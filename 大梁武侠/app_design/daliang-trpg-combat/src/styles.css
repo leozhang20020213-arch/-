@@ -1,0 +1,4595 @@
+/* ==========================================================================
+   Daliang TRPG Combat -- Styles (Complete Rewrite)
+   Theme: Dark Wood Desk + Parchment Panels -- Game-Table Feel
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Design Tokens / Root
+   -------------------------------------------------------------------------- */
+:root {
+  /* Color System */
+  --bg-deep:            #1a1410;
+  --bg-panel-dark:      #2a2218;
+  --bg-parchment:       #f5f0e8;
+  --bg-parchment-warm:  #faf5eb;
+  --ink-light:          #d4c8b8;
+  --ink-dark:           #2d1f14;
+  --ink-subtle:         #8a7a6a;
+  --ink-muted:          #5a5044;
+
+  /* Momentum / Shi */
+  --yang-die:           #d4843a;
+  --yin-die:            #3a5c7a;
+  --raw-die:            #6b6b6b;
+  --shi-yang:           #d4843a;
+  --shi-yin:            #3a5c7a;
+  --shi-he:             #6b8a5c;
+  --shi-harmony:        #c2a84e;
+  --shi-collapse:       #8b3a3a;
+  --shi-lost:           #6b6b6b;
+
+  /* Vitality */
+  --hp-red:             #c23a2e;
+  --shield-green:       #4a7a5c;
+  --burst-gold:         #d4843a;
+  --crisis-red:         #c23a2e;
+  --resolve-blue:       #4a7a9e;
+
+  /* Interactive */
+  --btn-primary:        #5c3a1e;
+  --btn-hover:          #7b4f2c;
+  --btn-danger:         #8b2a2a;
+  --disabled:           #5a5044;
+  --divider:            #3a3028;
+  --border-panel:       rgba(86, 61, 37, 0.28);
+  --border-card:        rgba(107, 75, 45, 0.32);
+  --border-accent:      #c5ad8a;
+  --card-glow:          rgba(212, 132, 58, 0.45);
+
+  /* Shadows */
+  --shadow-card:        0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover:  0 8px 28px rgba(0, 0, 0, 0.38);
+  --shadow-panel:       0 6px 24px rgba(0, 0, 0, 0.3);
+  --shadow-drawer:      0 20px 80px rgba(0, 0, 0, 0.45);
+  --shadow-modal:       0 26px 90px rgba(0, 0, 0, 0.52);
+
+  /* Transitions */
+  --ease-lift:          200ms ease;
+  --ease-shi:           500ms ease;
+  --ease-drawer:        320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Typography */
+  font-family:
+    "Cinzel", "EB Garamond", "Noto Serif SC",
+    "Microsoft YaHei", "PingFang SC", "Noto Sans SC",
+    Georgia, "Times New Roman", serif;
+  color: var(--ink-dark);
+  background: var(--bg-deep);
+}
+
+/* --------------------------------------------------------------------------
+   Reset / Base
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-deep);
+  background-image:
+    /* subtle wood-grain stripes via repeating gradient */
+    repeating-linear-gradient(
+      4deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.008) 3px,
+      rgba(255, 255, 255, 0.008) 4px
+    ),
+    /* warm lamplight glow */
+    radial-gradient(ellipse at 50% 0%, rgba(212, 132, 58, 0.08), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(58, 92, 122, 0.05), transparent 45%);
+  color: var(--ink-light);
+}
+
+/* --------------------------------------------------------------------------
+   Typography
+   -------------------------------------------------------------------------- */
+h1, h2, h3, p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink-light);
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink-dark);
+  letter-spacing: 0.02em;
+}
+
+h3 {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+.eyebrow {
+  margin-bottom: 3px;
+  color: var(--ink-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hint,
+.empty-state {
+  color: var(--ink-subtle);
+  font-size: 13px;
+  line-height: 1.55;
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Interactive Elements
+   -------------------------------------------------------------------------- */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--border-accent);
+  border-radius: 6px;
+  background: var(--bg-parchment);
+  color: var(--ink-dark);
+}
+
+input,
+select {
+  min-height: 38px;
+  padding: 0 10px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid rgba(212, 132, 58, 0.5);
+  outline-offset: -1px;
+}
+
+textarea {
+  min-height: 74px;
+  padding: 10px;
+  resize: vertical;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-row input {
+  width: auto;
+}
+
+meter {
+  width: 100%;
+  height: 8px;
+  grid-column: 1 / -1;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+meter::-webkit-meter-bar {
+  background: rgba(0, 0, 0, 0.15);
+  border: none;
+  border-radius: 4px;
+}
+
+meter::-webkit-meter-optimum-value {
+  background: linear-gradient(90deg, var(--hp-red), #e05a4a);
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   App Shell -- Dark Wood Desk
+   -------------------------------------------------------------------------- */
+.app-shell {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 18px 12px 18px;
+  background-image:
+    /* wood texture */
+    repeating-linear-gradient(
+      2deg,
+      transparent,
+      transparent 4px,
+      rgba(255, 255, 255, 0.004) 4px,
+      rgba(255, 255, 255, 0.004) 5px
+    ),
+    /* warm lamplight top */
+    radial-gradient(ellipse at 50% 0%, rgba(212, 132, 58, 0.09), transparent 48%),
+    /* cool moonlight bottom */
+    radial-gradient(ellipse at 30% 90%, rgba(58, 92, 122, 0.06), transparent 46%);
+  background-color: var(--bg-deep);
+}
+
+/* --------------------------------------------------------------------------
+   Topbar
+   -------------------------------------------------------------------------- */
+.topbar,
+.brand,
+.panel-title,
+.stage-header,
+.pending-preview,
+.top-actions,
+.split-actions {
+  display: flex;
+  align-items: center;
+}
+
+.topbar {
+  position: relative;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 18px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(245, 240, 232, 0.94) 0%, rgba(235, 226, 212, 0.9) 100%);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(4px);
+}
+
+/* Compact topbar (48px) */
+.topbar.compact {
+  height: 48px;
+  padding: 0 14px;
+  gap: 12px;
+  min-height: 48px;
+  max-height: 48px;
+}
+
+.topbar-left,
+.topbar-center,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-left {
+  flex: 0 0 auto;
+  min-width: 140px;
+}
+
+.topbar-center {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.topbar-right {
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.topbar-scene-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-round {
+  padding: 3px 10px;
+  border: 1px solid rgba(107, 75, 45, 0.25);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.85) 100%);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-dark);
+  white-space: nowrap;
+}
+
+/* Phase dots (compact) */
+.phase-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.brand,
+.panel-title,
+.pending-preview,
+.top-actions,
+.split-actions {
+  gap: 10px;
+}
+
+.brand h1 {
+  color: var(--ink-dark);
+  text-shadow: none;
+}
+
+/* Image placeholders -- keep the avatar/image sizes */
+.brand img,
+.panel-title img,
+.pending-preview img,
+.momentum-pill img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid rgba(107, 75, 45, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons (shared)
+   -------------------------------------------------------------------------- */
+.top-actions,
+.flow-buttons,
+.mini-dice-list,
+.zone-dice,
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-actions button,
+.flow-buttons button,
+.home-actions button,
+.drawer-toolbar button,
+.primary-action,
+.secondary-action,
+.actor-card,
+.die,
+.split-actions button,
+.inventory-launcher,
+.icon-button,
+.identity-pill {
+  border: 1px solid var(--border-accent);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, var(--bg-parchment) 100%);
+  color: var(--ink-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform var(--ease-lift), box-shadow var(--ease-lift), border-color var(--ease-lift);
+}
+
+.top-actions button,
+.flow-buttons button,
+.home-actions button,
+.drawer-toolbar button,
+.primary-action,
+.secondary-action,
+.split-actions button,
+.inventory-launcher,
+.identity-pill {
+  min-height: 38px;
+  padding: 0 14px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.top-actions button:hover,
+.flow-buttons button:hover:not(:disabled),
+.home-actions button:hover:not(:disabled),
+.drawer-toolbar button:hover:not(:disabled),
+.split-actions button:hover:not(:disabled),
+.inventory-launcher:hover,
+.icon-button:hover:not(:disabled),
+.identity-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--yang-die);
+}
+
+.top-actions button:active,
+.flow-buttons button:active:not(:disabled),
+.home-actions button:active:not(:disabled),
+.split-actions button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card);
+}
+
+.identity-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Primary action button */
+.primary-action {
+  border-color: var(--btn-primary);
+  background: linear-gradient(180deg, var(--btn-hover) 0%, var(--btn-primary) 100%);
+  color: #fff9ee;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.primary-action:hover {
+  border-color: var(--yang-die);
+  background: linear-gradient(180deg, #8b5e36 0%, var(--btn-hover) 100%);
+  box-shadow: 0 4px 18px rgba(212, 132, 58, 0.35);
+}
+
+.secondary-action {
+  width: 100%;
+}
+
+.icon-button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button {
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* --------------------------------------------------------------------------
+   Drawer
+   -------------------------------------------------------------------------- */
+.drawer-toolbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 12;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.97) 0%, rgba(235, 226, 212, 0.95) 100%);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+}
+
+.drawer-toolbar button.active {
+  border-color: var(--btn-primary);
+  background: linear-gradient(180deg, var(--btn-hover) 0%, var(--btn-primary) 100%);
+  color: #fff6e8;
+  box-shadow: 0 2px 10px rgba(92, 58, 30, 0.4);
+}
+
+.drawer-layer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  width: min(400px, calc(100vw - 36px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  border: 1px solid rgba(212, 132, 58, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(245, 240, 232, 0.99) 0%, rgba(240, 233, 220, 0.98) 100%);
+  box-shadow: var(--shadow-drawer);
+  backdrop-filter: blur(12px);
+  animation: slideInRight var(--ease-drawer);
+}
+
+.drawer-title {
+  position: sticky;
+  top: -16px;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -16px -16px 14px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.99) 0%, rgba(240, 233, 220, 0.97) 100%);
+  backdrop-filter: blur(6px);
+}
+
+.drawer-title h2 {
+  margin-bottom: 0;
+}
+
+.drawer-content {
+  display: grid;
+  gap: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Home Screen
+   -------------------------------------------------------------------------- */
+.home-screen {
+  display: grid;
+  min-height: calc(100vh - 110px);
+  place-items: center;
+}
+
+.home-hero {
+  width: min(780px, 100%);
+  text-align: center;
+}
+
+.home-hero > img {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.home-hero h1 {
+  margin-top: 16px;
+}
+
+.home-actions {
+  justify-content: center;
+  margin-top: 18px;
+}
+
+/* --------------------------------------------------------------------------
+   Desk / Layout Grids
+   -------------------------------------------------------------------------- */
+.room-grid,
+.desk {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.game-desk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.game-desk > .combat-main-grid,
+.game-desk > .dm-combat-grid,
+.game-desk > .combat-layout {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.game-desk > .drawer-toolbar {
+  flex-shrink: 0;
+}
+
+.room-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.desk {
+  grid-template-columns: 310px minmax(520px, 1fr) 360px;
+}
+
+.combat-main-grid {
+  display: grid;
+  grid-template-columns: minmax(640px, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.dm-combat-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(620px, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.scene-layout,
+.dm-scene-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(560px, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.mode-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.combat-under-stage {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.combat-brief-card {
+  display: grid;
+  gap: 10px;
+}
+
+.scene-board {
+  min-height: 360px;
+}
+
+.desk-primary-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.left-rail,
+.right-rail,
+.stage-column {
+  display: grid;
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+  align-content: start;
+}
+
+.stage-column {
+  position: relative;
+}
+
+/* Make combat/screen grid columns scroll individually */
+.desk > *,
+.combat-main-grid > *,
+.dm-combat-grid > *,
+.combat-layout > *,
+.scene-layout > *,
+.dm-scene-grid > * {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Panels -- Parchment Cards
+   -------------------------------------------------------------------------- */
+.panel,
+.zone-board,
+.stage {
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(245, 240, 232, 0.94) 0%,
+      rgba(238, 230, 217, 0.9) 50%,
+      rgba(232, 222, 207, 0.88) 100%
+    );
+  box-shadow: var(--shadow-panel);
+}
+
+.panel,
+.zone-board {
+  padding: 14px;
+}
+
+.panel h2,
+.panel h3 {
+  color: var(--ink-dark);
+}
+
+.hero-panel p {
+  color: var(--ink-dark);
+  line-height: 1.55;
+}
+
+/* --------------------------------------------------------------------------
+   Meta / Stats / Form Grids
+   -------------------------------------------------------------------------- */
+.meta-grid,
+.stat-grid,
+.form-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.meta-grid,
+.stat-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.meta-grid span,
+.stat-grid span,
+.track,
+.pending-preview,
+.dm-secrets,
+.inventory-item,
+.enemy-card {
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.9) 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.meta-grid span,
+.stat-grid span {
+  padding: 8px;
+  font-size: 12px;
+  color: var(--ink-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Actor List / Cards
+   -------------------------------------------------------------------------- */
+.actor-list,
+.inventory-tabs,
+.log-list {
+  display: grid;
+  gap: 8px;
+}
+
+.actor-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  width: 100%;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--ease-lift), box-shadow var(--ease-lift), border-color var(--ease-lift);
+}
+
+.actor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--yang-die);
+}
+
+.actor-card.selected {
+  border-color: var(--yang-die);
+  box-shadow: 0 0 0 2px var(--card-glow), var(--shadow-card-hover);
+  background: linear-gradient(180deg, #faf3e3 0%, #f5ecd8 100%);
+}
+
+.actor-card.static {
+  cursor: default;
+}
+
+.actor-card.static:hover {
+  transform: none;
+  box-shadow: var(--shadow-card);
+  border-color: var(--border-card);
+}
+
+.actor-card small,
+.actor-card em,
+.die small,
+.log-list small,
+.track small {
+  color: var(--ink-subtle);
+  font-size: 12px;
+  font-style: normal;
+}
+
+/* --------------------------------------------------------------------------
+   Unit Card
+   -------------------------------------------------------------------------- */
+.unit-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(107, 75, 45, 0.22);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.92) 100%);
+  box-shadow: var(--shadow-card);
+}
+
+.unit-head {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.unit-head img {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: contain;
+  border: 1px solid rgba(107, 75, 45, 0.3);
+}
+
+.unit-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.unit-momentum {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border: 1px solid var(--yang-die);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(212, 132, 58, 0.18) 0%, rgba(212, 132, 58, 0.08) 100%);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--shi-yang);
+  transition: border-color var(--ease-shi), background var(--ease-shi), color var(--ease-shi);
+}
+
+/* Shi transition -- smooth momentum border color morph */
+.shi-transition {
+  transition: border-color var(--ease-shi), background var(--ease-shi), color var(--ease-shi), box-shadow var(--ease-shi);
+}
+
+/* --------------------------------------------------------------------------
+   Status Bar / HP
+   -------------------------------------------------------------------------- */
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.status-bar span {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-panel-dark);
+  color: var(--ink-light);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.unit-hp {
+  margin-bottom: 0;
+  color: var(--ink-dark);
+}
+
+/* HP gradient bar */
+.unit-hp meter {
+  appearance: none;
+  height: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.unit-hp meter::-webkit-meter-optimum-value {
+  background: linear-gradient(90deg, var(--hp-red) 0%, #e05a4a 60%, #f07060 100%);
+  border-radius: 3px;
+}
+
+.unit-hp meter::-webkit-meter-suboptimum-value {
+  background: linear-gradient(90deg, var(--yang-die) 0%, #e0a040 100%);
+  border-radius: 3px;
+}
+
+.unit-hp meter::-webkit-meter-even-less-good-value {
+  background: linear-gradient(90deg, var(--hp-red) 0%, #a02020 100%);
+  border-radius: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   Six Roots
+   -------------------------------------------------------------------------- */
+.six-roots-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.six-roots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.six-roots-grid span {
+  padding: 6px 8px;
+  border: 1px solid rgba(107, 75, 45, 0.25);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.85) 100%);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Stage -- Combat Stage
+   -------------------------------------------------------------------------- */
+.stage {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
+  min-height: 180px;
+  max-height: 260px;
+  flex-shrink: 0;
+  padding: 12px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(245, 240, 232, 0.88) 0%,
+      rgba(238, 230, 217, 0.84) 40%,
+      rgba(230, 220, 205, 0.82) 100%
+    ),
+    radial-gradient(ellipse at 50% 35%, rgba(212, 132, 58, 0.06), transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(58, 92, 122, 0.04), transparent 45%);
+  transition: border-color 350ms ease, box-shadow 350ms ease;
+}
+
+/* Intercept window -- blue pulse */
+.stage.intercept-active {
+  border-color: var(--yin-die);
+  box-shadow:
+    0 0 0 3px rgba(58, 92, 122, 0.25),
+    0 0 24px rgba(58, 92, 122, 0.15),
+    var(--shadow-panel);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* React window -- green pulse */
+.stage.react-active {
+  border-color: var(--shield-green);
+  box-shadow:
+    0 0 0 3px rgba(74, 122, 92, 0.25),
+    0 0 24px rgba(74, 122, 92, 0.15),
+    var(--shadow-panel);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.stage-header {
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+
+.stage > *:not(.ink-sun) {
+  position: relative;
+}
+
+/* Phaser Board */
+.phaser-board {
+  position: relative;
+  z-index: 1;
+  height: 180px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(245, 240, 232, 0.55);
+}
+
+/* Ink Sun -- decorative atmospheric element */
+.ink-sun {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(212, 132, 58, 0.12) 0%, rgba(212, 132, 58, 0.05) 30%, transparent 58%),
+    radial-gradient(circle at 45% 45%, rgba(255, 255, 255, 0.5), transparent 28%);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Momentum Pill
+   -------------------------------------------------------------------------- */
+.momentum-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-accent);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.92) 0%, rgba(232, 222, 207, 0.88) 100%);
+  font-weight: 800;
+  color: var(--ink-dark);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transition: border-color var(--ease-shi), box-shadow var(--ease-shi);
+}
+
+/* Shi states on momentum pill */
+.momentum-pill.shi-yang {
+  border-color: var(--shi-yang);
+  box-shadow: 0 0 12px rgba(212, 132, 58, 0.3);
+}
+
+.momentum-pill.shi-yin {
+  border-color: var(--shi-yin);
+  box-shadow: 0 0 12px rgba(58, 92, 122, 0.3);
+}
+
+.momentum-pill.shi-he {
+  border-color: var(--shi-he);
+  box-shadow: 0 0 12px rgba(107, 138, 92, 0.3);
+}
+
+.momentum-pill.shi-harmony {
+  border-color: var(--shi-harmony);
+  box-shadow: 0 0 18px rgba(194, 168, 78, 0.45);
+}
+
+.momentum-pill.shi-collapse {
+  border-color: var(--shi-collapse);
+  box-shadow: 0 0 14px rgba(139, 58, 58, 0.35);
+}
+
+.momentum-pill.shi-lost {
+  border-color: var(--shi-lost);
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.momentum-pill img {
+  width: 28px;
+  height: 28px;
+}
+
+/* --------------------------------------------------------------------------
+   Fighters / Distance Lines
+   -------------------------------------------------------------------------- */
+.fighters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.distance-lines {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.distance-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px dashed rgba(107, 75, 45, 0.35);
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.55);
+  text-align: center;
+  color: var(--ink-dark);
+}
+
+.distance-line strong {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-panel-dark);
+  color: var(--ink-light);
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.fighter-group {
+  display: grid;
+  gap: 10px;
+}
+
+.fighter-group article {
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid rgba(107, 75, 45, 0.22);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.8) 0%, rgba(235, 226, 212, 0.75) 100%);
+  box-shadow: var(--shadow-card);
+}
+
+.fighter-group strong {
+  display: block;
+  color: var(--ink-dark);
+  font-size: 15px;
+}
+
+.fighter-group span {
+  display: block;
+  color: var(--ink-subtle);
+  font-size: 13px;
+}
+
+.fighter-group small {
+  display: block;
+  margin-top: 10px;
+  color: var(--ink-subtle);
+  font-size: 12px;
+}
+
+.versus {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  border: 2px solid rgba(45, 33, 24, 0.55);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 240, 232, 0.9) 0%, rgba(226, 214, 196, 0.8) 100%);
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--ink-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   Track / Pending Preview
+   -------------------------------------------------------------------------- */
+.track-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.track,
+.pending-preview,
+.inventory-item,
+.enemy-card {
+  padding: 10px;
+}
+
+.track {
+  display: grid;
+  gap: 6px;
+}
+
+.track h3 {
+  color: var(--ink-dark);
+}
+
+.pending-preview {
+  margin-top: 18px;
+}
+
+.pending-preview p {
+  margin-bottom: 0;
+  color: var(--ink-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Action Stack / Cards
+   -------------------------------------------------------------------------- */
+.action-stack {
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.88) 0%, rgba(238, 230, 217, 0.84) 100%);
+}
+
+.action-stack p {
+  margin-bottom: 5px;
+  color: var(--ink-dark);
+}
+
+.action-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Game-card feel -- playing card look */
+.action-card {
+  display: grid;
+  gap: 4px;
+  min-height: 86px;
+  padding: 10px;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--bg-parchment-warm) 0%,
+      rgba(240, 233, 218, 0.94) 40%,
+      rgba(232, 222, 207, 0.9) 100%
+    );
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink-dark);
+  transition: transform var(--ease-lift), box-shadow var(--ease-lift), border-color var(--ease-lift);
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--yang-die);
+}
+
+.action-card.selected {
+  border-color: var(--yang-die);
+  box-shadow: 0 0 0 2px var(--card-glow), var(--shadow-card-hover);
+  background: linear-gradient(180deg, #faf3e3 0%, #f5ecd8 100%);
+}
+
+.action-card.warn {
+  background: linear-gradient(180deg, #fef0e8 0%, #fde4d6 100%);
+  border-color: var(--hp-red);
+}
+
+.action-card span,
+.action-card small {
+  color: var(--ink-subtle);
+  font-size: 12px;
+}
+
+/* Card unavailable -- gray overlay with reason text */
+.card-unavailable {
+  position: relative;
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(180deg, #d4cfc5 0%, #c8c2b6 100%);
+  border-color: var(--disabled);
+  pointer-events: none;
+}
+
+.card-unavailable::after {
+  content: attr(data-reason);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(26, 20, 16, 0.55);
+  color: var(--ink-light);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  text-align: center;
+  padding: 6px;
+  line-height: 1.3;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Qi / Dice System
+   -------------------------------------------------------------------------- */
+.qi-operation-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.slot-hint {
+  margin-bottom: 0;
+  padding: 8px 10px;
+  border: 1px solid #b45d43;
+  border-radius: 6px;
+  background: #fff1eb;
+  color: #7a2e1e;
+  font-weight: 600;
+}
+
+.qi-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 40%) minmax(260px, 1fr) minmax(150px, 20%);
+  gap: 10px;
+}
+
+.qi-area,
+.qi-pool-strip {
+  position: relative;
+  overflow: hidden;
+  padding: 10px;
+  border: 1px dashed rgba(107, 75, 45, 0.35);
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.5);
+}
+
+.qi-center {
+  display: grid;
+  grid-template-rows: minmax(70px, 0.25fr) minmax(170px, 0.75fr);
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.temp-area,
+.lock-area {
+  position: relative;
+  overflow: hidden;
+  padding: 10px;
+  border: 1px dashed rgba(107, 75, 45, 0.35);
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.5);
+}
+
+.lock-slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lock-slot {
+  min-height: 86px;
+  padding: 8px;
+  border: 2px dashed rgba(107, 75, 45, 0.4);
+  border-radius: 8px;
+  background: var(--bg-parchment-warm);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.lock-slot.drag-over-valid {
+  border-color: var(--shield-green);
+  border-style: solid;
+  box-shadow: 0 0 12px rgba(74, 122, 92, 0.35);
+  animation: pulse 800ms infinite;
+}
+
+.lock-slot.drag-over-invalid {
+  border-color: var(--hp-red);
+  border-style: solid;
+  box-shadow: 0 0 12px rgba(194, 58, 46, 0.35);
+}
+
+/* Yin slot -- cool dark steel-blue gradient */
+.yin-slot {
+  background: linear-gradient(180deg, #eaf0f5 0%, #dce5ed 50%, #c8d4de 100%);
+  border-color: rgba(58, 92, 122, 0.3);
+}
+
+/* Yang slot -- warm bronze/gold gradient */
+.yang-slot {
+  background: linear-gradient(180deg, #faf0df 0%, #f5e4c0 50%, #edd4a6 100%);
+  border-color: rgba(212, 132, 58, 0.3);
+}
+
+/* Drag targets */
+.slot-valid-target {
+  border-color: var(--shield-green) !important;
+  border-style: dashed !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 12px rgba(74, 122, 92, 0.3) !important;
+}
+
+.slot-invalid-target {
+  border-color: var(--hp-red) !important;
+  border-style: dashed !important;
+  border-width: 2px !important;
+  box-shadow: 0 0 10px rgba(194, 58, 46, 0.25) !important;
+}
+
+.locked-summary {
+  margin-top: 10px;
+  color: var(--ink-subtle);
+  font-size: 13px;
+}
+
+.qi-pool-strip {
+  grid-column: 1 / -1;
+}
+
+/* --------------------------------------------------------------------------
+   Die -- Qi Dice Badges
+   -------------------------------------------------------------------------- */
+.die {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: 76px;
+  min-height: 56px;
+  padding: 7px;
+  border: 1px solid rgba(107, 75, 45, 0.35);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.9) 100%);
+  text-align: left;
+  font-weight: 800;
+  color: var(--ink-dark);
+  cursor: grab;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 200ms ease;
+}
+
+.die:active {
+  cursor: grabbing;
+}
+
+/* Nature accent borders */
+.die.yin {
+  border-left-color: var(--yin-die);
+}
+
+.die.yang {
+  border-left-color: var(--yang-die);
+}
+
+.die.raw {
+  border-left-color: var(--raw-die);
+}
+
+/* Owned die highlight */
+.die.owned:not(.selected) {
+  border-color: rgba(110, 75, 38, 0.55);
+  border-left-width: 3px;
+}
+
+/* Selected die */
+.die.selected {
+  border-color: var(--btn-primary);
+  background: linear-gradient(180deg, var(--btn-primary) 0%, var(--bg-panel-dark) 100%);
+  color: var(--ink-light);
+  box-shadow: 0 0 0 2px rgba(92, 58, 30, 0.35);
+}
+
+.die.selected small {
+  color: rgba(212, 200, 184, 0.8);
+}
+
+/* Dragging die -- follows cursor */
+.die.dragging {
+  opacity: 0.7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transform: scale(1.05);
+  z-index: 100;
+  cursor: grabbing;
+}
+
+/* Highlighted die -- pulsing gold for move-matching dice */
+.die.highlighted {
+  border-color: var(--yang-die);
+  box-shadow:
+    0 0 0 2px var(--card-glow),
+    0 0 16px rgba(212, 132, 58, 0.3);
+  animation: shiGlow 1.2s ease-in-out infinite;
+}
+
+.temp-badge {
+  justify-self: start;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--btn-primary);
+  color: #fff4e3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Just-rolled die flash animation */
+.die.just-rolled {
+  animation: dieRollFlash 600ms ease-out;
+}
+
+.die.just-rolled span {
+  animation: dieValuePop 400ms ease-out;
+}
+
+@keyframes dieRollFlash {
+  0% {
+    border-color: #c8943e;
+    box-shadow: 0 0 12px rgba(200, 148, 62, 0.7), 0 0 0 3px rgba(200, 148, 62, 0.4);
+    transform: scale(1.06);
+  }
+  100% {
+    border-color: rgba(154, 119, 79, 0.54);
+    box-shadow: 0 0 0 rgba(200, 148, 62, 0), 0 0 0 0 rgba(200, 148, 62, 0);
+    transform: scale(1);
+  }
+}
+
+@keyframes dieValuePop {
+  0% {
+    transform: scale(1.35);
+    color: #c8943e;
+    font-weight: 900;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Qi area header row with inline roll button */
+.qi-area-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.qi-area-header h3 {
+  margin: 0;
+}
+
+.inline-roll-button {
+  padding: 4px 12px;
+  border: 1px solid #c8943e;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(200, 148, 62, 0.18) 0%, rgba(160, 110, 40, 0.08) 100%);
+  color: #c8943e;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.inline-roll-button:hover {
+  background: linear-gradient(180deg, rgba(200, 148, 62, 0.32) 0%, rgba(180, 130, 50, 0.18) 100%);
+  box-shadow: 0 0 8px rgba(200, 148, 62, 0.35);
+}
+
+.inline-roll-button:active {
+  transform: scale(0.96);
+}
+
+/* Dice highlight zone */
+.dice-highlight-zone {
+  position: relative;
+  border-radius: 8px;
+  box-shadow: inset 0 0 20px rgba(212, 132, 58, 0.12);
+  transition: box-shadow 200ms ease;
+}
+
+/* --------------------------------------------------------------------------
+   Flow Buttons
+   -------------------------------------------------------------------------- */
+.flow-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.flow-buttons button {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Inventory
+   -------------------------------------------------------------------------- */
+.inventory-tabs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.inventory-entry {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 40px;
+}
+
+.inventory-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
+  width: fit-content;
+  box-shadow: var(--shadow-card);
+}
+
+.inventory-launcher img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.inventory-launcher:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.inventory-popover {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  width: min(680px, 100%);
+  max-height: min(78vh, 720px);
+  overflow: auto;
+  border-color: rgba(212, 132, 58, 0.22);
+  border-radius: 8px;
+  box-shadow: var(--shadow-drawer);
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.99) 0%, rgba(240, 233, 220, 0.98) 100%);
+}
+
+.inventory-popover .panel-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-bottom: 8px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.98) 0%, rgba(240, 233, 220, 0.96) 100%);
+  backdrop-filter: blur(6px);
+}
+
+.inventory-popover .panel-title h2 {
+  margin-right: auto;
+}
+
+.inventory-group {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.inventory-item p,
+.enemy-card p {
+  margin-bottom: 6px;
+  color: var(--ink-dark);
+  line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Enemy Card
+   -------------------------------------------------------------------------- */
+.enemy-card {
+  color: var(--ink-dark);
+}
+
+/* --------------------------------------------------------------------------
+   LAN Box
+   -------------------------------------------------------------------------- */
+.lan-box {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(107, 75, 45, 0.3);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.85) 0%, rgba(232, 222, 207, 0.78) 100%);
+}
+
+.lan-box code {
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-panel-dark);
+  color: #fff0cf;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   Log Panel
+   -------------------------------------------------------------------------- */
+.log-panel {
+  max-height: 470px;
+  overflow: hidden;
+}
+
+.log-list {
+  max-height: 405px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.log-list article {
+  padding: 10px;
+  border-left: 3px solid var(--btn-primary);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.9) 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.log-list span {
+  color: var(--yang-die);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.log-list p {
+  margin-bottom: 4px;
+  line-height: 1.45;
+  color: var(--ink-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Round / Timepoint Strip
+   -------------------------------------------------------------------------- */
+.round-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.round-strip,
+.timepoint-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.round-strip span,
+.round-strip strong,
+.timepoint-strip span {
+  padding: 6px 10px;
+  border: 1px solid rgba(107, 75, 45, 0.25);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.85) 100%);
+  font-size: 13px;
+  color: var(--ink-dark);
+}
+
+.timepoint-strip span {
+  opacity: 0.55;
+  color: var(--ink-subtle);
+}
+
+.timepoint-strip span.active {
+  border-color: var(--yang-die);
+  background: linear-gradient(180deg, rgba(212, 132, 58, 0.22) 0%, rgba(212, 132, 58, 0.1) 100%);
+  color: var(--yang-die);
+  opacity: 1;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(212, 132, 58, 0.2);
+}
+
+/* Phase dot */
+.phase-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(107, 75, 45, 0.3);
+  background: rgba(107, 75, 45, 0.15);
+  transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.phase-dot.active {
+  background: var(--yang-die);
+  border-color: var(--yang-die);
+  box-shadow: 0 0 10px rgba(212, 132, 58, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   Modal / Overlay
+   -------------------------------------------------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 14, 10, 0.6);
+  backdrop-filter: blur(3px);
+  animation: fadeIn 180ms ease;
+}
+
+.prompt-modal,
+.dice-roll-overlay {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 14px;
+  width: min(540px, 100%);
+  padding: 22px;
+  border: 1px solid rgba(212, 132, 58, 0.25);
+  border-radius: 8px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(245, 240, 232, 0.98) 0%,
+      rgba(238, 230, 217, 0.96) 50%,
+      rgba(230, 220, 205, 0.95) 100%
+    );
+  box-shadow: var(--shadow-modal);
+  animation: cardLift 220ms ease;
+}
+
+.dice-roll-overlay {
+  width: min(840px, 100%);
+}
+
+.prompt-modal > *,
+.dice-roll-overlay > * {
+  position: relative;
+  z-index: 1;
+}
+
+.prompt-modal h2,
+.dice-roll-overlay h2 {
+  color: var(--ink-dark);
+}
+
+/* Dice Canvas */
+.dice-canvas {
+  height: 340px;
+  overflow: hidden;
+  border: 1px solid rgba(107, 75, 45, 0.35);
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(212, 132, 58, 0.1), transparent 42%),
+    var(--bg-deep);
+}
+
+.dice-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Floating Damage / Heal Numbers
+   -------------------------------------------------------------------------- */
+.float-damage {
+  position: absolute;
+  z-index: 50;
+  font-weight: 900;
+  font-size: 24px;
+  color: var(--hp-red);
+  text-shadow: 0 2px 8px rgba(194, 58, 46, 0.5);
+  pointer-events: none;
+  animation: floatUp 1.2s ease-out forwards;
+}
+
+.float-heal {
+  position: absolute;
+  z-index: 50;
+  font-weight: 900;
+  font-size: 24px;
+  color: var(--shield-green);
+  text-shadow: 0 2px 8px rgba(74, 122, 92, 0.5);
+  pointer-events: none;
+  animation: floatUp 1.4s ease-out forwards;
+}
+
+/* --------------------------------------------------------------------------
+   Keyframe Animations
+   -------------------------------------------------------------------------- */
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.15);
+  }
+  60% {
+    opacity: 0.7;
+    transform: translateY(-42px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-70px) scale(0.9);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 2px rgba(58, 92, 122, 0.2), 0 0 16px rgba(58, 92, 122, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(58, 92, 122, 0.4), 0 0 32px rgba(58, 92, 122, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(58, 92, 122, 0.2), 0 0 16px rgba(58, 92, 122, 0.1);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(80px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cardLift {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shiGlow {
+  0% {
+    box-shadow: 0 0 0 1px rgba(212, 132, 58, 0.3), 0 0 8px rgba(212, 132, 58, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(212, 132, 58, 0.55), 0 0 22px rgba(212, 132, 58, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 1px rgba(212, 132, 58, 0.3), 0 0 8px rgba(212, 132, 58, 0.15);
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar Styling
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(26, 20, 16, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(90, 80, 68, 0.6);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 79, 44, 0.7);
+}
+
+/* --------------------------------------------------------------------------
+   Status Badges -- Colored by Status Type
+   -------------------------------------------------------------------------- */
+.status-badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.4;
+  max-height: 18px;
+  color: #fff;
+}
+
+.status-none {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-panel-dark);
+  color: var(--ink-light);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-chizhi   { background: #6b5c4e; color: #fff; }   /* 迟滞 - brown */
+.status-pokou    { background: #8b3a3a; color: #fff; }   /* 破口 - dark red */
+.status-shiheng  { background: #d4843a; color: #fff; }   /* 失衡 - orange */
+.status-liuxue   { background: #c23a2e; color: #fff; }   /* 流血 - red */
+.status-zhongdu  { background: #7a3a8b; color: #fff; }   /* 中毒 - purple */
+.status-ranshao  { background: #d45a2a; color: #fff; }   /* 燃烧 - orange-red */
+.status-dongjie  { background: #4a7a9e; color: #fff; }   /* 冻结 - blue */
+.status-xuanyun  { background: #c2a84e; color: #fff; }   /* 眩晕 - yellow */
+.status-fengxue  { background: #3a2a5c; color: #fff; }   /* 封穴 - dark purple */
+.status-default  { background: var(--bg-panel-dark); color: var(--ink-light); }
+
+/* --------------------------------------------------------------------------
+   Momentum Pill -- Small variant for UnitCard
+   -------------------------------------------------------------------------- */
+/* momentum-pill-sm consolidated — clean solid-color badges (used everywhere) */
+.momentum-pill-sm {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: border-color var(--ease-shi), background var(--ease-shi), color var(--ease-shi);
+  color: #fff;
+}
+
+.momentum-pill-sm.shi-yin { background: #3a5c7a; border-color: #3a5c7a; }
+.momentum-pill-sm.shi-yang { background: #d4843a; border-color: #d4843a; }
+.momentum-pill-sm.shi-he { background: #6b8a5c; border-color: #6b8a5c; }
+.momentum-pill-sm.shi-harmony { background: #c2a84e; border-color: #c2a84e; box-shadow: 0 0 8px rgba(194, 168, 78, 0.35); }
+.momentum-pill-sm.shi-collapse { background: #8b3a3a; border-color: #8b3a3a; }
+.momentum-pill-sm.shi-lost { background: #6b6b6b; border-color: #6b6b6b; opacity: 0.7; }
+
+/* --------------------------------------------------------------------------
+   Character Select
+   -------------------------------------------------------------------------- */
+.character-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.character-select-card {
+  padding: 16px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(245, 240, 232, 0.90) 0%, rgba(235, 226, 212, 0.84) 100%);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--ease-lift), box-shadow var(--ease-lift);
+}
+
+.character-select-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* --------------------------------------------------------------------------
+   Card Meta / Effect
+   -------------------------------------------------------------------------- */
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.card-meta small {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(107, 75, 45, 0.12);
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.card-effect {
+  color: var(--ink-dark);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.card-why {
+  color: var(--hp-red);
+  font-size: 11px;
+  font-style: normal;
+}
+
+/* ==========================================================================
+   Combat Layout -- New 3-Column Design (v2 Redesign)
+   ========================================================================== */
+
+.combat-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.combat-left-column,
+.combat-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px;
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.combat-center-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 4px;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Phase Line -- 2px colored indicator */
+.phase-line {
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  border-radius: 2px;
+  transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+
+.phase-line.phase-declare,
+.phase-line.phase-scene,
+.phase-line.phase-setup,
+.phase-line.phase-initiative {
+  background: #d4843a;
+  box-shadow: 0 0 8px rgba(212, 132, 58, 0.35);
+}
+
+.phase-line.phase-intercept_window {
+  background: #3a5c7a;
+  box-shadow: 0 0 6px rgba(58, 92, 122, 0.45);
+  animation: phasePulseBlue 1.5s ease-in-out infinite;
+}
+
+.phase-line.phase-react_window {
+  background: #4a7a5c;
+  box-shadow: 0 0 6px rgba(74, 122, 92, 0.45);
+  animation: phasePulseGreen 1.5s ease-in-out infinite;
+}
+
+.phase-line.phase-outcome {
+  background: #c23a2e;
+  box-shadow: 0 0 8px rgba(194, 58, 46, 0.4);
+}
+
+.phase-line.phase-default,
+.phase-line.phase-round_end {
+  background: #3a3028;
+}
+
+@keyframes phasePulseBlue {
+  0%, 100% { box-shadow: 0 0 4px rgba(58, 92, 122, 0.3); }
+  50% { box-shadow: 0 0 14px rgba(58, 92, 122, 0.65); }
+}
+
+@keyframes phasePulseGreen {
+  0%, 100% { box-shadow: 0 0 4px rgba(74, 122, 92, 0.3); }
+  50% { box-shadow: 0 0 14px rgba(74, 122, 92, 0.65); }
+}
+
+/* Character Card -- Left/Right Column Cards */
+.character-card {
+  padding: 10px;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.92) 100%);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: transform var(--ease-lift), box-shadow var(--ease-lift), border-color var(--ease-lift);
+  display: grid;
+  gap: 6px;
+}
+
+.character-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--yang-die);
+}
+
+.character-card.selected {
+  border-color: var(--yang-die);
+  box-shadow: 0 0 0 2px var(--card-glow), var(--shadow-card-hover);
+}
+
+.character-card.own-card {
+  border-color: rgba(212, 132, 58, 0.35);
+  background: linear-gradient(180deg, #faf3e3 0%, #f5ecd8 100%);
+}
+
+.character-card .card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Dying state -- HP <= 0 */
+.character-card.card-dying {
+  border-color: var(--hp-red);
+  box-shadow: 0 0 0 2px rgba(194, 58, 46, 0.4), var(--shadow-card);
+}
+
+.card-dying-badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--hp-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.character-card .card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+.character-card .card-momentum {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.character-card .card-momentum.shi-yang,
+.character-card .card-momentum.shi-yin,
+.character-card .card-momentum.shi-he,
+.character-card .card-momentum.shi-harmony,
+.character-card .card-momentum.shi-collapse,
+.character-card .card-momentum.shi-lost {
+  /* Inherits from momentum-pill-sm */
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(107, 75, 45, 0.3);
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.85) 100%);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.character-card .card-momentum.shi-yang {
+  border-color: var(--shi-yang);
+  background: linear-gradient(180deg, rgba(212, 132, 58, 0.20) 0%, rgba(212, 132, 58, 0.08) 100%);
+  color: var(--shi-yang);
+}
+.character-card .card-momentum.shi-yin {
+  border-color: var(--shi-yin);
+  background: linear-gradient(180deg, rgba(58, 92, 122, 0.20) 0%, rgba(58, 92, 122, 0.08) 100%);
+  color: var(--shi-yin);
+}
+.character-card .card-momentum.shi-he {
+  border-color: var(--shi-he);
+  background: linear-gradient(180deg, rgba(107, 138, 92, 0.20) 0%, rgba(107, 138, 92, 0.08) 100%);
+  color: var(--shi-he);
+}
+.character-card .card-momentum.shi-harmony {
+  border-color: var(--shi-harmony);
+  background: linear-gradient(180deg, rgba(194, 168, 78, 0.25) 0%, rgba(194, 168, 78, 0.12) 100%);
+  color: var(--shi-harmony);
+}
+.character-card .card-momentum.shi-collapse {
+  border-color: var(--shi-collapse);
+  background: linear-gradient(180deg, rgba(139, 58, 58, 0.20) 0%, rgba(139, 58, 58, 0.08) 100%);
+  color: var(--shi-collapse);
+}
+.character-card .card-momentum.shi-lost {
+  border-color: var(--shi-lost);
+  background: linear-gradient(180deg, rgba(107, 107, 107, 0.15) 0%, rgba(107, 107, 107, 0.06) 100%);
+  color: var(--shi-lost);
+  opacity: 0.7;
+}
+
+.character-card .card-hp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.character-card .card-hp-bar-wrap {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.character-card .card-hp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c23a2e 0%, #e05040 50%, #d44438 100%);
+  border-radius: 4px;
+  transition: width 500ms ease;
+}
+
+.character-card .card-hp-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-dark);
+  white-space: nowrap;
+}
+
+.character-card .card-shield {
+  font-size: 12px;
+  color: var(--shield-green);
+  font-weight: 700;
+}
+
+.character-card .card-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.character-card .card-status-badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  max-height: 18px;
+  line-height: 1.4;
+}
+
+.character-card .card-equip {
+  font-size: 11px;
+  color: var(--ink-subtle);
+}
+
+/* Target Lines Area (center column) */
+.target-lines-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.70) 0%, rgba(235, 226, 212, 0.60) 100%);
+  min-height: 80px;
+  flex-shrink: 0;
+}
+
+.target-line {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px dashed rgba(107, 75, 45, 0.25);
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.65);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-dark);
+  text-align: center;
+}
+
+.target-line .from { text-align: right; }
+.target-line .to { text-align: left; }
+.target-line .band {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg-panel-dark);
+  color: var(--ink-light);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Pending Action Bar */
+.pending-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(212, 132, 58, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(250, 243, 227, 0.92) 0%, rgba(245, 236, 216, 0.88) 100%);
+  box-shadow: 0 2px 8px rgba(212, 132, 58, 0.15);
+  font-weight: 700;
+  color: var(--ink-dark);
+  flex-shrink: 0;
+}
+
+/* Center Drawers -- inline, horizontally stacking */
+.center-drawers {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  min-height: 200px;
+  flex: 1;
+}
+
+.center-drawer {
+  flex-shrink: 0;
+  width: 420px;
+  min-width: 300px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.97) 0%, rgba(240, 233, 220, 0.95) 100%);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+  position: relative;
+}
+
+.center-drawer .drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--divider);
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.99) 0%, rgba(240, 233, 220, 0.97) 100%);
+  flex-shrink: 0;
+}
+
+.center-drawer .drawer-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-dark);
+}
+
+.center-drawer .drawer-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 2;
+  transition: background 150ms ease;
+}
+
+.center-drawer .drawer-resize-handle:hover,
+.center-drawer .drawer-resize-handle.active {
+  background: rgba(212, 132, 58, 0.35);
+}
+
+.center-drawer .drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+}
+
+/* Vertical Drawer Triggers (left column) */
+.drawer-triggers-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.drawer-triggers-vertical button {
+  padding: 7px 10px;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.88) 100%);
+  color: var(--ink-dark);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.drawer-triggers-vertical button:hover {
+  background: linear-gradient(180deg, var(--btn-hover) 0%, var(--btn-primary) 100%);
+  color: #fff6e8;
+  box-shadow: var(--shadow-card);
+}
+
+.drawer-triggers-vertical button.active {
+  background: linear-gradient(180deg, var(--btn-hover) 0%, var(--btn-primary) 100%);
+  color: #fff6e8;
+  border-color: var(--btn-primary);
+  box-shadow: 0 2px 10px rgba(92, 58, 30, 0.4);
+}
+
+/* Qi Zone Horizontal -- 180px bar */
+.qi-zone-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  height: 180px;
+  min-height: 180px;
+  padding: 10px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.94) 0%, rgba(238, 230, 217, 0.90) 100%);
+  box-shadow: var(--shadow-panel);
+  align-items: stretch;
+}
+
+.qi-zone-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px dashed rgba(107, 75, 45, 0.25);
+  border-radius: 6px;
+  padding: 6px;
+  background: rgba(245, 240, 232, 0.5);
+  overflow: hidden;
+}
+
+.qi-zone-section.qi-pool-section {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.qi-zone-section.qi-sea-section {
+  flex: 1;
+  min-width: 260px;
+}
+
+.qi-zone-section.qi-temp-section {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.qi-zone-section.qi-rest-section {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.qi-zone-section .section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qi-zone-section .section-dice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
+  align-content: flex-start;
+}
+
+/* Slot Drop Zones */
+.slot-drop-zones {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.slot-drop-zone {
+  width: 130px;
+  min-height: 130px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 2px dashed rgba(107, 75, 45, 0.5);
+  border-radius: 8px;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.slot-drop-zone.yin-slot-zone {
+  background: linear-gradient(180deg, #2a3040 0%, #1e2530 100%);
+  border-color: rgba(58, 92, 122, 0.5);
+}
+
+.slot-drop-zone.yang-slot-zone {
+  background: linear-gradient(180deg, #3a2820 0%, #2a1a10 100%);
+  border-color: rgba(212, 132, 58, 0.5);
+}
+
+.slot-drop-zone .slot-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.slot-drop-zone .slot-sum {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--ink-light);
+}
+
+.slot-drop-zone .slot-dice-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+/* Qi Die -- Beautiful redesign 56x56 */
+.qi-die {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid rgba(107, 75, 45, 0.35);
+  border-left-width: 3px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.92) 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  user-select: none;
+}
+
+.qi-die:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.qi-die:active {
+  cursor: grabbing;
+}
+
+.qi-die.die-yin { border-left-color: var(--yin-die); }
+.qi-die.die-yang { border-left-color: var(--yang-die); }
+.qi-die.die-raw { border-left-color: var(--raw-die); }
+
+.qi-die.selected {
+  border-color: var(--yang-die);
+  box-shadow: 0 0 0 2px var(--card-glow), 0 0 14px rgba(212, 132, 58, 0.35);
+}
+
+.qi-die.dragging {
+  opacity: 0.6;
+  transform: scale(1.05);
+}
+
+.qi-die.temporary {
+  border-style: dashed;
+}
+
+.qi-die.highlighted {
+  border-color: var(--yang-die);
+  box-shadow: 0 0 0 2px var(--card-glow), 0 0 16px rgba(212, 132, 58, 0.35);
+  animation: shiGlow 1.2s ease-in-out infinite;
+}
+
+.qi-die.just-rolled {
+  animation: dieRollFlash 600ms ease-out;
+}
+
+.qi-die.just-rolled .die-value {
+  animation: dieValuePop 400ms ease-out;
+}
+
+.qi-die .die-sides {
+  font-size: 10px;
+  color: var(--ink-subtle);
+  font-weight: 600;
+}
+
+.qi-die .die-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink-dark);
+  line-height: 1;
+}
+
+.qi-die .die-source {
+  font-size: 9px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 48px;
+}
+
+/* Hand Area -- bottom move cards */
+.hand-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  height: 96px;
+  min-height: 96px;
+  padding: 4px 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: center;
+}
+
+.hand-card {
+  flex-shrink: 0;
+  height: 82px;
+  min-width: 130px;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.92) 100%);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: transform var(--ease-lift), box-shadow var(--ease-lift), border-color var(--ease-lift);
+  text-align: center;
+}
+
+.hand-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--yang-die);
+}
+
+.hand-card.selected {
+  border-color: var(--yang-die);
+  box-shadow: 0 0 0 2px var(--card-glow), var(--shadow-card-hover);
+  transform: translateY(-6px);
+}
+
+.hand-card strong {
+  font-size: 13px;
+  color: var(--ink-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hand-card .card-meta-line {
+  font-size: 10px;
+  color: var(--ink-subtle);
+}
+
+/* Target selector */
+.target-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.88) 0%, rgba(235, 226, 212, 0.80) 100%);
+  flex-shrink: 0;
+}
+
+.target-select-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-dark);
+}
+
+.target-select-row select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-card);
+  border-radius: 4px;
+  background: var(--bg-parchment-warm);
+  color: var(--ink-dark);
+  font-size: 13px;
+}
+
+/* Collapsible pool */
+.qi-pool-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+}
+
+.qi-pool-collapsed button {
+  padding: 4px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: 4px;
+  background: var(--btn-primary);
+  color: #fff6e8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive (preserved from original, adapted to new theme)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1220px) {
+  body {
+    min-width: 0;
+  }
+
+  .app-shell {
+    padding: 10px;
+  }
+
+  .topbar,
+  .brand {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .combat-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  .combat-left-column { order: 2; flex-direction: row; flex-wrap: wrap; overflow-y: visible; max-height: none; }
+  .combat-right-column { order: 3; flex-direction: row; flex-wrap: wrap; overflow-y: visible; max-height: none; }
+  .combat-center-column { order: 1; }
+
+  .qi-zone-horizontal {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: auto;
+  }
+  .qi-zone-section { flex: 1 1 auto; min-width: 200px; }
+  .slot-drop-zones { flex-wrap: wrap; }
+
+  .desk,
+  .room-grid,
+  .qi-layout,
+  .track-row,
+  .fighters,
+  .inventory-tabs,
+  .form-grid,
+  .lock-slots,
+  .six-roots-grid {
+    grid-template-columns: 1fr;
+  }
+
+/* ==========================================================================
+   Combat Layout Refinements
+   ========================================================================== */
+
+/* Scrollable card area within left/right columns */
+.combat-cards-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* Fixed drawer buttons at bottom of left column */
+.combat-drawer-buttons {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--divider);
+}
+
+.combat-drawer-buttons button {
+  padding: 7px 10px;
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--bg-parchment-warm) 0%, rgba(240, 233, 218, 0.88) 100%);
+  color: var(--ink-dark);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.combat-drawer-buttons button:hover,
+.combat-drawer-buttons button.active {
+  background: linear-gradient(180deg, rgba(212, 132, 58, 0.12) 0%, rgba(212, 132, 58, 0.05) 100%);
+  border-color: var(--yang-die, #d4843a);
+  box-shadow: 0 0 0 1px rgba(212, 132, 58, 0.25);
+}
+
+/* ==========================================================================
+   Response Window (Intercept / React)
+   ========================================================================== */
+
+.response-window {
+  flex-shrink: 0;
+  border: 1px solid var(--yang-die, #d4843a);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, rgba(250, 243, 227, 0.95) 0%, rgba(245, 236, 216, 0.90) 100%);
+  box-shadow: 0 2px 12px rgba(212, 132, 58, 0.18);
+  animation: windowAppear 300ms ease-out;
+}
+
+.response-window.intercept-window {
+  border-color: var(--die-yin, #3a5c7a);
+  box-shadow: 0 2px 12px rgba(58, 92, 122, 0.22);
+}
+
+@keyframes windowAppear {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.response-window-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.response-window-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skip-button {
+  padding: 4px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: 4px;
+  background: var(--bg-parchment-warm);
+  color: var(--ink-dark);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.skip-button:hover {
+  background: rgba(212, 132, 58, 0.1);
+  border-color: var(--yang-die, #d4843a);
+}
+
+.response-cards {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.response-card.highlighted {
+  border-color: var(--yang-die, #d4843a);
+  box-shadow: 0 0 0 2px rgba(212, 132, 58, 0.3), var(--shadow-card-hover);
+  cursor: pointer;
+}
+
+.response-window.intercept-window .response-card.highlighted {
+  border-color: var(--die-yin, #3a5c7a);
+  box-shadow: 0 0 0 2px rgba(58, 92, 122, 0.3), var(--shadow-card-hover);
+}
+
+/* ==========================================================================
+   Timer Ring
+   ========================================================================== */
+
+.timer-ring-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.timer-ring-svg {
+  flex-shrink: 0;
+}
+
+.timer-ring-text {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 26px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Declaration Preview
+   ========================================================================== */
+
+.declaration-preview {
+  flex-shrink: 0;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.92) 0%, rgba(235, 226, 212, 0.86) 100%);
+}
+
+.declaration-preview .preview-header {
+  margin-bottom: 4px;
+}
+
+.declaration-preview .preview-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.declaration-preview .preview-body p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-dark);
+}
+
+.declaration-preview .preview-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ink-subtle);
+}
+
+/* ==========================================================================
+   Dice to Rest Animation
+   ========================================================================== */
+
+@keyframes dieToRest {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  60%  { transform: translateY(-10px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(60px) scale(0.85); opacity: 0.25; }
+}
+
+.die-to-rest {
+  animation: dieToRest 600ms ease-in forwards;
+  pointer-events: none;
+}
+
+/* 3D dice tray — pure visual layer behind HTML dice */
+.dice-tray-visual {
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.88;
+  height: 110px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.dice-tray-visual canvas {
+  pointer-events: none !important;
+}
+
+/* Qi zone horizontal layout */
+.qi-zone-horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: stretch;
+  height: 170px;
+  flex-shrink: 0;
+}
+
+.qi-zone-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-panel);
+  border-radius: 8px;
+  background: rgba(245, 240, 232, 0.45);
+  overflow: hidden;
+  position: relative;
+}
+
+.qi-sea-section {
+  flex: 2;
+  min-width: 300px;
+}
+
+.qi-temp-section {
+  flex: 0.7;
+  min-width: 90px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-subtle);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.section-dice {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-content: start;
+  min-height: 0;
+  z-index: 1;
+  position: relative;
+}
+
+  .qi-center {
+    display: contents;
+  }
+
+  .temp-area {
+    order: 1;
+  }
+
+  .lock-area {
+    order: 2;
+  }
+
+  .qi-sea {
+    order: 3;
+  }
+
+  .qi-rest,
+  .qi-pool-strip {
+    order: 4;
+  }
+
+  .versus {
+    width: 100%;
+    height: 48px;
+    border-radius: 8px;
+  }
+
+  .flow-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-entry {
+    justify-content: stretch;
+  }
+
+  .inventory-launcher {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .inventory-popover {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+    max-height: 76vh;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Print (optional)
+   -------------------------------------------------------------------------- */
+@media print {
+  .app-shell {
+    background: #fff;
+    color: #000;
+  }
+
+  .topbar,
+  .drawer-layer,
+  .modal-backdrop,
+  .drawer-toolbar {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   R6 Hotfix: hidden action timing + constrained qi dice desk
+   -------------------------------------------------------------------------- */
+.action-state-hint {
+  padding: 4px 8px;
+  color: var(--ink-subtle);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.qi-zone-horizontal {
+  display: grid;
+  grid-template-columns: minmax(300px, 2fr) minmax(300px, 1.8fr) minmax(90px, 0.5fr);
+  grid-template-rows: minmax(136px, 1fr) auto;
+  gap: 8px;
+  height: auto;
+  min-height: 188px;
+  padding: 8px;
+  align-items: stretch;
+}
+
+.qi-center-column {
+  display: grid;
+  grid-template-rows: minmax(44px, 0.32fr) minmax(112px, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.qi-sea-section {
+  min-width: 0;
+  flex: initial;
+}
+
+.qi-temp-section {
+  min-width: 0;
+  width: auto;
+  flex: initial;
+}
+
+.qi-rest-section {
+  min-width: 140px;
+  width: auto;
+  flex: initial;
+}
+
+.qi-locked-section {
+  grid-column: 3;
+  min-height: 72px;
+}
+
+.qi-pool-strip {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(107, 75, 45, 0.22);
+  border-radius: 8px;
+  background: rgba(245, 240, 232, 0.62);
+  padding: 6px 8px;
+}
+
+.qi-pool-strip summary {
+  cursor: pointer;
+  color: var(--ink-subtle);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.qi-warning {
+  margin-left: 6px;
+  color: var(--hp-red);
+}
+
+.inline-roll-button {
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.slot-hint {
+  margin: 0;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(128, 58, 42, 0.10);
+  color: var(--hp-red);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+
+.slot-drop-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-height: 112px;
+}
+
+.slot-drop-zone {
+  width: auto;
+  min-height: 112px;
+  padding: 8px;
+}
+
+.slot-drop-zone.drag-over-valid {
+  border-color: var(--yang-die);
+  box-shadow: inset 0 0 0 2px rgba(212, 132, 58, 0.25), 0 0 14px rgba(212, 132, 58, 0.22);
+}
+
+.slot-drop-zone.drag-over-invalid {
+  border-color: var(--hp-red);
+  box-shadow: inset 0 0 0 2px rgba(128, 58, 42, 0.22);
+  animation: slotRejectShake 180ms ease-in-out;
+}
+
+.slot-placeholder {
+  color: rgba(255, 246, 232, 0.62);
+  font-size: 11px;
+}
+
+.qi-die {
+  touch-action: none;
+}
+
+.qi-die.not-draggable {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.qi-die.not-draggable:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.qi-die.temporary .die-source {
+  opacity: 0;
+}
+
+@keyframes slotRejectShake {
+  0%, 100% { transform: translateX(0); }
+  35% { transform: translateX(-2px); }
+  70% { transform: translateX(2px); }
+}
+
+@media (max-width: 980px) {
+  .qi-zone-horizontal {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .qi-center-column {
+    grid-row: 1;
+  }
+
+  .qi-sea-section {
+    grid-row: 2;
+  }
+
+  .qi-rest-section,
+  .qi-locked-section,
+  .qi-pool-strip {
+    grid-column: 1;
+  }
+}
+
+/* Desktop sizing pass: keep the whole combat desk inside common laptop windows. */
+.app-shell {
+  padding: 8px 10px;
+}
+
+.game-desk {
+  gap: 6px;
+  width: min(100%, 1480px);
+  margin: 0 auto;
+}
+
+.combat-layout {
+  grid-template-columns: minmax(180px, 0.72fr) minmax(420px, 1.8fr) minmax(188px, 0.76fr);
+  gap: 8px;
+}
+
+.combat-center-column {
+  gap: 8px;
+}
+
+.hand-area {
+  height: 84px;
+  gap: 6px;
+}
+
+.hand-card {
+  min-height: 68px;
+}
+
+/* R7: top tool bar replaces bottom/side drawer launchers. */
+.app-tool-topbar {
+  min-height: 48px;
+  flex-shrink: 0;
+  gap: 10px;
+  padding: 6px 10px;
+}
+
+.topbar-brand {
+  color: var(--ink-light);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.app-tool-topbar .topbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.app-tool-topbar .topbar-center button {
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.app-tool-topbar .topbar-center button.active {
+  border-color: var(--yang-die);
+  background: linear-gradient(180deg, rgba(212, 132, 58, 0.35), rgba(92, 58, 30, 0.85));
+  color: #fff6e8;
+  box-shadow: 0 0 12px rgba(212, 132, 58, 0.28);
+}
+
+.drawer-toolbar,
+.combat-drawer-buttons {
+  display: none !important;
+}
+
+/* R7: qi dice are dice objects, not number boxes. */
+.qi-dice-tray-container {
+  border: 1px solid rgba(107, 75, 45, 0.28);
+  background:
+    radial-gradient(circle at 45% 28%, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(28, 23, 18, 0.95), rgba(16, 14, 12, 0.96));
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.38);
+}
+
+.qi-die {
+  border-radius: 12px;
+  border-width: 2px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 5px 12px rgba(0,0,0,0.24);
+}
+
+.qi-die.die-yin {
+  background: linear-gradient(160deg, #282828, #050505);
+  color: #fff;
+  border-color: #111;
+}
+
+.qi-die.die-yang {
+  background: linear-gradient(160deg, #fffdf4, #d9d2c1);
+  color: #17120d;
+  border-color: #9d927e;
+}
+
+.qi-die.die-raw {
+  background: linear-gradient(160deg, #2568a5, #12385f);
+  color: #f2c14e;
+  border-color: #f2c14e;
+}
+
+.qi-die.selected {
+  outline: 2px solid #ffd76b;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(255, 215, 107, 0.35), 0 0 18px rgba(255, 215, 107, 0.38);
+}
+
+.qi-die .die-value,
+.qi-die .die-sides {
+  color: inherit;
+}
+
+.card-attr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.card-attr-grid span,
+.card-public-note {
+  border: 1px solid rgba(107, 75, 45, 0.18);
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: rgba(255, 250, 240, 0.48);
+}
+
+.card-public-note {
+  font-size: 11px;
+  color: var(--ink-subtle);
+}
+
+.drawer-content {
+  display: grid;
+  gap: 12px;
+}
+
+.drawer-content .inventory-tabs,
+.drawer-content.action-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.inventory-group,
+.six-root-detail,
+.enemy-card {
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(250, 245, 235, 0.66);
+}
+
+/* Final UI overhaul overrides: locked desktop combat frame and game-style drawers. */
+.combat-layout {
+  display: grid !important;
+  grid-template-columns: 48px 200px minmax(420px, 1fr) 200px 48px !important;
+  gap: 10px !important;
+  align-items: stretch;
+}
+
+.combat-layout::before,
+.combat-layout::after {
+  content: "";
+  min-height: 100%;
+  border: 1px dashed rgba(115, 82, 45, 0.18);
+  border-radius: 10px;
+  background: rgba(39, 26, 16, 0.03);
+}
+
+.combat-layout::before { grid-column: 1; grid-row: 1; }
+.combat-layout::after { grid-column: 5; grid-row: 1; }
+.combat-left-column { grid-column: 2 !important; }
+.combat-center-column { grid-column: 3 !important; min-width: 0; position: relative; }
+.combat-right-column { grid-column: 4 !important; }
+
+/* Side strips for future drawer trigger buttons */
+.side-strip-left,
+.side-strip-right {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.qi-zone-horizontal {
+  height: 170px !important;
+  min-height: 170px !important;
+  grid-template-columns: minmax(300px, 1.35fr) minmax(380px, 2.0fr) 100px !important;
+  align-items: stretch;
+}
+
+.temp-qi-panel {
+  min-height: 38px !important;
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+}
+
+.rest-panel { min-width: 128px; }
+.pool-collapsed { min-height: 28px !important; }
+
+.hand-area {
+  height: 96px !important;
+  min-height: 96px !important;
+  align-items: stretch;
+}
+
+.hand-area > .primary-action {
+  display: none !important;
+}
+
+.hand-card {
+  min-width: 92px !important;
+  width: 96px;
+  max-width: 116px;
+  cursor: pointer;
+}
+
+.hand-card .card-meta-line {
+  font-size: 10px;
+  color: var(--ink-subtle);
+  line-height: 1.2;
+}
+
+.hand-card .card-effect-line {
+  display: block;
+  color: rgba(57, 43, 31, 0.72);
+  font-size: 12px;
+  line-height: 1.25;
+  margin-top: 6px;
+  max-height: 32px;
+  overflow: hidden;
+}
+
+.hand-card.card-unavailable {
+  filter: grayscale(0.72);
+  opacity: 0.56;
+}
+
+/* Reflection (返照) hand card -- special blue accent for the emergency bailout */
+.hand-card.reflection-hand-card {
+  border-color: var(--resolve-blue, #4a7a9e);
+  background: linear-gradient(180deg, rgba(74, 122, 158, 0.15) 0%, rgba(74, 122, 158, 0.06) 100%);
+}
+
+.hand-card.reflection-hand-card:hover {
+  border-color: #4a7a9e;
+  box-shadow: 0 0 12px rgba(74, 122, 158, 0.3);
+}
+
+.target-line-overlay {
+  position: relative;
+  z-index: 2;
+  padding: 6px 8px;
+}
+
+.declared-target-line {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content 1fr max-content;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(155, 115, 55, 0.48);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 249, 231, 0.92), rgba(232, 211, 167, 0.55));
+  box-shadow: 0 6px 18px rgba(70, 47, 24, 0.14);
+}
+
+.declared-target-line i {
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8f5b2d, transparent);
+}
+
+.character-card > .card-attr-grid + .card-status-row {
+  display: none;
+}
+
+.card-equip {
+  display: none !important;
+}
+
+.card-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 6px;
+  min-height: 22px;
+}
+
+.card-status-row.empty span {
+  color: rgba(58, 45, 32, 0.45);
+  font-size: 12px;
+}
+
+.card-status-badge {
+  border-radius: 999px;
+  padding: 1px 6px;
+  border: 1px solid rgba(90, 64, 36, 0.22);
+  font-size: 10px;
+  line-height: 1.4;
+  max-height: 18px;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.card-status-badge.overflow {
+  background: #392719;
+  color: #f8ead1;
+}
+
+/* Status colors are now set individually via .status-{key} classes above */
+
+.center-drawer {
+  width: 400px;
+  max-width: 640px;
+}
+
+.inventory-drawer-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inventory-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(118, 83, 43, 0.28);
+  border-radius: 8px;
+  background: rgba(248, 239, 218, 0.78);
+}
+
+.backpack-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 48px);
+  grid-auto-rows: 48px;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(52, 34, 20, 0.08);
+}
+
+.backpack-slot {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(103, 70, 39, 0.34);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(252, 245, 229, 0.92), rgba(216, 193, 147, 0.44));
+  box-shadow: inset 0 2px 6px rgba(76, 48, 26, 0.12);
+}
+
+.backpack-slot.filled {
+  cursor: pointer;
+}
+
+.backpack-slot:disabled {
+  opacity: 0.58;
+}
+
+.item-icon-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-weight: 700;
+  color: #3d2a18;
+}
+
+.item-qty {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #24160d;
+  color: #ffe8ae;
+  font-size: 11px;
+}
+
+.item-equipped-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #138143;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.dice-tray-visual,
+.dice-tray-visual canvas,
+.qi-dice-tray-container,
+.qi-dice-tray-container canvas {
+  pointer-events: auto !important;
+}
+
+.qi-dice-tray-container canvas {
+  cursor: grab;
+}
+
+.qi-dice-tray-container canvas:active {
+  cursor: grabbing;
+}
+
+.qi-zone-horizontal.qi-zone-3d-layout {
+  display: grid !important;
+  grid-template-columns: minmax(820px, 1fr) 220px !important;
+  grid-template-rows: auto auto minmax(540px, 1fr) auto !important;
+  height: min(76vh, 760px) !important;
+  min-height: 680px !important;
+  gap: 12px !important;
+  background: #050505 !important;
+  border-color: rgba(235, 198, 115, 0.38) !important;
+  box-shadow: inset 0 0 48px rgba(0, 0, 0, 0.9), 0 12px 40px rgba(0, 0, 0, 0.35) !important;
+}
+
+.qi-zone-horizontal.qi-zone-3d-layout > .panel-title {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  color: #f7e7bb;
+}
+
+.qi-zone-horizontal.qi-zone-3d-layout > .slot-hint {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.qi-operation-board {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: radial-gradient(circle at center, #15120f 0%, #080808 58%, #000 100%) !important;
+  border-color: rgba(232, 198, 126, 0.5) !important;
+  padding: 10px !important;
+}
+
+.qi-board-status,
+.qi-board-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #f2d68f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.qi-board-status span,
+.qi-board-counts span {
+  border: 1px solid rgba(232, 198, 126, 0.28);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.operation-dice-tray {
+  flex: 1;
+  height: auto !important;
+  min-height: 520px;
+  opacity: 1;
+  pointer-events: auto !important;
+  background: #050505 !important;
+  border: 1px solid rgba(232, 198, 126, 0.28);
+  box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.85);
+}
+
+.operation-dice-tray .qi-dice-tray-container {
+  height: 100% !important;
+  min-height: 520px !important;
+  background: #050505 !important;
+}
+
+.operation-dice-tray canvas,
+.qi-zone-3d-layout canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.qi-side-rest {
+  grid-column: 2;
+  grid-row: 3;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  min-height: 0;
+  padding: 10px;
+  border: 1px solid rgba(232, 198, 126, 0.28);
+  border-radius: 8px;
+  background: rgba(9, 9, 8, 0.92);
+  color: #f7e7bb;
+}
+
+.qi-side-rest .qi-dice-tray-container {
+  flex: 1;
+  height: 100% !important;
+  min-height: 360px !important;
+  background: #050505 !important;
+}
+
+.qi-zone-3d-layout .qi-pool-strip {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  border: 1px solid rgba(232, 198, 126, 0.28);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(9, 9, 8, 0.92);
+  color: #f7e7bb;
+}
+
+.pool-dice-text {
+  margin-top: 6px;
+  color: rgba(247, 231, 187, 0.72);
+  font-size: 12px;
+}
+
+/* R7 correction: player tools belong at the top of the game desk. */
+.game-desk > .drawer-toolbar {
+  display: flex !important;
+  position: relative !important;
+  inset: auto !important;
+  justify-content: flex-start;
+  padding: 6px 8px;
+  border-radius: 8px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.18);
+}
+
+.qi-zone-horizontal.qi-zone-3d-layout {
+  grid-template-rows: auto auto minmax(430px, 1fr) auto !important;
+  height: min(62vh, 620px) !important;
+  min-height: 570px !important;
+}
+
+.operation-dice-tray {
+  min-height: 420px !important;
+}
+
+.operation-dice-tray .qi-dice-tray-container {
+  min-height: 420px !important;
+}
+
+.qi-side-rest .qi-dice-tray-container {
+  min-height: 300px !important;
+}
+
+/* ==========================================================================
+   Drawer Enhancements -- Library, Settings, InnerArt, Moves, Statuses, DM
+   ========================================================================== */
+
+/* ---- Six Roots Detail Grid ---- */
+.six-root-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.7);
+  border: 1px solid rgba(107, 75, 45, 0.18);
+}
+
+.six-root-icon {
+  font-size: 18px;
+  font-weight: 700;
+  color: #5c3a1e;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(212, 132, 58, 0.15);
+}
+
+.six-root-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+}
+
+.six-root-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-dark);
+}
+
+.six-roots-summary .six-roots-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+/* ---- Inner Art Card ---- */
+.inner-art-card {
+  border: 1px solid rgba(107, 75, 45, 0.24);
+  border-radius: 8px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(250, 245, 235, 0.94) 0%, rgba(240, 233, 218, 0.88) 100%);
+}
+
+.inner-art-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(107, 75, 45, 0.15);
+}
+
+.inner-art-header strong {
+  font-size: 15px;
+  color: var(--ink-dark);
+}
+
+.inner-art-body {
+  display: grid;
+  gap: 6px;
+}
+
+.inner-art-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.inner-art-stat-row .stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+}
+
+.inner-art-stat-row .stat-value {
+  font-size: 12px;
+  color: var(--ink-dark);
+  text-align: right;
+}
+
+.inner-art-acupoints {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.acupoint-dot {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(212, 132, 58, 0.15);
+  color: #5c3a1e;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+}
+
+.inner-art-attr-section {
+  margin-top: 2px;
+}
+
+.inner-art-attr-section .stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.inner-art-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.inner-art-table th,
+.inner-art-table td {
+  padding: 3px 5px;
+  border-bottom: 1px solid rgba(107, 75, 45, 0.12);
+  text-align: left;
+}
+
+.inner-art-table th {
+  font-weight: 600;
+  color: var(--ink-subtle);
+  font-size: 10px;
+}
+
+.inner-art-divider {
+  border: none;
+  border-top: 1px dashed rgba(107, 75, 45, 0.18);
+  margin: 8px 0 4px;
+}
+
+/* ---- Tier & Grade Badges ---- */
+.tier-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(107, 75, 45, 0.12);
+  color: #5c3a1e;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+}
+
+.tier-badge.tier-俗家 { background: rgba(107, 139, 92, 0.18); color: #3a5c2e; }
+.tier-badge.tier-行家 { background: rgba(212, 132, 58, 0.18); color: #8b5a20; }
+.tier-badge.tier-神功 { background: rgba(194, 168, 78, 0.2); color: #7a5c1e; }
+.tier-badge.tier-禁功 { background: rgba(194, 58, 46, 0.15); color: #8b2a2a; }
+
+.grade-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  background: rgba(58, 92, 122, 0.15);
+  color: #3a5c7a;
+}
+
+.form-position-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(212, 132, 58, 0.12);
+  color: #8b5a20;
+}
+
+.yin-yang-label {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(107, 75, 45, 0.08);
+  color: var(--ink-subtle);
+}
+
+.attachment-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  background: rgba(58, 92, 122, 0.14);
+  color: #3a5c7a;
+}
+
+/* ---- Full Move Card (drawer) ---- */
+.move-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.move-card-badges {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.move-card-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--ink-subtle);
+  margin-bottom: 4px;
+}
+
+.move-card-detail {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.move-detail-line {
+  font-size: 11px;
+  color: var(--ink-subtle);
+  line-height: 1.4;
+}
+
+.move-card-effect {
+  font-size: 12px;
+  color: var(--ink-dark);
+  margin-bottom: 6px;
+  padding: 6px;
+  border-radius: 4px;
+  background: rgba(212, 132, 58, 0.07);
+  border-left: 2px solid rgba(212, 132, 58, 0.3);
+}
+
+.move-card-triggers {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.move-trigger-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+}
+
+.move-trigger-line {
+  font-size: 11px;
+  color: var(--ink-dark);
+  padding-left: 8px;
+  border-left: 2px solid rgba(107, 75, 45, 0.2);
+  line-height: 1.35;
+}
+
+.move-card-footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--ink-subtle);
+  padding-top: 4px;
+  border-top: 1px solid rgba(107, 75, 45, 0.12);
+}
+
+/* ---- Full Status Card (drawer) ---- */
+.status-card-full {
+  border: 1px solid rgba(107, 75, 45, 0.22);
+  border-radius: 8px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(250, 245, 235, 0.94) 0%, rgba(240, 233, 218, 0.88) 100%);
+}
+
+.status-card-full.status-card-chizhi { border-left: 4px solid #8a7a6a; }
+.status-card-full.status-card-pokou { border-left: 4px solid #c23a2e; }
+.status-card-full.status-card-shiheng { border-left: 4px solid #d4843a; }
+.status-card-full.status-card-liuxue { border-left: 4px solid #c23a2e; }
+.status-card-full.status-card-zhongdu { border-left: 4px solid #6b3a8a; }
+.status-card-full.status-card-ranshao { border-left: 4px solid #d4843a; }
+.status-card-full.status-card-dongjie { border-left: 4px solid #4a7a9e; }
+.status-card-full.status-card-xuanyun { border-left: 4px solid #8b6a3a; }
+.status-card-full.status-card-fengxue { border-left: 4px solid #3a2a5c; }
+
+.status-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.status-badge-lg {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.status-hidden-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(107, 75, 45, 0.15);
+  color: var(--ink-subtle);
+}
+
+.status-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-subtle);
+  margin-bottom: 6px;
+}
+
+.status-permanent {
+  font-style: italic;
+}
+
+.status-card-effects {
+  margin-bottom: 6px;
+}
+
+.status-effects-label,
+.status-decay-label,
+.status-removal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+}
+
+.status-effects-list {
+  margin: 3px 0 0 16px;
+  padding: 0;
+  font-size: 11px;
+  color: var(--ink-dark);
+  line-height: 1.45;
+}
+
+.status-card-decay,
+.status-card-removal {
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--ink-dark);
+}
+
+/* ---- Library Drawer ---- */
+.library-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(107, 75, 45, 0.15);
+}
+
+.library-tab-btn {
+  padding: 4px 12px;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 6px;
+  background: rgba(245, 240, 232, 0.6);
+  color: var(--ink-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.library-tab-btn:hover {
+  background: rgba(212, 132, 58, 0.12);
+  color: var(--ink-dark);
+}
+
+.library-tab-btn.active {
+  background: rgba(92, 58, 30, 0.85);
+  color: #fff6e8;
+  border-color: rgba(92, 58, 30, 0.6);
+}
+
+.library-tab-content {
+  display: grid;
+  gap: 10px;
+}
+
+.library-search {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(107, 75, 45, 0.25);
+  border-radius: 6px;
+  background: rgba(250, 245, 235, 0.8);
+  color: var(--ink-dark);
+  font-size: 12px;
+}
+
+.library-move-list,
+.library-status-list {
+  display: grid;
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.library-equip-section {
+  display: grid;
+  gap: 8px;
+}
+
+/* ---- Term Glossary ---- */
+.term-group {
+  border: 1px solid rgba(107, 75, 45, 0.16);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: rgba(250, 245, 235, 0.6);
+}
+
+.term-group-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c3a1e;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(107, 75, 45, 0.12);
+}
+
+.term-entry {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.term-name {
+  font-weight: 600;
+  color: var(--ink-dark);
+  white-space: nowrap;
+}
+
+.term-def {
+  color: var(--ink-subtle);
+}
+
+/* ---- Settings Drawer ---- */
+.settings-section {
+  border: 1px solid rgba(107, 75, 45, 0.16);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(250, 245, 235, 0.94);
+}
+
+.settings-section-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5c3a1e;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(107, 75, 45, 0.12);
+}
+
+.settings-number-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-dark);
+}
+
+.settings-number-row input {
+  width: 60px;
+  min-height: 30px;
+  text-align: center;
+}
+
+.lan-status-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-dark);
+}
+
+.lan-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8a7a6a;
+}
+
+.lan-status-dot.connected {
+  background: #4a7a5c;
+  box-shadow: 0 0 6px rgba(74, 122, 92, 0.4);
+}
+
+.danger-btn {
+  background: rgba(194, 58, 46, 0.12) !important;
+  border-color: rgba(194, 58, 46, 0.35) !important;
+  color: #8b2a2a !important;
+}
+
+.danger-btn:hover {
+  background: rgba(194, 58, 46, 0.22) !important;
+}
+
+/* ---- Distance Pair Card (DM drawer) ---- */
+.distance-pair-card {
+  border: 1px solid rgba(107, 75, 45, 0.22);
+  border-radius: 8px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(250, 245, 235, 0.94) 0%, rgba(238, 228, 210, 0.88) 100%);
+}
+
+.distance-pair-actors {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.distance-actor-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-dark);
+}
+
+.distance-arrow {
+  font-size: 10px;
+  color: var(--ink-subtle);
+  letter-spacing: 2px;
+}
+
+.distance-pair-detail {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.distance-band-pill {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(212, 132, 58, 0.15);
+  color: #8b5a20;
+}
+
+.height-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(58, 92, 122, 0.12);
+  color: #3a5c7a;
+}
+
+.entangled-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(194, 58, 46, 0.12);
+  color: #8b2a2a;
+}
+
+.distance-pair-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.distance-btn {
+  font-size: 10px;
+  padding: 2px 7px;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 4px;
+  background: rgba(245, 240, 232, 0.6);
+  color: var(--ink-subtle);
+  cursor: pointer;
+}
+
+.distance-btn:hover {
+  background: rgba(212, 132, 58, 0.15);
+  color: var(--ink-dark);
+}
+
+.distance-btn.active {
+  background: rgba(92, 58, 30, 0.85);
+  color: #fff6e8;
+  border-color: rgba(92, 58, 30, 0.6);
+}
+
+/* ---- DM Ruling Drawer ---- */
+.ruling-status-section {
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(250, 245, 235, 0.94);
+  display: grid;
+  gap: 6px;
+}
+
+.ruling-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ruling-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+}
+
+.ruling-value {
+  font-size: 12px;
+  color: var(--ink-dark);
+}
+
+.ruling-section {
+  border: 1px solid rgba(107, 75, 45, 0.16);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(248, 243, 230, 0.85);
+}
+
+.ruling-section-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5c3a1e;
+  margin-bottom: 6px;
+}
+
+/* ---- momentum pill small: defined earlier in consolidated block ---- */
+
+/* ---- Section Divider ---- */
+.library-section-divider {
+  display: flex;
+  align-items: center;
+  grid-column: 1 / -1;
+  margin: 6px 0;
+}
+
+.library-section-divider::before,
+.library-section-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(107, 75, 45, 0.2);
+}
+
+.section-divider-label {
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Status badge colors (consistent with primary definitions above) ---- */
+.status-chizhi  { background: #6b5c4e; }  /* 迟滞 - brown */
+.status-pokou   { background: #8b3a3a; }  /* 破口 - dark red */
+.status-shiheng { background: #d4843a; }  /* 失衡 - orange */
+.status-liuxue  { background: #c23a2e; }  /* 流血 - red */
+.status-zhongdu { background: #7a3a8b; }  /* 中毒 - purple */
+.status-ranshao { background: #d45a2a; }  /* 燃烧 - orange-red */
+.status-dongjie { background: #4a7a9e; }  /* 冻结 - blue */
+.status-xuanyun { background: #c2a84e; }  /* 眩晕 - yellow */
+.status-fengxue { background: #3a2a5c; }  /* 封穴 - dark purple */
