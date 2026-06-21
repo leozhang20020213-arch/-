@@ -1,0 +1,39 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath' | { read -r f; case \"$f\" in *.ts|*.tsx) echo \"  [CC] TS: $f\"; cd \"D:/trpg/大梁武侠/app_design/daliang-trpg-combat\" && npx tsc --noEmit 2>&1 | head -12 || true ;; *.css) echo \"  [CC] CSS: $f\" ;; *.json) echo \"  [CC] JSON: $f\" ;; esac } 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "TS check..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"大梁江湖TRPG 开发 | daliang-trpg-combat | fable@DeepSeek v4 Pro\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:legacy)",
+      "Bash(npm run dev)",
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(npx vite *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
