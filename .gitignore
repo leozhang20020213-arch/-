@@ -1,0 +1,38 @@
+# Local workspace probes
+_docker_direct_touch_test.txt
+_simple_mount_test*.txt
+_openhands_permission_test/
+
+# Dependencies and build output
+node_modules/
+dist/
+.vite/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Local environment/editor files
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
+Thumbs.db
+thumbs.db
+
+# Generated archives can be recreated from source packages.
+# Keep existing rulebook docs, spreadsheets, reports, and source files tracked.
+*.7z
+*.zip
+
+# Local tool runtimes are too large for the project repository.
+大梁武侠/app_design/tools/
+
+# Godot generated local cache/import metadata
+.godot/
+.import/
+*.import
+
+# Python generated cache
+__pycache__/
+*.pyc

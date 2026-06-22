@@ -1,0 +1,68 @@
+你现在执行“大梁江湖TRPG_UI_PHASE2：规则字段绑定与交锋主屏验收”。
+
+前提：
+PHASE1 已建立 Godot 1920×1080 Windows 主框架、交锋主屏卡牌操作骨架、小按钮抽屉占位，已停用旧 React/Phaser UI。
+
+最高优先级：
+规则书、世界观、数据库原文。
+
+本阶段只做：
+1. 建立规则字段只读绑定层。
+2. 建立 rules_ui_manifest.json，锁死页面术语、字段和占位。
+3. 建立 mock_combat_state.json，用占位数据驱动交锋主屏。
+4. 接入基础 Theme/NinePatchRect 占位结构，但不挑正式美术素材。
+5. 生成交锋主屏截图 phase2_main.png。
+6. 输出 README_UI_PHASE2.md。
+
+硬性禁止：
+禁止改规则书原文。
+禁止改世界观原文。
+禁止改数据库原始字段。
+禁止改计算层。
+禁止新增规则术语。
+禁止把六根放回交锋主屏小卡。
+禁止逐点点击气骰。
+禁止把调息、返照、取物、争夺物、便行做成底部裸按钮。
+禁止地图、格子、Token坐标、地形、路径、战棋移动。
+禁止用滚轮承载交锋主屏核心操作。
+
+必须新增或确认存在：
+app_design/daliang-trpg-godot-r6/data/rules_ui_manifest.json
+app_design/daliang-trpg-godot-r6/data/mock_combat_state.json
+app_design/daliang-trpg-godot-r6/scripts/rules_manifest_loader.gd
+app_design/daliang-trpg-godot-r6/scripts/mock_combat_state_loader.gd
+app_design/daliang-trpg-godot-r6/themes/daliang_placeholder_theme.tres
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase2_main.png
+app_design/daliang-trpg-godot-r6/README_UI_PHASE2.md
+
+rules_ui_manifest.json 必须包含：
+交锋阶段：准备、宣言、计算、响应、结算、势变化。
+气骰五区：气池、气海、锁气、息库、临气区。
+势面：阴盛、阳盛、合势、圆融、崩溃、失势。
+六根/内属性：顶门、目窍、心口、丹田、命门、步根。
+交锋小卡字段：角色名、势、状态、气骰摘要、距离、纠缠、当前宣言/响应。
+交锋小卡禁用字段：顶门、目窍、心口、丹田、命门、步根。
+卡牌类型：招式卡、响应卡、调息卡、返照卡、取物卡、争夺物卡、便行卡。
+小按钮：人物、背包、装备、内功、外功、法门、规则、日志、DM。
+目标线类型：目标线、纠缠线、响应线、第三方护人线。
+占位格式：【占位：字段名】。
+
+交锋主屏必须保持：
+左侧玩家卡区，右侧敌人卡区，中间交锋裁决区，底部卡牌操作区。
+交锋小卡不得出现六根。
+气骰只作为资源状态与锁气结果摘要显示，不允许逐点点击。
+调息、返照、取物、争夺物、便行必须作为卡牌显示。
+人物、背包、装备、内功、外功、法门、规则、日志、DM 必须作为小按钮显示，并打开浮动抽屉占位。
+
+README_UI_PHASE2.md 必须逐项回答：
+1. 是否仍然停用旧 React/Phaser UI？
+2. 是否仍然未改规则书、世界观、数据库、计算层？
+3. 是否生成 rules_ui_manifest.json？
+4. 是否生成 mock_combat_state.json？
+5. 交锋小卡是否没有出现顶门、目窍、心口、丹田、命门、步根？
+6. 气骰是否没有逐点点击？
+7. 调息、返照、取物、争夺物、便行是否仍在卡牌区？
+8. 小按钮是否包含人物、背包、装备、内功、外功、法门、规则、日志、DM？
+9. 是否生成 phase2_main.png 截图？
+10. 是否列出全部美术素材槽位？
+11. 是否列出下一阶段计划？

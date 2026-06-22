@@ -1,0 +1,295 @@
+import type { Actor, CombatState, QiDie, SceneTrack } from "../combat/types";
+
+const playerMoves = [
+  {
+    id: "move-rain-step-cut",
+    name: "雨步斜斩",
+    actionType: "formal" as const,
+    minDice: 2,
+    baseDamage: 4,
+    summary: "正式出手。若成招，对目标造成气血4；适合作为样例主攻。",
+  },
+  {
+    id: "move-watch-bridge",
+    name: "听雨辨桥",
+    actionType: "scene" as const,
+    minDice: 1,
+    trackDelta: 1,
+    summary: "情景行动。成招后解密值+1，用于追查雨夜失镖线索。",
+  },
+];
+
+const enemyMoves = [
+  {
+    id: "move-short-blade",
+    name: "短刀近身",
+    actionType: "formal" as const,
+    minDice: 1,
+    baseDamage: 4,
+    summary: "短兵客主动作。基础气血4，阴值足时可令目标迟滞。",
+  },
+];
+
+export const seedActors: Actor[] = [
+  {
+    id: "pc-shen-qing",
+    name: "沈青",
+    side: "player",
+    momentum: "阴盛",
+    maxHp: 18,
+    hp: 18,
+    stats: { qiBlood: 18, guard: 4, burst: 5, recovery: 3, insight: 4, movement: 5 },
+    sixRoots: { head: 4, eyes: 5, heart: 6, dantian: 5, waist: 4, legs: 5 },
+    activeNeigong: { name: "寒潭诀", acupoint: "心", passiveSummary: "调息后回气 +1" },
+    statuses: [],
+    publicStatuses: [],
+    moves: playerMoves,
+    responses: [
+      {
+        id: "react-cloud-sleeve",
+        name: "云袖卸力",
+        window: "react",
+        minDice: 1,
+        preventDamage: 2,
+        summary: "应招。落果前减轻气血损失2点。",
+      },
+    ],
+    inventory: [
+      {
+        id: "item-bamboo-sword",
+        name: "青竹短剑",
+        category: "equipment",
+        quantity: 1,
+        equipped: true,
+        sourceId: "沈青·青竹短剑",
+        publicNote: "轻便短剑。当前只作为装备许可和来源示例。",
+      },
+      {
+        id: "item-breath-pill",
+        name: "行气丸",
+        category: "medicine",
+        quantity: 2,
+        sourceId: "行气丸临气",
+        grantsTempQi: { nature: "neutral", sides: 6, count: 1 },
+        publicNote: "使用后生成1枚中性临时气骰，进入临气区。",
+      },
+      {
+        id: "item-pass-token",
+        name: "镖局信物",
+        category: "tool",
+        quantity: 1,
+        publicNote: "可用于情景交涉，向镖局或水会证明身份。",
+      },
+      {
+        id: "item-expire-demo",
+        name: "打落短兵",
+        category: "temporary_source",
+        quantity: 1,
+        expiresSourceId: "短兵客·雨步",
+        publicNote: "调试样例：触发短兵客·雨步来源失效。",
+      },
+    ],
+    publicWeakness: "擅长快剑，但在拥挤场地需要明确目标线。",
+    publicNote: "玩家预设角色。轻身快剑，适合测试气骰、宣言和应招。",
+  },
+  {
+    id: "enemy-short-blade",
+    name: "短兵客",
+    side: "enemy",
+    momentum: "阴盛",
+    maxHp: 14,
+    hp: 14,
+    stats: { qiBlood: 14, guard: 3, burst: 4, recovery: 2, insight: 3, movement: 4 },
+    sixRoots: { head: 3, eyes: 4, heart: 4, dantian: 3, waist: 4, legs: 5 },
+    activeNeigong: { name: "阴刃短息", acupoint: "腰", passiveSummary: "近身时截击优先" },
+    statuses: [],
+    publicStatuses: [],
+    hiddenStatuses: [],
+    moves: enemyMoves,
+    responses: [
+      {
+        id: "intercept-wrist-pick",
+        name: "截腕挑锋",
+        window: "intercept",
+        minDice: 1,
+        cancelsAction: true,
+        summary: "截击。对方宣言后、成招前使用；成功时使本次宣言不合法。",
+      },
+      {
+        id: "react-side-slip",
+        name: "侧身卸力",
+        window: "react",
+        minDice: 1,
+        preventDamage: 2,
+        summary: "应招。最低1阴，护体+2，样例中等价为减伤2。",
+      },
+    ],
+    inventory: [
+      {
+        id: "enemy-short-blade-weapon",
+        name: "短刀",
+        category: "equipment",
+        quantity: 1,
+        equipped: true,
+        sourceId: "短兵客·阴刃",
+        publicNote: "公开可见：短兵客依赖此刀近身。",
+        dmNote: "失去短刀后主动作关闭。",
+      },
+    ],
+    publicWeakness: "怕被长兵封距；失去短刀后威胁下降。",
+    hiddenGoal: "拖到巡检注意升高后撤离。",
+    behaviorHint: "优先截击玩家的强宣言，气海不足时保留应招。",
+    entryCondition: "雨夜石桥或旧堤仓伏击时入场。",
+    lootOrClue: "可掉落买主线索、短刀、带泥的布条。",
+    publicNote: "样例敌人。怕长兵封距，若失去短刀主动作关闭。",
+    dmNote: "隐藏弱点：被缴械后不再能使用短刀近身；优先拖到巡检注意升高。",
+  },
+  {
+    id: "enemy-porter",
+    name: "黑衣脚夫",
+    side: "enemy",
+    momentum: "合势",
+    maxHp: 9,
+    hp: 9,
+    stats: { qiBlood: 9, guard: 2, burst: 2, recovery: 2, insight: 2, movement: 4 },
+    sixRoots: { head: 2, eyes: 3, heart: 2, dantian: 3, waist: 4, legs: 5 },
+    activeNeigong: { name: "脚夫行气", acupoint: "腿", passiveSummary: "搬运奔逃时身势 +1" },
+    statuses: [],
+    publicStatuses: [],
+    hiddenStatuses: [],
+    moves: [
+      {
+        id: "move-carry-box",
+        name: "搬箱奔逃",
+        actionType: "quick",
+        minDice: 1,
+        trackDelta: 1,
+        summary: "出手便行。推进危机值+1。",
+      },
+    ],
+    responses: [
+      {
+        id: "intercept-trip-rope",
+        name: "绊索",
+        window: "intercept",
+        minDice: 1,
+        cancelsAction: true,
+        summary: "截击。目标移步失败，宣言取消。",
+      },
+    ],
+    inventory: [
+      {
+        id: "enemy-rope",
+        name: "绊索",
+        category: "tool",
+        quantity: 1,
+        sourceId: "脚夫·绊索",
+        publicNote: "公开可见：腰间有粗麻绳。",
+        dmNote: "用于截击移步或制造危机值。",
+      },
+    ],
+    publicWeakness: "气血低，受伤后优先逃跑。",
+    hiddenGoal: "拖延两轮后把木箱交给买主线索。",
+    behaviorHint: "优先搬箱奔逃，必要时用绊索截击。",
+    entryCondition: "木箱被追到旧堤仓或石桥时出现。",
+    lootOrClue: "水会香口记号、湿脚印方向。",
+    publicNote: "低气血敌人。受伤后优先逃跑。",
+    dmNote: "隐藏目标：拖延两轮后把木箱交给买主线索。",
+  },
+];
+
+export const seedTracks: SceneTrack[] = [
+  {
+    id: "track-clue",
+    name: "解密值",
+    value: 1,
+    max: 4,
+    description: "达到4时查明木箱去向。",
+  },
+  {
+    id: "track-patrol",
+    name: "巡检注意",
+    value: 1,
+    max: 5,
+    hidden: true,
+    description: "达到5时官府介入，镖局名声受损。",
+  },
+  {
+    id: "track-escape",
+    name: "危机值",
+    value: 0,
+    max: 4,
+    description: "达到4时敌人借雨水撤离。",
+  },
+];
+
+export const seedDice: QiDie[] = [
+  die("pc-d1", "沈青·顶门", "pc-shen-qing", "yin", 6),
+  die("pc-d2", "沈青·步根", "pc-shen-qing", "yang", 6),
+  die("pc-d3", "沈青·丹田", "pc-shen-qing", "neutral", 8),
+  die("pc-d4", "沈青·心口", "pc-shen-qing", "yang", 6),
+  die("sb-d1", "短兵客·阴刃", "enemy-short-blade", "yin", 6),
+  die("sb-d2", "短兵客·雨步", "enemy-short-blade", "yin", 6),
+  die("sb-d3", "短兵客·藏势", "enemy-short-blade", "neutral", 8),
+  die("sb-d4", "短兵客·狠劲", "enemy-short-blade", "yang", 6),
+  die("porter-d1", "脚夫·脚力", "enemy-porter", "neutral", 6),
+  die("porter-d2", "脚夫·绊索", "enemy-porter", "yin", 6),
+  die("porter-d3", "脚夫·搬运", "enemy-porter", "yang", 6),
+];
+
+export function createSeedState(): CombatState {
+  return {
+    campaignName: "桥陵镇雨夜失镖",
+    sceneName: "雨夜石桥",
+    sceneGoal: "追回木箱或确认买主，同时避免巡检注意扩大。",
+    round: 1,
+    phase: "setup",
+    momentum: "阴盛",
+    activeActorId: "pc-shen-qing",
+    actors: structuredClone(seedActors),
+    dice: structuredClone(seedDice),
+    tracks: structuredClone(seedTracks),
+    distances: [
+      {
+        id: "dist-shen-porter",
+        fromActorId: "pc-shen-qing",
+        toActorId: "enemy-porter",
+        band: "近身",
+        entangled: false,
+        public: true,
+      },
+      {
+        id: "dist-shen-short-blade",
+        fromActorId: "pc-shen-qing",
+        toActorId: "enemy-short-blade",
+        band: "短距",
+        entangled: false,
+        public: true,
+      },
+    ],
+    logs: [
+      {
+        id: "log-seed",
+        type: "DM_OVERRIDE",
+        round: 1,
+        message: "载入内置样例：桥陵镇雨夜失镖。",
+        public: true,
+        createdAt: Date.now(),
+      },
+    ],
+  };
+}
+
+function die(id: string, sourceName: string, ownerId: string, nature: QiDie["nature"], sides: number): QiDie {
+  return {
+    id,
+    label: `d${sides}`,
+    sourceId: sourceName,
+    sourceName,
+    nature,
+    sides,
+    value: null,
+    zone: "QI_POOL",
+    ownerId,
+  };
+}

@@ -1,0 +1,107 @@
+你现在执行“大梁江湖TRPG_UI_PHASE3：卡牌交互与浮动抽屉”。
+
+前提：
+PHASE2 已完成 rules_ui_manifest.json、mock_combat_state.json、只读绑定层、基础 Theme/NinePatchRect 占位结构和 phase2_main.png 截图。
+
+本阶段只做交互表现细化，不接入真实规则计算，不改规则书、世界观、数据库原始字段或计算层。
+
+目标：
+1. 实现选卡悬浮。
+2. 实现选卡高亮。
+3. 实现可选目标高亮。
+4. 实现目标线/纠缠线/响应线/第三方护人线的可视演示。
+5. 实现宣言/锁气预览浮起。
+6. 实现响应窗口浮起。
+7. 实现结算预览。
+8. 实现卡牌不可用遮罩。
+9. 实现整组投入方案切换占位。
+10. 实现人物、背包、装备、内功、外功、法门、规则、日志、DM 浮动抽屉开合。
+11. 生成 PHASE3 截图。
+12. 输出 README_UI_PHASE3.md。
+
+硬性禁止：
+禁止改规则书原文。
+禁止改世界观原文。
+禁止改数据库原始字段。
+禁止改计算层、规则层、数据层。
+禁止引入真实规则自动裁决。
+禁止把六根放回交锋主屏小卡。
+禁止逐点点击气骰。
+禁止把调息、返照、取物、争夺物、便行做成底部裸按钮。
+禁止地图、格子、Token坐标、地形、路径、战棋移动。
+禁止用滚轮承载交锋主屏核心操作。
+禁止为了动画加入新规则术语。
+禁止为了美术效果改字段名。
+
+必须新增或确认：
+app_design/daliang-trpg-godot-r6/scripts/ui_interaction_state.gd
+app_design/daliang-trpg-godot-r6/scripts/card_view.gd
+app_design/daliang-trpg-godot-r6/scripts/combatant_card_view.gd
+app_design/daliang-trpg-godot-r6/scripts/target_line_view.gd
+app_design/daliang-trpg-godot-r6/scripts/drawer_controller.gd
+app_design/daliang-trpg-godot-r6/data/mock_interaction_cases.json
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_card_hover.png
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_card_selected.png
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_target_selected.png
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_declaration_preview.png
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_response_open.png
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_resolution_preview.png
+app_design/daliang-trpg-godot-r6/docs/screenshots/phase3_drawer_open.png
+app_design/daliang-trpg-godot-r6/README_UI_PHASE3.md
+
+交互状态机固定：
+IDLE
+CARD_SELECTED
+TARGET_SELECTED
+DECLARATION_PREVIEW
+RESPONSE_OPEN
+RESOLUTION_PREVIEW
+
+操作流程固定：
+鼠标移到卡上 → 卡浮起。
+点击卡 → 卡高亮，写入选中卡详情，可选目标高亮。
+点击目标 → 中央出现目标线，进入宣言/锁气预览。
+模拟响应 → 响应窗口浮起。
+模拟结算 → 显示效阶、落果、势变化、气骰去向。
+点击小按钮 → 对应抽屉滑出，其他抽屉关闭。
+
+气骰原则：
+气骰只作为资源状态和锁气结果显示。
+不得逐点点击。
+不得点十点。
+如需调整，只做整组投入方案切换占位。
+
+卡牌区必须保留：
+招式卡、响应卡、调息卡、返照卡、取物卡、争夺物卡、便行卡。
+
+底部小按钮必须保留：
+人物、背包、装备、内功、外功、法门、规则、日志、DM。
+
+交锋小卡仍然只显示：
+角色名、势、状态、气骰摘要、距离、纠缠、当前宣言/响应。
+交锋小卡禁止显示：
+顶门、目窍、心口、丹田、命门、步根。
+
+README_UI_PHASE3.md 必须逐项回答：
+1. 是否仍然停用旧 React/Phaser UI？
+2. 是否仍然未改规则书、世界观、数据库、计算层？
+3. 是否仍然使用 rules_ui_manifest.json 作为 UI 术语来源？
+4. 是否新增 ui_interaction_state.gd？
+5. 是否实现 IDLE / CARD_SELECTED / TARGET_SELECTED / DECLARATION_PREVIEW / RESPONSE_OPEN / RESOLUTION_PREVIEW？
+6. 交锋小卡是否仍然没有出现六根？
+7. 气骰是否仍然没有逐点点击？
+8. 调息、返照、取物、争夺物、便行是否仍然在卡牌区？
+9. 小按钮是否仍然包含人物、背包、装备、内功、外功、法门、规则、日志、DM？
+10. 是否实现卡牌悬浮？
+11. 是否实现卡牌选中？
+12. 是否实现目标高亮？
+13. 是否实现目标线/纠缠线/响应线/第三方护人线至少一种可视演示？
+14. 是否实现宣言/锁气预览浮起？
+15. 是否实现响应窗口浮起？
+16. 是否实现结算预览？
+17. 是否实现浮动抽屉开合？
+18. 是否生成全部 PHASE3 截图？
+19. 是否列出仍未接入真实数据库？
+20. 是否列出下一阶段计划？
+
+PHASE3 通过后，PHASE4 才允许进入美术素材搜索与统一换皮。

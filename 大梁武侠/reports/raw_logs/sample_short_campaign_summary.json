@@ -1,0 +1,134 @@
+{
+  "seed": 20260609,
+  "log_path": "reports\\raw_logs\\sample_short_campaign_seed_20260609.jsonl",
+  "events": 16,
+  "final_dm_state": {
+    "crisis": 18,
+    "mystery": 8,
+    "fortune": 11
+  },
+  "usage": [
+    {
+      "rule_id": "CORE_COMBAT_ACTION",
+      "rule_name": "正式战斗动作",
+      "chapter": "战斗",
+      "category": "战斗",
+      "opportunities": 7,
+      "triggered_count": 7,
+      "player_initiated_count": 7,
+      "dm_initiated_count": 0,
+      "changed_outcome_count": 7,
+      "ignored_count": 0,
+      "ambiguity_count": 0,
+      "total_resolution_time": 56.0,
+      "notes": "",
+      "average_resolution_time": 8.0
+    },
+    {
+      "rule_id": "CORE_CRISIS",
+      "rule_name": "危机增长",
+      "chapter": "情景",
+      "category": "情景",
+      "opportunities": 9,
+      "triggered_count": 9,
+      "player_initiated_count": 0,
+      "dm_initiated_count": 9,
+      "changed_outcome_count": 9,
+      "ignored_count": 0,
+      "ambiguity_count": 0,
+      "total_resolution_time": 27.0,
+      "notes": "",
+      "average_resolution_time": 3.0
+    },
+    {
+      "rule_id": "CORE_FLAW",
+      "rule_name": "破绽结算",
+      "chapter": "战斗",
+      "category": "战斗",
+      "opportunities": 7,
+      "triggered_count": 7,
+      "player_initiated_count": 0,
+      "dm_initiated_count": 7,
+      "changed_outcome_count": 7,
+      "ignored_count": 0,
+      "ambiguity_count": 7,
+      "total_resolution_time": 42.0,
+      "notes": "",
+      "average_resolution_time": 6.0
+    },
+    {
+      "rule_id": "CORE_SCENE_CHECK",
+      "rule_name": "情景检定",
+      "chapter": "情景",
+      "category": "情景",
+      "opportunities": 9,
+      "triggered_count": 9,
+      "player_initiated_count": 9,
+      "dm_initiated_count": 0,
+      "changed_outcome_count": 9,
+      "ignored_count": 0,
+      "ambiguity_count": 0,
+      "total_resolution_time": 63.0,
+      "notes": "",
+      "average_resolution_time": 7.0
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "I0001",
+      "tag": "【太惩罚】",
+      "scene": "茶馆接案",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    },
+    {
+      "issue_id": "I0002",
+      "tag": "【太惩罚】",
+      "scene": "茶馆接案",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    },
+    {
+      "issue_id": "I0003",
+      "tag": "【太惩罚】",
+      "scene": "茶馆接案",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    },
+    {
+      "issue_id": "I0004",
+      "tag": "【太惩罚】",
+      "scene": "码头追踪",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    },
+    {
+      "issue_id": "I0005",
+      "tag": "【太惩罚】",
+      "scene": "码头追踪",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    },
+    {
+      "issue_id": "I0006",
+      "tag": "【太惩罚】",
+      "scene": "北仓潜入",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    },
+    {
+      "issue_id": "I0007",
+      "tag": "【太惩罚】",
+      "scene": "北仓潜入",
+      "text": "成功但危机继续上涨，玩家可能感觉行动越多越糟。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并模拟危机增长。"
+    }
+  ]
+}
