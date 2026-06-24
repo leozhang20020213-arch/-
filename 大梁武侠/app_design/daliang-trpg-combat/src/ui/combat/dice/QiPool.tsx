@@ -18,8 +18,10 @@ export interface QiPoolProps {
 }
 
 /**
- * Qi Sea pool — horizontal row of draggable dice cards.
- * The primary source of dice for move assignment.
+ * Qi Sea pool — the primary source of draggable dice.
+ *
+ * Shows each die as a QiDie card. When empty, prompts the user to
+ * roll dice into the sea or use 调息/返照 to recover dice.
  */
 export const QiPool: FC<QiPoolProps> = ({
   dice,
@@ -29,23 +31,34 @@ export const QiPool: FC<QiPoolProps> = ({
   onClickDie,
   onRoll,
 }) => {
+  const yinCount = dice.filter((d) => d.nature === "yin").length;
+  const yangCount = dice.filter((d) => d.nature === "yang").length;
+  const rawCount = dice.filter((d) => d.nature === "raw").length;
+  const totalValue = dice.reduce((sum, d) => sum + (d.value ?? 0), 0);
+
   return (
     <div className="qi-pool-area">
       <div className="qi-pool-header">
         <span className="qi-pool-label">
-          气海 <span className="qi-pool-count">{dice.length}</span>
+          气海{" "}
+          <span className="qi-pool-count">{dice.length} 枚</span>
+          {dice.length > 0 && (
+            <span className="qi-pool-sum">
+              {" "}· 合计 {totalValue} 点 · 阴{yinCount} 阳{yangCount} 原{rawCount}
+            </span>
+          )}
         </span>
         {onRoll && (
           <button
             className="qi-pool-roll-btn"
             type="button"
-            disabled={dice.length === 0}
             onClick={onRoll}
           >
             投掷入海
           </button>
         )}
       </div>
+
       <div className="qi-pool-dice">
         {dice.length > 0 ? (
           dice.map((d) => (
@@ -59,7 +72,22 @@ export const QiPool: FC<QiPoolProps> = ({
             />
           ))
         ) : (
-          <span className="qi-pool-empty">气海无骰 · 请调息或投掷</span>
+          <div className="qi-pool-empty">
+            <span className="qi-pool-empty-icon">🎲</span>
+            <span>气海无骰</span>
+            {onRoll && (
+              <button
+                className="qi-pool-empty-btn"
+                type="button"
+                onClick={onRoll}
+              >
+                点击投掷入海
+              </button>
+            )}
+            <span className="qi-pool-empty-hint">
+              或使用调息 / 返照从息库回收气骰
+            </span>
+          </div>
         )}
       </div>
     </div>

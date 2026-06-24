@@ -54,6 +54,7 @@ npm run test:all      # 全部测试 (68 项)
 | [PHASE 7 — 玩家/DM分离](docs/devlog/README_UI_PHASE7_2026年6月24日.md) | DebugPanel、DmControlPanel、PlayerPromptBar |
 | [PHASE 8 — 导航收束](docs/devlog/README_UI_PHASE8_2026年6月24日.md) | 六根/内功并入人物抽屉 |
 | [PHASE 9 — 设计Token](docs/devlog/README_UI_PHASE9_2026年6月24日.md) | 颜色语义统一 |
+| [PHASE 10 — 气骰系统重构](docs/devlog/README_UI_PHASE_DICE.md) | 骰子可见可拖可锁、单一操作区、去重 |
 | [总结文档](docs/devlog/README_UI_COMBAT_REFACTOR_SUMMARY_2026年6月24日.md) | 架构、组件树、状态机、已知问题 |
 
 ## 主要组件位置

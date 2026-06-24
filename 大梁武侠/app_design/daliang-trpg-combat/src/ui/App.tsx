@@ -30,7 +30,6 @@ import {
 import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, QiDie, QiZone } from "../combat/types";
 import { createLanClient, type LanClient, type LanConnectionStatus } from "../net/lanClient";
 // PhaserCombatBoard replaced by TacticalCombatStage in PHASE2
-import { QiDiceTray } from "../dice3d/QiDiceTray";
 import { QiDiceRollOverlay } from "../dice3d/QiDiceRollOverlay";
 import type { DiceRollResult } from "../dice3d/diceTypes";
 import { TitleBar } from "./layouts/TitleBar";
@@ -893,6 +892,7 @@ function PlayerCombatDesk(props: DeskProps & {
               actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
               selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
               hasSelectedTarget={Boolean(props.selectedTargetId)}
+              onRollToSea={() => props.patch((current) => enterScene(current))}
               onConfirm={(yinIds, yangIds) => {
                 const move = actor.moves.find((m) => m.id === props.selectedMoveId);
                 if (!move || !props.selectedTargetId) return;
@@ -1096,6 +1096,7 @@ function DmCombatDesk(props: DeskProps & {
                   actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
                   selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
                   hasSelectedTarget={Boolean(props.selectedTargetId)}
+                  onRollToSea={() => props.patch((current) => enterScene(current))}
                   onConfirm={(yinIds, yangIds) => {
                     const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
                     if (!move || !props.selectedTargetId) return;
@@ -1564,232 +1565,6 @@ function PendingPreview({ state }: { state: CombatState }) {
         <strong>{pending.formed ? "已成招，等待应招或落果" : "截击窗口打开"}</strong>
         <p>{actor?.name} 对 {target?.name} 使用「{move?.name}」，锁气 {pending.diceIds.length} 枚。</p>
       </div>
-    </div>
-  );
-}
-
-function QiZoneBoard({
-  dice,
-  selectedDice,
-  activeActorId,
-  slotDice,
-  slotHint,
-  phase,
-  onToggleDie,
-  onAssignDieToSlot,
-  onRemoveFromSlot,
-  onCommitRollResults,
-  onRollDice,
-}: {
-  dice: QiDie[];
-  selectedDice: string[];
-  activeActorId: string;
-  slotDice: { yin: string[]; yang: string[] };
-  slotHint: string;
-  phase: CombatState["phase"];
-  onToggleDie: (id: string) => void;
-  onAssignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
-  onRemoveFromSlot: (id: string) => void;
-  onCommitRollResults: (results: DiceRollResult[]) => void;
-  onRollDice: (dice: QiDie[]) => void;
-}) {
-  const [inlineRolling, setInlineRolling] = useState(false);
-  const seaDice = dice.filter((die) => die.zone === "QI_SEA");
-  const tempDice = dice.filter((die) => die.zone === "TEMP_QI");
-  const restDice = dice.filter((die) => die.zone === "QI_REST");
-  const poolDice = dice.filter((die) => die.zone === "QI_POOL");
-  const lockedDice = dice.filter((die) => die.zone === "QI_LOCK");
-  const slottedIds = new Set([...slotDice.yin, ...slotDice.yang]);
-  const operationDice = inlineRolling ? poolDice : dice.filter((die) => (
-    die.zone === "QI_SEA" || die.zone === "TEMP_QI" || slottedIds.has(die.id)
-  ));
-  const canMoveNow = phase === "scene" || phase === "declare";
-
-  function canDrag(dieId: string) {
-    const die = dice.find((item) => item.id === dieId);
-    if (!die) return false;
-    return canMoveNow && die.ownerId === activeActorId && (die.zone === "QI_SEA" || die.zone === "TEMP_QI" || slottedIds.has(die.id));
-  }
-
-  function startInlineRoll() {
-    if (poolDice.length === 0 || inlineRolling) return;
-    setInlineRolling(true);
-  }
-
-  return (
-    <section className="qi-dice-zone">
-      {/* 临气区 — top 18% */}
-      <div className="qi-temp-area">
-        <span className="temp-label">临气区</span>
-        {tempDice.length > 0
-          ? tempDice.map((d) => (
-              <span key={d.id} style={{ color: "#f2c14e", fontSize: 12, fontWeight: 700 }}>
-                {d.label}({d.value}/{d.sides})
-              </span>
-            ))
-          : <span style={{ color: "rgba(247,231,187,0.3)", fontSize: 11 }}>暂无临时气骰</span>}
-        {slotHint ? (
-          <span style={{ color: "#f5d89a", fontSize: 11, marginLeft: "auto", fontStyle: "italic" }}>
-            {slotHint}
-          </span>
-        ) : null}
-      </div>
-
-      {/* 阴槽 | 气海 | 阳槽 — middle 67% */}
-      <div className="qi-tray-row">
-        <div className={`qi-yin-slot${slottedIds.size > 0 ? " drop-active" : ""}`}>
-          <span className="slot-label">阴槽</span>
-          {slotDice.yin.length > 0 ? (
-            <span style={{ color: "rgba(100,160,200,0.8)", fontSize: 12, marginTop: 20 }}>
-              {slotDice.yin.length} 枚
-            </span>
-          ) : (
-            <span style={{ color: "rgba(100,160,200,0.3)", fontSize: 11, marginTop: 20 }}>
-              拖入阴骰
-            </span>
-          )}
-        </div>
-
-        <div className="qi-hai-center">
-          <span className="hai-label">气海</span>
-          <div className="operation-dice-tray" aria-label="3D气骰底板：阴槽、气海、阳槽、临气槽" style={{ width: "100%", height: "100%" }}>
-            <QiDiceTray
-              dice={operationDice}
-              rolling={inlineRolling}
-              onRollComplete={(results) => {
-                setInlineRolling(false);
-                onCommitRollResults(results);
-              }}
-              highlightedIds={selectedDice.filter((id) => operationDice.some((die) => die.id === id))}
-              selectedIds={selectedDice}
-              onSelectDie={onToggleDie}
-              canDragDie={canDrag}
-              slotDice={slotDice}
-              onAssignToSlot={onAssignDieToSlot}
-              onRemoveFromSlot={onRemoveFromSlot}
-              canInteract={!inlineRolling}
-            />
-          </div>
-        </div>
-
-        <div className={`qi-yang-slot${slottedIds.size > 0 ? " drop-active" : ""}`}>
-          <span className="slot-label">阳槽</span>
-          {slotDice.yang.length > 0 ? (
-            <span style={{ color: "rgba(212,150,80,0.8)", fontSize: 12, marginTop: 20 }}>
-              {slotDice.yang.length} 枚
-            </span>
-          ) : (
-            <span style={{ color: "rgba(212,150,80,0.3)", fontSize: 11, marginTop: 20 }}>
-              拖入阳骰
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* 气池/息库 — bottom 15% */}
-      <div className="qi-pool-strip">
-        <span className="pool-stat">
-          气海 <span className="stat-val">{seaDice.length}</span>
-        </span>
-        <span className="pool-stat">
-          阴槽 <span className="stat-val">{slotDice.yin.length}</span>
-        </span>
-        <span className="pool-stat">
-          阳槽 <span className="stat-val">{slotDice.yang.length}</span>
-        </span>
-        <span className="pool-stat">
-          息库 <span className="stat-val">{restDice.length}</span>
-        </span>
-        <span className="pool-stat">
-          气池 <span className="stat-val">{poolDice.length}</span>
-        </span>
-        {lockedDice.length > 0 ? (
-          <span className="pool-stat" style={{ color: "rgba(247,231,187,0.4)" }}>
-            锁气 <span className="stat-val">{lockedDice.length}</span>
-          </span>
-        ) : null}
-        <span style={{ marginLeft: "auto", display: "flex", gap: 6, flexShrink: 0 }}>
-          <button
-            className="btn btn-sm btn-secondary"
-            type="button"
-            disabled={poolDice.length === 0 || inlineRolling}
-            onClick={startInlineRoll}
-          >
-            投掷入海
-          </button>
-          <button
-            className="btn btn-sm btn-secondary"
-            type="button"
-            disabled={poolDice.length === 0}
-            onClick={() => onRollDice(poolDice)}
-          >
-            弹窗投掷
-          </button>
-          {(restDice.length > 0 || poolDice.length > 0 || lockedDice.length > 0) && (
-            <details style={{ display: "inline-flex", alignItems: "center" }}>
-              <summary style={{ fontSize: 11, color: "rgba(247,231,187,0.5)", cursor: "pointer", whiteSpace: "nowrap" }}>
-                详情
-              </summary>
-              <div style={{
-                position: "absolute", bottom: "100%", right: 0,
-                background: "rgba(9,9,8,0.96)", border: "1px solid rgba(232,198,126,0.28)",
-                borderRadius: 6, padding: "8px 10px", minWidth: 200, zIndex: 10,
-                fontSize: 11, color: "rgba(247,231,187,0.7)",
-              }}>
-                {poolDice.length > 0 && <div>气池：{poolDice.map(dieLabel).join("、")}</div>}
-                {restDice.length > 0 && <div>息库：{restDice.map(dieLabel).join("、")}</div>}
-                {lockedDice.length > 0 && <div style={{ color: "rgba(247,231,187,0.4)" }}>锁气：{lockedDice.map(dieLabel).join("、")}</div>}
-              </div>
-            </details>
-          )}
-        </span>
-      </div>
-    </section>
-  );
-}
-
-function DiceList({
-  dice,
-  selectedDice,
-  activeActorId,
-  onToggleDie,
-  draggable,
-  temporary = false,
-}: {
-  dice: QiDie[];
-  selectedDice: string[];
-  activeActorId: string;
-  onToggleDie: (id: string) => void;
-  draggable: boolean;
-  temporary?: boolean;
-}) {
-  if (dice.length === 0) {
-    return <p className="empty-state">暂无</p>;
-  }
-
-  return (
-    <div className="zone-dice">
-      {dice.map((die) => (
-        <button
-          key={die.id}
-          type="button"
-          draggable={draggable}
-          title={die.sourceName}
-          className={`${selectedDice.includes(die.id) ? "die selected" : "die"} ${die.ownerId === activeActorId ? "owned" : ""} die-${die.nature} ${(temporary || die.temporary) ? "temporary" : ""}`}
-          onClick={() => onToggleDie(die.id)}
-          onDragStart={(event) => {
-            if (!draggable) {
-              event.preventDefault();
-              return;
-            }
-            event.dataTransfer.setData("text/plain", die.id);
-            event.dataTransfer.effectAllowed = "move";
-          }}
-        >
-          <span>{dieLabel(die)}</span>
-          {(temporary || die.temporary) ? <small className="temp-badge">临</small> : null}
-        </button>
-      ))}
     </div>
   );
 }

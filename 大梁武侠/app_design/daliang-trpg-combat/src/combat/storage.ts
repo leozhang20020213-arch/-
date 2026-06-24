@@ -1,4 +1,4 @@
-import { createSeedState } from "../data/seed";
+import { createInitialCombatState, createSeedState } from "../data/seed";
 import type { AppSession, CombatState, InnerArt, InventoryItem, SixRoots, StatusEffect } from "./types";
 
 const STORAGE_KEY = "daliang-trpg-combat:v1";
@@ -32,14 +32,17 @@ export function createDefaultSession(): AppSession {
 
 export function loadCombatState(): CombatState {
   if (typeof window === "undefined") {
-    return createSeedState();
+    return createSeedState(); // SSR/test: return raw seed (no auto-enter)
   }
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? normalizeCombatState(JSON.parse(raw) as Partial<CombatState>) : createSeedState();
+    // If saved state exists, normalize it. Otherwise use initial state with pre-rolled dice.
+    return raw
+      ? normalizeCombatState(JSON.parse(raw) as Partial<CombatState>)
+      : createInitialCombatState();
   } catch {
-    return createSeedState();
+    return createInitialCombatState();
   }
 }
 
@@ -59,7 +62,7 @@ export function clearCombatState(): CombatState {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(STORAGE_KEY);
   }
-  return createSeedState();
+  return createInitialCombatState();
 }
 
 export function loadAppSession(): AppSession {

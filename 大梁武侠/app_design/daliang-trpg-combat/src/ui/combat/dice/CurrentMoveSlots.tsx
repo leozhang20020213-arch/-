@@ -9,9 +9,9 @@ export interface CurrentMoveSlotsProps {
   yinDice: QiDieType[];
   /** Dice assigned to the yang slot */
   yangDice: QiDieType[];
-  /** Whether the move requires both yin+ yang (formal) or not (quick) */
+  /** Whether the move requires both yin+yang (formal) or not (quick) */
   requiresBoth: boolean;
-  /** Current phase */
+  /** Whether dice can be dropped into slots */
   canAssign: boolean;
   /** Drop handlers */
   onDropToYin: (dieId: string) => void;
@@ -25,16 +25,11 @@ export interface CurrentMoveSlotsProps {
 /**
  * Yin/Yang slot drop zones for the currently selected move.
  *
- * Layout:
- *   ┌──────────┐  ┌──────────┐
- *   │  阴槽     │  │  阳槽     │
- *   │ (yin)    │  │ (yang)   │
- *   │  dice... │  │  dice... │
- *   │ 需≥1     │  │ 需≥1     │
- *   └──────────┘  └──────────┘
- *
- * Empty state: "将骰子拖入此槽"
- * Requirement badge: "需≥1" (red if unmet, green if met)
+ * Each slot shows:
+ *   - Slot name (阴槽 / 阳槽)
+ *   - Dice count and value total
+ *   - Requirement badge (✓ met / ✗ unmet)
+ *   - Dropped dice cards
  */
 export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
   move,
@@ -47,8 +42,13 @@ export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
   onRemove,
   onClickDie,
 }) => {
+  const yinTotal = yinDice.reduce((sum, d) => sum + (d.value ?? 0), 0);
+  const yangTotal = yangDice.reduce((sum, d) => sum + (d.value ?? 0), 0);
+  const grandTotal = yinTotal + yangTotal;
+
   const yinMet = yinDice.length >= 1;
   const yangMet = yangDice.length >= 1;
+  const minDiceMet = !move || (yinDice.length + yangDice.length) >= move.minDice;
 
   function handleDragOver(e: React.DragEvent) {
     if (canAssign) {
@@ -75,6 +75,11 @@ export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
     return (
       <div className="move-slots-empty">
         <span>请先选择招式</span>
+        {yinDice.length + yangDice.length > 0 && (
+          <span className="move-slots-empty-pre">
+            （已预选 {yinDice.length + yangDice.length} 枚骰子，阴{yinDice.length}/阳{yangDice.length}）
+          </span>
+        )}
       </div>
     );
   }
@@ -83,8 +88,13 @@ export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
     <div className="current-move-slots">
       <div className="move-slots-header">
         <span className="move-slots-title">{move.name}</span>
-        <span className="move-slots-requirement">
-          {requiresBoth ? "至少1阴+1阳" : "任意气性"}
+        <span className="move-slots-req-row">
+          <span className={`move-slots-req-badge ${minDiceMet ? "met" : "unmet"}`}>
+            {yinDice.length + yangDice.length}/{move.minDice} 枚
+          </span>
+          <span className="move-slots-requirement">
+            {requiresBoth ? "至少1阴+1阳" : "任意气性"}
+          </span>
         </span>
       </div>
 
@@ -98,7 +108,7 @@ export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
           <div className="slot-header">
             <span className="slot-name">阴槽</span>
             <span className={`slot-req ${yinMet ? "met" : "unmet"}`}>
-              {yinMet ? "✓" : "需≥1"}
+              {yinMet ? `✓ ${yinDice.length}枚 ${yinTotal}点` : "需≥1"}
             </span>
           </div>
           <div className="slot-dice">
@@ -130,7 +140,7 @@ export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
           <div className="slot-header">
             <span className="slot-name">阳槽</span>
             <span className={`slot-req ${yangMet ? "met" : "unmet"}`}>
-              {yangMet ? "✓" : "需≥1"}
+              {yangMet ? `✓ ${yangDice.length}枚 ${yangTotal}点` : "需≥1"}
             </span>
           </div>
           <div className="slot-dice">
@@ -153,6 +163,13 @@ export const CurrentMoveSlots: FC<CurrentMoveSlotsProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Slot totals */}
+      {yinDice.length + yangDice.length > 0 && (
+        <div className="move-slots-total">
+          合计 {yinTotal + yangTotal} 点 · 阴{yinTotal} 阳{yangTotal} · 合{grandTotal} · 差{Math.abs(yinTotal - yangTotal)}
+        </div>
+      )}
     </div>
   );
 };

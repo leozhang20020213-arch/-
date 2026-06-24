@@ -16,6 +16,9 @@ import type {
   FormPosition,
   MoveTiming,
 } from "../combat/types";
+import { enterScene, type RollFn } from "../combat/combatEngine";
+
+const defaultRoll: RollFn = (sides) => Math.floor(Math.random() * sides) + 1;
 
 // ============================================================
 // MOVES (from rulebook 04_招式库_统一版_修复版.md)
@@ -668,6 +671,15 @@ export function createSeedState(): CombatState {
     logs: [],
     lastSavedAt: undefined,
   };
+}
+
+/**
+ * Creates the initial combat state with dice pre-rolled into QI_SEA.
+ * Use this for UI initialization — it ensures dice are immediately visible.
+ * For tests, use createSeedState() + enterScene() with a fixed roll function.
+ */
+export function createInitialCombatState(): CombatState {
+  return enterScene(createSeedState(), defaultRoll);
 }
 
 export { quickAsMove };

@@ -17,10 +17,12 @@ export interface QiDiceDockProps {
   hasSelectedTarget: boolean;
   /** Called when the player wants to confirm & lock, passes slot dice IDs */
   onConfirm: (yinIds: string[], yangIds: string[]) => void;
+  /** Called when the player wants to roll dice from pool into sea */
+  onRollToSea?: () => void;
 }
 
 /**
- * QiDiceDock — the complete card-game-style qi dice assignment area.
+ * QiDiceDock — the single, canonical qi dice assignment area.
  *
  * Layout:
  *   ┌─────────────────────────────────────────┐
@@ -34,6 +36,9 @@ export interface QiDiceDockProps {
  *   ├─────────────────────────────────────────┤
  *   │ [确认宣言并锁气]  ← enabled/disabled     │
  *   └─────────────────────────────────────────┘
+ *
+ * Dice can be pre-assigned to slots even without a selected move.
+ * The confirm button shows why it's disabled when requirements aren't met.
  */
 export const QiDiceDock: FC<QiDiceDockProps> = ({
   state,
@@ -41,6 +46,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   selectedMove,
   hasSelectedTarget,
   onConfirm,
+  onRollToSea,
 }) => {
   // Local slot assignment state — tracks which dice are in yin/yang slots
   const [yinSlotIds, setYinSlotIds] = useState<string[]>([]);
@@ -61,8 +67,6 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
 
   // Whether drag is allowed now
   const canDrag = Boolean(
-    selectedMove &&
-    hasSelectedTarget &&
     (state.phase === "declare" || state.phase === "scene"),
   );
 
@@ -95,7 +99,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
     if (!die) return;
 
     if (!canDropDieToSlot(die, "yin", activeActorId)) {
-      setDragError(`${die.label} 不能投入阴槽`);
+      setDragError(`${die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"}骰 D${die.sides} 不能投入阴槽`);
       setTimeout(() => setDragError(null), 1800);
       return;
     }
@@ -111,7 +115,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
     if (!die) return;
 
     if (!canDropDieToSlot(die, "yang", activeActorId)) {
-      setDragError(`${die.label} 不能投入阳槽`);
+      setDragError(`${die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"}骰 D${die.sides} 不能投入阳槽`);
       setTimeout(() => setDragError(null), 1800);
       return;
     }
@@ -126,12 +130,15 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   }
 
   function handleClickDie(dieId: string) {
-    // Toggle: if in a slot, remove; if in sea, add to yin first
+    // Toggle: if in a slot, remove
     if (assignedIds.has(dieId)) {
       handleRemoveFromSlot(dieId);
     }
-    // Clicking in sea doesn't auto-assign (drag required)
+    // Clicking a sea die doesn't auto-assign — drag required
   }
+
+  const yinTotal = yinDice.reduce((sum, d) => sum + (d.value ?? 0), 0);
+  const yangTotal = yangDice.reduce((sum, d) => sum + (d.value ?? 0), 0);
 
   return (
     <div className="qi-dice-dock">
@@ -152,6 +159,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
           canDrag={canDrag}
           onDragStart={() => {}}
           onClickDie={handleClickDie}
+          onRoll={poolDice.length > 0 ? onRollToSea : undefined}
         />
         <div className="qi-dock-divider" />
         <CurrentMoveSlots
@@ -170,6 +178,14 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       {/* Drag error toast */}
       {dragError && (
         <div className="qi-drag-error">{dragError}</div>
+      )}
+
+      {/* Slot summary (visible before move is selected, for pre-selection) */}
+      {!selectedMove && (yinSlotIds.length + yangSlotIds.length > 0) && (
+        <div className="qi-preselect-hint">
+          已预选 {yinSlotIds.length + yangSlotIds.length} 枚气骰（阴{yinTotal}点 / 阳{yangTotal}点）
+          — 选择招式和目标后即可确认
+        </div>
       )}
 
       {/* Rest / Locked / Pool stats */}
