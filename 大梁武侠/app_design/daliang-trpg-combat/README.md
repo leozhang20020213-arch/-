@@ -23,24 +23,50 @@
 - 浏览器本地保存房间和身份会话。
 - 规则纯函数测试。
 
-## 运行
+## 交锋 UI 内测版运行方式
 
 ```bash
 npm install
-npm run dev -- --port 5174
+npm run dev:legacy -- --port 5174 --host 127.0.0.1
 ```
 
-打开：
-
-```text
-http://127.0.0.1:5174
-```
+打开：`http://127.0.0.1:5174`
 
 ## 验证
 
 ```bash
-npm test
-npm run build
+npm run build         # TypeScript + Vite 生产构建
+npm run test          # 规则引擎测试 (34 项)
+npm run test:lib      # UI 逻辑测试 (34 项)
+npm run test:all      # 全部测试 (68 项)
+```
+
+## 开发文档入口
+
+| 文档 | 说明 |
+|------|------|
+| [PHASE 0 — 审查基线](docs/devlog/README_UI_PHASE0_2026年6月24日.md) | 技术栈、目录结构、UI 问题诊断 |
+| [PHASE 1 — 三栏桌面](docs/devlog/README_UI_PHASE1_2026年6月24日.md) | CombatShell 骨架、三栏布局 |
+| [PHASE 2 — 战术舞台](docs/devlog/README_UI_PHASE2_2026年6月24日.md) | CombatantNode、SVG 距离线 |
+| [PHASE 3 — 敌方公开卡](docs/devlog/README_UI_PHASE3_2026年6月24日.md) | 选中展开、player/dm 双模式 |
+| [PHASE 5 — 气骰拖拽](docs/devlog/README_UI_PHASE5_2026年6月24日.md) | 卡牌式拖骰、确认宣言条件 |
+| [PHASE 6 — 状态机](docs/devlog/README_UI_PHASE6_2026年6月24日.md) | 阶段按钮、自然语言提示 |
+| [PHASE 7 — 玩家/DM分离](docs/devlog/README_UI_PHASE7_2026年6月24日.md) | DebugPanel、DmControlPanel、PlayerPromptBar |
+| [PHASE 8 — 导航收束](docs/devlog/README_UI_PHASE8_2026年6月24日.md) | 六根/内功并入人物抽屉 |
+| [PHASE 9 — 设计Token](docs/devlog/README_UI_PHASE9_2026年6月24日.md) | 颜色语义统一 |
+| [总结文档](docs/devlog/README_UI_COMBAT_REFACTOR_SUMMARY_2026年6月24日.md) | 架构、组件树、状态机、已知问题 |
+
+## 主要组件位置
+
+```
+src/ui/combat/CombatShell.tsx    — 桌面外壳
+src/ui/combat/TopCombatBar.tsx   — 顶部导航栏
+src/ui/combat/PhaseActionBar.tsx — 底部阶段按钮
+src/ui/combat/stage/CombatStage.tsx — 战术舞台
+src/ui/combat/dice/QiDiceDock.tsx   — 气骰拖拽区
+src/ui/combat/enemy/EnemyPublicDrawer.tsx — 敌方信息卡片
+src/lib/combat/qiAssignment.ts       — 拖拽验证逻辑
+src/lib/combat/combatPhaseMachine.ts — 阶段状态机
 ```
 
 ## 首版边界

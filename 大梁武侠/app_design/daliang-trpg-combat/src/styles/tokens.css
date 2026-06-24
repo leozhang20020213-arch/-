@@ -4,7 +4,7 @@
    ========================================================================== */
 
 :root {
-  /* ---- Color System ---- */
+  /* ---- Color System (base) ---- */
   --bg-deep:            #1a1410;
   --bg-panel-dark:      #2a2218;
   --bg-parchment:       #f5f0e8;
@@ -13,6 +13,20 @@
   --ink-dark:           #2d1f14;
   --ink-subtle:         #8a7a6a;
   --ink-muted:          #5a5044;
+
+  /* ---- Semantic Aliases (PHASE9) ---- */
+  --color-bg-main:      var(--bg-deep);           /* 深黑褐 — 战盘背景 */
+  --color-bg-panel:     var(--bg-parchment);      /* 米白 — 信息卡背景 */
+  --color-bg-card:      var(--bg-parchment-warm); /* 宣纸白 — 卡片 */
+  --color-border-normal: var(--border-card);       /* 淡褐 — 常规边框 */
+  --color-border-active: var(--yang-die);          /* 金色 — 选中/可操作 */
+  --color-warning:      var(--hp-red);             /* 红色 — 警告/失败/受伤 */
+  --color-disabled:     var(--disabled);           /* 灰色 — 禁用 */
+  --color-yin:          var(--yin-die);            /* 青蓝 — 阴 */
+  --color-yang:         var(--yang-die);           /* 赤金 — 阳 */
+  --color-text-main:    var(--ink-dark);           /* 墨黑 — 主文字 */
+  --color-text-muted:   var(--ink-subtle);         /* 灰褐 — 次要文字 */
+  --color-gold-active:  var(--yang-die);           /* 金色 — 当前选中 */
 
   /* ---- Momentum / Shi ---- */
   --yang-die:           #d4843a;
