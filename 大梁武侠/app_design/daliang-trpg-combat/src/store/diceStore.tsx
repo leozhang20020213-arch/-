@@ -91,9 +91,7 @@ export type DiceStoreAction =
   // Phase 5: rolling animation
   | { type: "START_ROLLING" }
   | { type: "UPDATE_ROLLING_DISPLAY"; displayValues: Record<string, number> }
-  | { type: "FINISH_ROLLING"; values: Array<{ dieId: string; value: number }> }
-  // Phase 7: move-driven slot management
-  | { type: "RETURN_ALL_ASSIGNED_TO_SEA" };
+  | { type: "FINISH_ROLLING"; values: Array<{ dieId: string; value: number }> };
 
 // ---- Reducer ----
 
@@ -256,15 +254,6 @@ function diceReducer(state: DiceStoreState, action: DiceStoreAction): DiceStoreS
       });
       return { ...state, qiDice: updated, lastRollAt: Date.now(), isRolling: false, rollingDisplayValues: {} };
     }
-    // ---- Phase 7 ----
-    case "RETURN_ALL_ASSIGNED_TO_SEA": {
-      const returned = state.qiDice.map((die) =>
-        die.location === "lockedYin" || die.location === "lockedYang"
-          ? { ...die, location: "qiSea" as const }
-          : die,
-      );
-      return { ...state, qiDice: returned, assignedYinDiceIds: [], assignedYangDiceIds: [] };
-    }
     default:
       return state;
   }
@@ -301,8 +290,6 @@ interface DiceStoreContextValue {
   regulateBreath: () => void;
   returnLight: () => void;
   resetReturnLight: () => void;
-  // Phase 7
-  returnAllAssignedToSea: () => void;
 }
 
 const DiceStoreContext = createContext<DiceStoreContextValue | null>(null);
@@ -399,11 +386,6 @@ export function DiceStoreProvider({ children }: { children: ReactNode }) {
     () => dispatch({ type: "RESET_RETURN_LIGHT" }),
     [],
   );
-  // Phase 7
-  const returnAllAssignedToSea = useCallback(
-    () => dispatch({ type: "RETURN_ALL_ASSIGNED_TO_SEA" }),
-    [],
-  );
 
   const value: DiceStoreContextValue = {
     state,
@@ -432,8 +414,6 @@ export function DiceStoreProvider({ children }: { children: ReactNode }) {
     regulateBreath,
     returnLight,
     resetReturnLight,
-    // Phase 7
-    returnAllAssignedToSea,
   };
 
   return (

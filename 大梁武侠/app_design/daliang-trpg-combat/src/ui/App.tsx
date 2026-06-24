@@ -54,15 +54,11 @@ import { QiDiceDock } from "./combat/dice/QiDiceDock";
 import { DmControlPanel } from "./combat/dm/DmControlPanel";
 import { PlayerPromptBar } from "./combat/player/PlayerPromptBar";
 import { DebugPanel } from "./debug/DebugPanel";
-import { DiceStoreProvider, useDiceStore } from "../store/diceStore";
+import { DiceStoreProvider } from "../store/diceStore";
 import { QiDiceTray as QiDiceTray2D } from "../components/dice/QiDiceTray";
 import { QiAssignmentBoard } from "../components/dice/QiAssignmentBoard";
 import { QiZonePanel } from "../components/dice/QiZonePanel";
 import type { CurrentMoveQiRequirement } from "../types/dice";
-import { MoveCard } from "./combat/dice/MoveCard";
-import { ActionHintBar } from "./combat/dice/ActionHintBar";
-import type { MoveCardData, MoveUnavailableReason } from "../types/move";
-import { parseQiThreshold, mapTimingToKind, classifyUnavailableReason } from "../types/move";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -882,7 +878,7 @@ function PlayerCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={actor} state={props.state} />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} onSelectTarget={props.setSelectedTargetId} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
             (() => {
               const move = actor.moves.find((m) => m.id === props.selectedMoveId);
@@ -1061,7 +1057,7 @@ function DmCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} onSelectTarget={props.setSelectedTargetId} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
             (() => {
               const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
@@ -1371,36 +1367,15 @@ function SixRootsSummary({ actor }: { actor: Actor }) {
   );
 }
 
-/** Convert combat Move to UI MoveCardData */
-function combatMoveToCardData(move: Move): MoveCardData {
-  const { minYin, minYang } = parseQiThreshold(move.qiNatureThreshold);
-  return {
-    id: move.id,
-    name: move.name,
-    kind: mapTimingToKind(move.timing, move.category, move.formPosition),
-    requirement: {
-      minYin,
-      minYang,
-      timing: [move.timing],
-      consumesAction: move.timing === "正式出手",
-    },
-    baseEffect: move.baseEffect,
-    tags: [move.category, move.tier, move.designGrade].filter(Boolean),
-    description: `${move.name} · ${move.category} · ${move.timing}\n${move.baseEffect}\n气性门槛：${move.qiNatureThreshold}`,
-  };
-}
-
 function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
-  const { state: diceState, returnAllAssignedToSea } = useDiceStore();
-
-  /** Handle move change — return assigned dice to sea (MVP behaviour) */
-  function handleMoveChange(moveId: string) {
-    if (moveId !== props.selectedMoveId) {
-      // Auto-return dice to qi sea when switching moves
-      returnAllAssignedToSea();
-    }
-    props.setSelectedMoveId(moveId);
-  }
+  const actorDice = props.state.dice.filter((die) => die.ownerId === props.actor.id && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"));
+  const selectedMove = props.actor.moves.find((move) => move.id === props.selectedMoveId) ?? props.actor.moves[0];
+  const availability = selectedMove
+    ? canDeclareAction(props.state, props.actor.id, selectedMove.id, {
+        yinSlotDiceIds: props.slotDice.yin,
+        yangSlotDiceIds: props.slotDice.yang,
+      })
+    : { allowed: false, reasons: ["未选择行动"] };
 
   return (
     <section className="panel">
@@ -1408,82 +1383,84 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
         <img src={iconMap.response} alt="" />
         <h2>招式与宣言</h2>
       </div>
-
-      {/* ---- Action Hint Bar ---- */}
-      <ActionHintBar
-        hasMove={Boolean(props.selectedMoveId)}
-        moveName={props.actor.moves.find((m) => m.id === props.selectedMoveId)?.name}
-        hasTarget={Boolean(props.selectedTargetId)}
-        targetName={props.enemies.find((e) => e.id === props.selectedTargetId)?.name}
-        yinMet={diceState.assignedYinDiceIds.length >= (parseQiThreshold(props.actor.moves.find((m) => m.id === props.selectedMoveId)?.qiNatureThreshold ?? "").minYin)}
-        yangMet={diceState.assignedYangDiceIds.length >= (parseQiThreshold(props.actor.moves.find((m) => m.id === props.selectedMoveId)?.qiNatureThreshold ?? "").minYang)}
-        yinCount={diceState.assignedYinDiceIds.length}
-        yangCount={diceState.assignedYangDiceIds.length}
-        isRolling={diceState.isRolling}
-        isLocked={diceState.declarationStatus === "locked"}
-      />
-
-      {/* ---- Target selector (also accessible via CombatStage click) ---- */}
-      <div className="form-grid" style={{ marginTop: 8 }}>
-        <label style={{ fontSize: 12 }}>
+      <div className="form-grid">
+        <label>
           目标
-          <select
-            value={props.selectedTargetId}
-            onChange={(event) => props.setSelectedTargetId(event.target.value)}
-            style={{ fontSize: 12 }}
-          >
+          <select value={props.selectedTargetId} onChange={(event) => props.setSelectedTargetId(event.target.value)}>
             {props.enemies.map((enemy) => (
               <option key={enemy.id} value={enemy.id}>{enemy.name}</option>
             ))}
           </select>
         </label>
+        <label>
+          招式
+          <select value={props.selectedMoveId} onChange={(event) => props.setSelectedMoveId(event.target.value)}>
+            {props.actor.moves.map((move) => (
+              <option key={move.id} value={move.id}>{move.name}</option>
+            ))}
+          </select>
+        </label>
       </div>
-
-      {/* ---- Move Cards ---- */}
-      <div className="action-card-grid" style={{ marginTop: 6 }}>
+      <div className="action-card-grid">
         {props.actor.moves.map((move) => {
           const selected = props.selectedMoveId === move.id;
           const moveAvailability = canDeclareAction(props.state, props.actor.id, move.id, {
             yinSlotDiceIds: props.slotDice.yin,
             yangSlotDiceIds: props.slotDice.yang,
           });
-          const card = combatMoveToCardData(move);
+          const disabledReason = moveAvailability.reasons.join("、");
           return (
-            <MoveCard
+            <button
+              className={`action-card ${selected ? "selected" : ""} ${disabledReason ? "warn" : ""}`}
+              type="button"
               key={move.id}
-              move={card}
-              selected={selected}
-              available={moveAvailability.allowed}
-              rawReasons={moveAvailability.reasons}
-              onClick={handleMoveChange}
-            />
+              onClick={() => props.setSelectedMoveId(move.id)}
+            >
+              <strong>{move.name}</strong>
+              <span>{move.timing === "正式出手" ? "招式卡 · 至少一阴一阳" : `${move.category} · ${move.timing}`}</span>
+              <small>{disabledReason || "可选择"}</small>
+            </button>
           );
         })}
+        <button className="action-card" type="button" onClick={() => props.patch((current) => dmOverride(current, "玩家选择基础动作：调息。"))}>
+          <strong>调息</strong>
+          <span>基础动作卡</span>
+          <small>按规则从息库回气海</small>
+        </button>
+        <button className="action-card" type="button" onClick={() => props.patch((current) => dmOverride(current, "玩家选择基础动作：返照。"))}>
+          <strong>返照</strong>
+          <span>基础动作卡</span>
+          <small>气海为空时可用</small>
+        </button>
       </div>
+      <p className="hint">{selectedMove?.baseEffect}</p>
+      <div className="mini-dice-list">
+        {actorDice.map((die) => (
+          <button className={props.selectedDice.includes(die.id) ? "die selected" : "die"} type="button" key={die.id} onClick={() => props.toggleDie(die.id)}>
+            {dieLabel(die)}
+          </button>
+        ))}
+      </div>
+      {actorDice.length === 0 ? <p className="empty-state">气海/临气区没有可用气骰。先开始场景或调息。</p> : null}
+      <button className="primary-action" type="button" disabled={!availability.allowed} onClick={() => props.declareFor(props.actor.id, props.selectedTargetId, props.selectedMoveId)}>
+        确认宣言并锁气
+      </button>
+      {!availability.allowed ? <p className="hint">不可宣言：{availability.reasons.join("、")}</p> : null}
     </section>
   );
 }
 
-function CombatStage({ state, selectedId, onSelect, onSelectTarget }: {
+function CombatStage({ state, selectedId, onSelect }: {
   state: CombatState;
   selectedId?: string;
   onSelect: (id: string) => void;
-  /** Called when an enemy is selected (to set the qi declaration target) */
-  onSelectTarget?: (id: string) => void;
 }) {
   const stageData = buildStageData(state);
   return (
     <TacticalCombatStage
       data={stageData}
       selectedId={selectedId}
-      onSelectCombatant={(id) => {
-        onSelect(id);
-        // If clicked on an enemy, also set as declaration target
-        const actor = state.actors.find((a) => a.id === id);
-        if (actor && actor.side !== "player") {
-          onSelectTarget?.(id);
-        }
-      }}
+      onSelectCombatant={onSelect}
     />
   );
 }
