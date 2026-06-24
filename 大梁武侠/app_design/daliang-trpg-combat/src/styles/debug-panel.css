@@ -1,0 +1,139 @@
+/* ==========================================================================
+   Debug Panel — development-only state/performance inspector
+   ========================================================================== */
+
+.debug-panel {
+  position: fixed;
+  bottom: 56px;
+  right: 0;
+  z-index: 90;
+  width: 380px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(200, 160, 60, 0.3);
+  border-radius: 6px 0 0 6px;
+  background: rgba(15, 12, 8, 0.97);
+  box-shadow: -4px -4px 20px rgba(0,0,0,0.5);
+  font-size: 11px;
+  color: var(--ink-light);
+  overflow: hidden;
+}
+
+.debug-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(200, 160, 60, 0.1);
+  border-bottom: 1px solid rgba(200, 160, 60, 0.15);
+  flex-shrink: 0;
+}
+
+.debug-panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c8943e;
+}
+
+.debug-panel-close {
+  padding: 2px 8px;
+  border: 1px solid rgba(200, 160, 60, 0.2);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ink-subtle);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.debug-panel-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(107,75,45,0.1);
+  flex-shrink: 0;
+}
+
+.debug-tab {
+  flex: 1;
+  padding: 5px 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 150ms ease;
+}
+.debug-tab:hover { color: var(--ink-light); }
+.debug-tab.active {
+  color: #c8943e;
+  border-bottom-color: #c8943e;
+}
+
+.debug-panel-body {
+  padding: 8px 10px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.debug-state table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.debug-state td {
+  padding: 2px 6px;
+  border-bottom: 1px solid rgba(107,75,45,0.08);
+}
+.debug-state td:first-child {
+  color: var(--ink-subtle);
+  width: 40%;
+}
+
+.debug-log-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(107,75,45,0.06);
+}
+.debug-log-type {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--yang-die);
+  letter-spacing: 0.03em;
+}
+.debug-log-type.dm-only { color: rgba(200,160,200,0.7); }
+.debug-log-entry span { color: var(--ink-light); }
+.debug-log-entry small { color: var(--ink-muted); }
+
+.debug-perf { color: var(--ink-subtle); }
+
+/* ==========================================================================
+   Player Prompt Bar — natural-language guidance
+   ========================================================================== */
+
+.player-prompt-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(30,25,18,0.9) 0%, rgba(22,18,13,0.85) 100%);
+  border-top: 1px solid rgba(107,75,45,0.12);
+  border-bottom: 1px solid rgba(107,75,45,0.12);
+  flex-shrink: 0;
+  min-height: 32px;
+}
+
+.player-prompt-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.player-prompt-text {
+  font-size: 12px;
+  color: rgba(212,200,184,0.85);
+  font-style: italic;
+  line-height: 1.4;
+}

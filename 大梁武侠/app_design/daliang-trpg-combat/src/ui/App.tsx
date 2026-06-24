@@ -51,6 +51,9 @@ import { CombatStage as TacticalCombatStage } from "./combat/stage/CombatStage";
 import { buildStageData } from "../data/mockCombatData";
 import { EnemyPublicDrawer } from "./combat/enemy/EnemyPublicDrawer";
 import { QiDiceDock } from "./combat/dice/QiDiceDock";
+import { DmControlPanel } from "./combat/dm/DmControlPanel";
+import { PlayerPromptBar } from "./combat/player/PlayerPromptBar";
+import { DebugPanel } from "./debug/DebugPanel";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -406,6 +409,7 @@ export function App() {
           />
         ) : null}
         {prompt ? <PromptModal title={prompt.title} message={prompt.message} onClose={() => setPrompt(null)} /> : null}
+        <DebugPanel state={state} session={session} debugView={debugView} setDebugView={setDebugView} />
       </>
     );
   }
@@ -838,7 +842,12 @@ function PlayerSceneDesk(props: DeskProps & {
           }
         />
       }
-      bottom={<PhaseActionBar state={props.state} isDM={false} />}
+      bottom={
+        <>
+          <PlayerPromptBar state={props.state} />
+          <PhaseActionBar state={props.state} isDM={false} />
+        </>
+      }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
   );
@@ -937,13 +946,16 @@ function PlayerCombatDesk(props: DeskProps & {
         />
       }
       bottom={
-        <PhaseActionBar
-          state={props.state}
-          isDM={false}
-          onStartScene={props.onStartScene}
-          onEnterDeclaration={props.onStartScene}
-          onResolveResult={props.onOutcome}
-        />
+        <>
+          <PlayerPromptBar state={props.state} />
+          <PhaseActionBar
+            state={props.state}
+            isDM={false}
+            onStartScene={props.onStartScene}
+            onEnterDeclaration={props.onStartScene}
+            onResolveResult={props.onOutcome}
+          />
+        </>
       }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
@@ -1107,7 +1119,24 @@ function DmCombatDesk(props: DeskProps & {
       }
       right={
         <RightCombatPanel
-          actions={<DmControlPanel {...props} />}
+          actions={
+            <DmControlPanel
+              state={props.state}
+              dmNote={props.dmNote}
+              setDmNote={props.setDmNote}
+              onStartScene={props.onStartScene}
+              onIntercept={props.onIntercept}
+              onForm={props.onForm}
+              onReact={props.onReact}
+              onOutcome={props.onOutcome}
+              onEndRound={props.onEndRound}
+              onRegulateBreath={props.onRegulateBreath}
+              onReflection={props.onReflection}
+              onExpireSource={props.onExpireSource}
+              onMomentum={props.onMomentum}
+              onOverride={props.onOverride}
+            />
+          }
           enemies={
             selectedEnemy ? (
               <EnemyPublicDrawer
@@ -1909,47 +1938,70 @@ function DrawerLayer(props: DeskProps & { actor: Actor; role: "player" | "dm" })
   );
 }
 
+function CharacterDrawerTabs({ actor, initialTab }: { actor: Actor; initialTab?: string }) {
+  const [tab, setTab] = useState(initialTab ?? "基础");
+  const innerArt = actor.innerArts[0];
+  const tabs = ["基础", "六根", "内功", "状态"] as const;
+
+  return (
+    <div className="drawer-content">
+      <div className="tabs tabs--underline">
+        {tabs.map((t) => (
+          <button key={t} className={`tab${tab === t ? " active" : ""}`} type="button" onClick={() => setTab(t)}>
+            {t}
+          </button>
+        ))}
+      </div>
+      {tab === "基础" && (
+        <>
+          <UnitCard actor={actor} mode="self" />
+          <div className="stat-grid">
+            <span>气血 {actor.hp}/{actor.maxHp}</span>
+            <span>护体 {actor.tableAttrs.护体}</span>
+            <span>爆发 {actor.tableAttrs.爆发}</span>
+            <span>回气 {actor.tableAttrs.回气}</span>
+            <span>观照 {actor.tableAttrs.观照}</span>
+            <span>身势 {actor.tableAttrs.身势}</span>
+          </div>
+          <p>{actor.publicNote}</p>
+        </>
+      )}
+      {tab === "六根" && (
+        <div className="six-root-detail">
+          <SixRootsSummary actor={actor} />
+          <p className="hint">六根：顶门、目窍、心口、丹田、命门、步根。</p>
+        </div>
+      )}
+      {tab === "内功" && (
+        <>
+          <p><strong>已装备内功：</strong>{innerArt?.name ?? "无"}</p>
+          <p><strong>运行窍位：</strong>{innerArt?.occupiedAcupoints.join("、") || "无"}</p>
+          <p><strong>被动：</strong>{innerArt?.passive ?? "无"}</p>
+        </>
+      )}
+      {tab === "状态" && (
+        <div>
+          {actor.statuses.length > 0
+            ? actor.statuses.map((s) => <p key={s.id} className="inventory-item">{s.name} · 层数{s.layers} · {s.source}</p>)
+            : <p className="empty-state">无状态</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DrawerContent(props: DeskProps & { actor: Actor; role: "player" | "dm" }) {
   const drawer = props.activeDrawer;
   const actor = props.actor;
   const enemies = props.state.actors.filter((item) => item.side !== "player");
 
   if (drawer === "character") {
-    return (
-      <div className="drawer-content">
-        <UnitCard actor={actor} mode="self" />
-        <div className="stat-grid">
-          <span>气血 {actor.hp}/{actor.maxHp}</span>
-          <span>护体 {actor.tableAttrs.护体}</span>
-          <span>爆发 {actor.tableAttrs.爆发}</span>
-          <span>回气 {actor.tableAttrs.回气}</span>
-          <span>观照 {actor.tableAttrs.观照}</span>
-          <span>身势 {actor.tableAttrs.身势}</span>
-        </div>
-        <p>{actor.publicNote}</p>
-      </div>
-    );
+    return <CharacterDrawerTabs actor={actor} />;
   }
 
-  if (drawer === "sixRoots") {
-    return (
-      <div className="drawer-content six-root-detail">
-        <SixRootsSummary actor={actor} />
-        <p className="hint">六根锁定为：顶门、目窍、心口、丹田、命门、步根。</p>
-      </div>
-    );
-  }
-
-  if (drawer === "innerArt") {
-    const innerArt = actor.innerArts[0];
-    return (
-      <div className="drawer-content">
-        <p><strong>已装备内功：</strong>{innerArt?.name ?? "无"}</p>
-        <p><strong>当前运行窍位：</strong>{innerArt?.occupiedAcupoints.join("、") || "无"}</p>
-        <p><strong>被动效果：</strong>{innerArt?.passive ?? "无"}</p>
-        <div className="mini-dice-list">{["顶门", "目窍", "心口", "丹田", "命门", "步根"].map((item) => <span className="identity-pill" key={item}>{item}</span>)}</div>
-      </div>
-    );
+  // sixRoots and innerArt now folded into character drawer
+  if (drawer === "sixRoots" || drawer === "innerArt") {
+    return <CharacterDrawerTabs actor={actor} initialTab={drawer === "innerArt" ? "内功" : "六根"} />;
   }
 
   if (drawer === "inventory") {
@@ -2114,42 +2166,6 @@ function PlayerFlowPanel({
     </section>
   );
 }
-
-function DmControlPanel(props: DmDeskParameters) {
-  const activeActor = props.state.actors.find((actor) => actor.id === props.state.activeActorId) ?? props.state.actors[0];
-  return (
-    <section className="panel dm-console">
-      <div className="panel-title">
-        <img src={iconMap.dm} alt="" />
-        <h2>裁定面板</h2>
-      </div>
-      <div className="flow-buttons">
-        <button type="button" onClick={props.onStartScene}>开始场景</button>
-        <button type="button" onClick={props.onIntercept} disabled={!props.state.pendingAction}>截击取消</button>
-        <button type="button" onClick={props.onForm} disabled={!props.state.pendingAction}>判定成招</button>
-        <button type="button" onClick={props.onReact} disabled={!props.state.pendingAction}>目标应招</button>
-        <button type="button" onClick={props.onOutcome} disabled={!props.state.pendingAction}>应用落果</button>
-        <button type="button" onClick={props.onEndRound}>轮次结束</button>
-        <button type="button" onClick={props.onRegulateBreath}>调息</button>
-        <button type="button" onClick={props.onReflection}>返照</button>
-        <button type="button" onClick={props.onExpireSource}>来源失效</button>
-      </div>
-      <label>
-        势变化（{activeActor?.name ?? "未选单位"}）
-        <select value={activeActor?.momentum ?? "阴盛"} onChange={(event) => activeActor && props.onMomentum(activeActor.id, event.target.value as Actor["momentum"])}>
-          {["阴盛", "阳盛", "合势", "圆融", "崩势", "失势"].map((item) => <option key={item} value={item}>{item}</option>)}
-        </select>
-      </label>
-      <label>
-        手动裁定 / 广播文本
-        <textarea value={props.dmNote} onChange={(event) => props.setDmNote(event.target.value)} />
-      </label>
-      <button className="secondary-action" type="button" onClick={props.onOverride}>写入裁定日志</button>
-    </section>
-  );
-}
-
-type DmDeskParameters = Parameters<typeof DmCombatDesk>[0];
 
 function BroadcastPreview({ state }: { state: CombatState }) {
   return (
