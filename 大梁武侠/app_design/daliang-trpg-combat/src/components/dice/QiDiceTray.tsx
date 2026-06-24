@@ -3,12 +3,11 @@
 // Phase 2: supports draggable mode via @dnd-kit.
 // ==========================================================================
 
-import { type FC, useCallback } from "react";
+import { type FC, useState, useCallback } from "react";
 import { QiDie2D } from "./QiDie2D";
 import { DraggableQiDie } from "./DraggableQiDie";
 import { QiDiceToolbar } from "./QiDiceToolbar";
 import { useDiceStore } from "../../store/diceStore";
-import { useDiceRollAnimation } from "../../hooks/useDiceRollAnimation";
 import "./dice.css";
 
 export interface QiDiceTrayProps {
@@ -25,9 +24,6 @@ export interface QiDiceTrayProps {
  *
  * When draggable=true, each die is wrapped in DraggableQiDie
  * and requires a @dnd-kit DndContext ancestor.
- *
- * Phase 5: uses useDiceRollAnimation for per-die 500–900ms animations.
- * During rolling, drag and confirm are disabled.
  */
 export const QiDiceTray: FC<QiDiceTrayProps> = ({
   minHeight = 200,
@@ -37,25 +33,25 @@ export const QiDiceTray: FC<QiDiceTrayProps> = ({
   const {
     state,
     initStarterDice,
+    rollAllQiSeaDice,
     resetDiceToQiSea,
     selectDie,
     getQiSeaDice,
   } = useDiceStore();
 
-  const { isAnyRolling, getDisplayValue, startRollAnimation } = useDiceRollAnimation();
+  const [isRolling, setIsRolling] = useState(false);
 
   const qiSeaDice = getQiSeaDice();
   const hasDice = state.qiDice.length > 0;
 
   const handleRoll = useCallback(() => {
-    if (isAnyRolling || !hasDice) return;
-    const diceToRoll = getQiSeaDice();
-    if (diceToRoll.length === 0) return;
-    startRollAnimation(diceToRoll);
-  }, [isAnyRolling, hasDice, getQiSeaDice, startRollAnimation]);
-
-  // Drag is disabled during roll animation
-  const effectiveCanDrag = canDrag && !isAnyRolling;
+    if (isRolling || !hasDice) return;
+    setIsRolling(true);
+    setTimeout(() => {
+      rollAllQiSeaDice();
+      setIsRolling(false);
+    }, 400);
+  }, [isRolling, hasDice, rollAllQiSeaDice]);
 
   return (
     <div
@@ -74,7 +70,7 @@ export const QiDiceTray: FC<QiDiceTrayProps> = ({
         </div>
         <QiDiceToolbar
           hasDice={hasDice}
-          isRolling={isAnyRolling}
+          isRolling={isRolling}
           onInit={initStarterDice}
           onRoll={handleRoll}
           onReset={resetDiceToQiSea}
@@ -91,17 +87,14 @@ export const QiDiceTray: FC<QiDiceTrayProps> = ({
                   key={die.id}
                   die={die}
                   selected={state.selectedDieId === die.id}
-                  disabled={!effectiveCanDrag}
-                  rolling={isAnyRolling}
-                  displayValue={getDisplayValue(die.id, die.value)}
+                  disabled={!canDrag}
                 />
               ) : (
                 <QiDie2D
                   key={die.id}
                   die={die}
                   selected={state.selectedDieId === die.id}
-                  rolling={isAnyRolling}
-                  displayValue={getDisplayValue(die.id, die.value)}
+                  rolling={isRolling}
                   onClick={selectDie}
                 />
               ),

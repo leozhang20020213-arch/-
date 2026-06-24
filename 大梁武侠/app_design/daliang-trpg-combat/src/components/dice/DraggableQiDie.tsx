@@ -14,10 +14,6 @@ export interface DraggableQiDieProps {
   selected?: boolean;
   /** Can this die be dragged right now? */
   disabled?: boolean;
-  /** Show rolling animation (passed through to QiDie2D) */
-  rolling?: boolean;
-  /** Temporary display value during rolling (passed through to QiDie2D) */
-  displayValue?: number;
 }
 
 /**
@@ -29,8 +25,6 @@ export const DraggableQiDie: FC<DraggableQiDieProps> = ({
   die,
   selected = false,
   disabled = false,
-  rolling = false,
-  displayValue,
 }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -57,8 +51,6 @@ export const DraggableQiDie: FC<DraggableQiDieProps> = ({
       <QiDie2D
         die={die}
         selected={selected}
-        rolling={rolling}
-        displayValue={displayValue}
       />
     </div>
   );

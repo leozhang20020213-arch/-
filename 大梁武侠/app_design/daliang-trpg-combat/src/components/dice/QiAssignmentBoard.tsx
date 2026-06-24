@@ -69,24 +69,21 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
   const isResolved = state.declarationStatus === "resolved";
 
   // A move must be selected AND a target must be selected to allow drops
-  // Also: cannot drag when locked, resolved, or rolling
-  const canDrop = Boolean(moveRequirement?.moveId && hasTarget && !isLocked && !isResolved && !state.isRolling);
+  // Also: cannot drag when locked
+  const canDrop = Boolean(moveRequirement?.moveId && hasTarget && !isLocked && !isResolved);
 
   // Confirm check
   const yinTotal = assignedYin.reduce((s, d) => s + d.value, 0);
   const yangTotal = assignedYang.reduce((s, d) => s + d.value, 0);
 
-  // Also block confirm when dice are rolling
-  const confirmCheck = state.isRolling
-    ? { ok: false, reasons: ["气骰投掷中，请等待动画结束"] }
-    : canConfirmQiDeclaration({
-        requirement: moveRequirement,
-        targetId: state.targetId,
-        targetName,
-        yinDice: assignedYin,
-        yangDice: assignedYang,
-        declarationStatus: state.declarationStatus,
-      });
+  const confirmCheck = canConfirmQiDeclaration({
+    requirement: moveRequirement,
+    targetId: state.targetId,
+    targetName,
+    yinDice: assignedYin,
+    yangDice: assignedYang,
+    declarationStatus: state.declarationStatus,
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

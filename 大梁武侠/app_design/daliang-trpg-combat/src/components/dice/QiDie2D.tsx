@@ -14,8 +14,6 @@ export interface QiDie2DProps {
   selected?: boolean;
   /** Show a rolling animation */
   rolling?: boolean;
-  /** Temporary display value during rolling (overrides die.value when provided) */
-  displayValue?: number;
   /** Click handler */
   onClick?: (dieId: string) => void;
 }
@@ -40,7 +38,6 @@ export const QiDie2D: FC<QiDie2DProps> = ({
   die,
   selected = false,
   rolling = false,
-  displayValue,
   onClick,
 }) => {
   const kindCls = KIND_CLASS[die.kind] ?? "";
@@ -50,10 +47,6 @@ export const QiDie2D: FC<QiDie2DProps> = ({
 
   const baseSize = 64; // px base for D6
   const size = Math.round(baseSize * scale);
-
-  // Use displayValue during rolling, fall back to die.value
-  const shownValue = rolling && displayValue !== undefined ? displayValue : die.value;
-  const isAnimating = rolling && displayValue !== undefined && displayValue !== die.value;
 
   function handleClick() {
     onClick?.(die.id);
@@ -69,21 +62,21 @@ export const QiDie2D: FC<QiDie2DProps> = ({
   return (
     <button
       type="button"
-      className={`qi-die-2d ${kindCls}${selected ? " qi-die-2d--selected" : ""}${rolling ? " qi-die-2d--rolling" : ""}${isAnimating ? " qi-die-2d--animating" : ""}`}
+      className={`qi-die-2d ${kindCls}${selected ? " qi-die-2d--selected" : ""}${rolling ? " qi-die-2d--rolling" : ""}`}
       style={{ width: size, height: Math.round(size * 1.15) }}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      aria-label={`${kindLabel}骰 ${sidesLabel} 点数 ${shownValue}`}
+      aria-label={`${kindLabel}骰 ${sidesLabel} 点数 ${die.value}`}
       title={`${kindLabel}骰 ${sidesLabel} · ${die.source ?? "气海"}${die.temporary ? " · 临时" : ""}`}
     >
       {/* 左上角：性质标识 */}
-      <span className="qi-die-2d__face qi-die-kind-mark">{kindLabel}</span>
+      <span className="qi-die-2d__face">{kindLabel}</span>
 
       {/* 中央大数字 */}
-      <span className={`qi-die-2d__value qi-die-face-value${isAnimating ? " qi-die-face-value--spinning" : ""}`}>{shownValue}</span>
+      <span className="qi-die-2d__value">{die.value}</span>
 
       {/* 右下角：骰阶 */}
-      <span className="qi-die-2d__sides qi-die-sides-mark">{sidesLabel}</span>
+      <span className="qi-die-2d__sides">{sidesLabel}</span>
 
       {/* 临时标记 */}
       {die.temporary && <span className="qi-die-2d__temp-mark">临</span>}
