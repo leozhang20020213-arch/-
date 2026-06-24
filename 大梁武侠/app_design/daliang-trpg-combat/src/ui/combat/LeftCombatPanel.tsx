@@ -30,41 +30,14 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
 
   return (
     <div className="combat-left-panel">
-      {/* My combat brief card */}
+      {/* My combat brief card — compact */}
       <GamePanel title="我的战斗简卡" variant="parchment">
         <CombatBriefCard actor={actor} />
       </GamePanel>
 
-      {/* Teammates (if any) */}
-      {teammates.length > 0 && (
-        <GamePanel title="队友" variant="parchment">
-          {teammates.map((tm) => (
-            <UnitCard key={tm.id} actor={tm} mode="teammate" />
-          ))}
-        </GamePanel>
-      )}
-
-      {/* Scene goal / tracks */}
-      <GamePanel title="场景目标" variant="parchment">
-        <p style={{ margin: 0, fontSize: 13, color: "var(--ink-dark)" }}>
-          {state.sceneGoal || "—"}
-        </p>
-        {visibleTracks.map((track) => (
-          <div key={track.id} style={{ marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: "var(--ink-dark)", fontWeight: 600 }}>
-              {track.name}{track.hidden ? "（隐藏）" : ""}
-            </span>
-            <meter min={0} max={track.max} value={track.value} style={{ width: "100%", marginTop: 4 }} />
-            <small style={{ color: "var(--ink-subtle)" }}>
-              {track.value}/{track.max}
-            </small>
-          </div>
-        ))}
-      </GamePanel>
-
-      {/* Enemy overview (compact chips) */}
-      {enemies.length > 0 && (
-        <GamePanel title="敌方概览" variant="parchment">
+      {/* Selected target — compact */}
+      <GamePanel title="当前目标" variant="parchment">
+        {enemies.length > 0 ? (
           <div className="enemy-roster-compact">
             {enemies.map((enemy) => (
               <div className="enemy-chip" key={enemy.id}>
@@ -76,17 +49,47 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
               </div>
             ))}
           </div>
+        ) : (
+          <p style={{ margin: 0, fontSize: 11, color: "var(--ink-subtle)" }}>暂无敌方</p>
+        )}
+      </GamePanel>
+
+      {/* Teammates (if any) — compact */}
+      {teammates.length > 0 && (
+        <GamePanel title="队友" variant="parchment">
+          {teammates.map((tm) => (
+            <UnitCard key={tm.id} actor={tm} mode="teammate" />
+          ))}
         </GamePanel>
       )}
 
-      {/* Recent log */}
+      {/* Scene tracks — compact */}
+      {visibleTracks.length > 0 && (
+        <GamePanel title="场景" variant="parchment">
+          {visibleTracks.map((track) => (
+            <div key={track.id} style={{ marginBottom: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                <span style={{ fontWeight: 600, color: "var(--ink-dark)" }}>
+                  {track.name}{track.hidden ? "（隐藏）" : ""}
+                </span>
+                <small style={{ color: "var(--ink-subtle)" }}>
+                  {track.value}/{track.max}
+                </small>
+              </div>
+              <meter min={0} max={track.max} value={track.value} style={{ width: "100%", height: 6 }} />
+            </div>
+          ))}
+        </GamePanel>
+      )}
+
+      {/* Recent log — brighter */}
       <GamePanel title="最近动态" variant="subtle">
-        <div style={{ fontSize: "var(--fs-helper)", color: "var(--ink-subtle)", maxHeight: 80, overflowY: "auto" }}>
+        <div className="recent-log">
           {state.logs
             .filter((l) => l.public)
             .slice(0, 3)
             .map((l) => (
-              <div key={l.id} style={{ marginBottom: 4 }}>
+              <div key={l.id} style={{ marginBottom: 3 }}>
                 {l.message}
               </div>
             ))}
