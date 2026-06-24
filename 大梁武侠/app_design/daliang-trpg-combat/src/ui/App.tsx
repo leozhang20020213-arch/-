@@ -11,6 +11,7 @@ import {
   equipItem,
   expireSource,
   formMove,
+  getBasicActionAvailability,
   regulateBreath,
   resolveInterceptSuccess,
   resolveReact,
@@ -19,6 +20,7 @@ import {
   useReflection,
   visibleForPlayer,
 } from "../combat/combatEngine";
+import type { BasicActionType } from "../combat/combatEngine";
 import {
   clearAppSession,
   clearCombatState,
@@ -124,6 +126,7 @@ export function App() {
   const [prompt, setPrompt] = useState<{ title: string; message: string } | null>(null);
   const [selectedCombatantId, setSelectedCombatantId] = useState<string | undefined>();
   const [actedActorIds, setActedActorIds] = useState<Set<string>>(new Set());
+  const [selectedBasicAction, setSelectedBasicAction] = useState<BasicActionType | null>(null);
   const lanClientRef = useRef<LanClient | null>(null);
 
   const playerActorId = session.selectedActorId ?? "pc-shen-qing";
@@ -143,6 +146,7 @@ export function App() {
     setState((current) => updater(current));
     setSelectedDice([]);
     setSlotDice({ yin: [], yang: [] });
+    setSelectedBasicAction(null);
   }
 
   function go(route: AppSession["route"], patchSession: Partial<AppSession> = {}) {
@@ -281,6 +285,25 @@ export function App() {
     );
   }
 
+  function executeBasicAction(actionType: BasicActionType) {
+    const availability = getBasicActionAvailability(state, playerActorId, actionType);
+    if (!availability.usable) {
+      setPrompt({ title: "动作不可用", message: availability.detailReasons.join("、") });
+      return;
+    }
+    if (actionType === "regulateBreath") {
+      const die = state.dice.find((d) => d.ownerId === playerActorId && d.zone === "QI_REST");
+      if (!die) {
+        setPrompt({ title: "调息失败", message: "息库没有可调息气骰。" });
+        return;
+      }
+      patch((current) => regulateBreath(current, playerActorId, [die.id], true));
+    }
+    if (actionType === "fanzhao") {
+      patch((current) => useReflection(current, playerActorId));
+    }
+  }
+
   function interceptPending() {
     const pending = state.pendingAction;
     if (!pending) return;
@@ -328,11 +351,14 @@ export function App() {
     commitRollResults,
     setRollDice,
     declareFor,
+    executeBasicAction,
     patch,
     go,
     resetAll,
     selectedCombatantId,
     setSelectedCombatantId,
+    selectedBasicAction,
+    setSelectedBasicAction,
     setPrompt,
     actedActorIds,
   };
@@ -941,7 +967,9 @@ function PlayerCombatDesk(props: DeskProps & {
                 onClose={() => props.setSelectedCombatantId(undefined)}
               />
             ) : (
-              <EnemyRoster actors={enemies} mode="public" />
+              <section className="panel" style={{ textAlign: "center" }}>
+                <p className="hint" style={{ padding: "12px 0" }}>点击战场敌人卡片查看情报</p>
+              </section>
             )
           }
           flowButtons={
@@ -1158,7 +1186,9 @@ function DmCombatDesk(props: DeskProps & {
                 onClose={() => props.setSelectedCombatantId(undefined)}
               />
             ) : (
-              <BroadcastPreview state={props.state} />
+              <section className="panel" style={{ textAlign: "center" }}>
+                <p className="hint" style={{ padding: "12px 0" }}>点击战场敌人卡片查看情报</p>
+              </section>
             )
           }
           flowButtons={
@@ -1215,11 +1245,14 @@ interface DeskProps {
   assignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
   removeDieFromSlot: (id: string) => void;
   declareFor: (actorId: string, targetId: string, moveId: string) => void;
+  executeBasicAction: (actionType: BasicActionType) => void;
   patch: (updater: (current: CombatState) => CombatState) => void;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
   resetAll: () => void;
   selectedCombatantId: string | undefined;
   setSelectedCombatantId: (id: string | undefined) => void;
+  selectedBasicAction: BasicActionType | null;
+  setSelectedBasicAction: (action: BasicActionType | null) => void;
   setPrompt: (p: { title: string; message: string } | null) => void;
   actedActorIds: Set<string>;
 }
@@ -1419,13 +1452,49 @@ function SixRootsSummary({ actor }: { actor: Actor }) {
 
 function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
   const actorDice = props.state.dice.filter((die) => die.ownerId === props.actor.id && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"));
-  const selectedMove = props.actor.moves.find((move) => move.id === props.selectedMoveId) ?? props.actor.moves[0];
-  const availability = selectedMove
+  const selectedMove = props.selectedBasicAction
+    ? undefined
+    : props.actor.moves.find((move) => move.id === props.selectedMoveId) ?? props.actor.moves[0];
+  const moveAvailability = selectedMove
     ? canDeclareAction(props.state, props.actor.id, selectedMove.id, {
         yinSlotDiceIds: props.slotDice.yin,
         yangSlotDiceIds: props.slotDice.yang,
       })
     : { allowed: false, reasons: ["未选择行动"] };
+
+  // Basic action availability
+  const regulateBreathAvail = getBasicActionAvailability(props.state, props.actor.id, "regulateBreath");
+  const fanzhaoAvail = getBasicActionAvailability(props.state, props.actor.id, "fanzhao");
+
+  const isBreathSelected = props.selectedBasicAction === "regulateBreath";
+  const isFanzhaoSelected = props.selectedBasicAction === "fanzhao";
+
+  // Dynamic confirm button
+  const confirmLabel = isBreathSelected ? "确认调息"
+    : isFanzhaoSelected ? "确认返照"
+    : "确认宣言并锁气";
+
+  const confirmDisabled = isBreathSelected ? !regulateBreathAvail.usable
+    : isFanzhaoSelected ? !fanzhaoAvail.usable
+    : !moveAvailability.allowed;
+
+  const confirmHint = isBreathSelected
+    ? (regulateBreathAvail.usable ? "调息：从息库取回气骰入气海" : regulateBreathAvail.detailReasons.join("、"))
+    : isFanzhaoSelected
+    ? (fanzhaoAvail.usable ? "返照：气海为空时取回最低起投气骰" : fanzhaoAvail.detailReasons.join("、"))
+    : moveAvailability.allowed
+    ? (selectedMove?.baseEffect ?? "")
+    : moveAvailability.reasons.join("、");
+
+  function handleConfirm() {
+    if (isBreathSelected) {
+      props.executeBasicAction("regulateBreath");
+    } else if (isFanzhaoSelected) {
+      props.executeBasicAction("fanzhao");
+    } else {
+      props.declareFor(props.actor.id, props.selectedTargetId, props.selectedMoveId);
+    }
+  }
 
   return (
     <section className="panel">
@@ -1433,69 +1502,122 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
         <img src={iconMap.response} alt="" />
         <h2>招式与宣言</h2>
       </div>
-      <div className="form-grid">
-        <label>
-          目标
-          <select value={props.selectedTargetId} onChange={(event) => { const id = event.target.value; props.setSelectedTargetId(id); props.setSelectedCombatantId(id); }}>
-            {props.enemies.map((enemy) => (
-              <option key={enemy.id} value={enemy.id}>{enemy.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          招式
-          <select value={props.selectedMoveId} onChange={(event) => props.setSelectedMoveId(event.target.value)}>
-            {props.actor.moves.map((move) => (
-              <option key={move.id} value={move.id}>{move.name}</option>
-            ))}
-          </select>
-        </label>
+
+      {/* Target & Move dropdowns — only for normal moves */}
+      {!props.selectedBasicAction && (
+        <div className="form-grid">
+          <label>
+            目标
+            <select value={props.selectedTargetId} onChange={(event) => { const id = event.target.value; props.setSelectedTargetId(id); props.setSelectedCombatantId(id); }}>
+              {props.enemies.map((enemy) => (
+                <option key={enemy.id} value={enemy.id}>{enemy.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            招式
+            <select value={props.selectedMoveId} onChange={(event) => props.setSelectedMoveId(event.target.value)}>
+              {props.actor.moves.map((move) => (
+                <option key={move.id} value={move.id}>{move.name}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {/* Current selection summary */}
+      <div style={{ marginBottom: 8 }}>
+        {isBreathSelected && (
+          <div className="action-summary">
+            <p><strong>当前选择：调息</strong></p>
+            <p className="hint">类型：基础动作 · 目标：自身 · 距离：无</p>
+            <p className="hint">效果：从息库回气海</p>
+            <p className="hint" style={{ color: regulateBreathAvail.usable ? "var(--shield-green)" : "var(--hp-red)" }}>
+              {regulateBreathAvail.reasonTags.join("、")}
+            </p>
+          </div>
+        )}
+        {isFanzhaoSelected && (
+          <div className="action-summary">
+            <p><strong>当前选择：返照</strong></p>
+            <p className="hint">类型：基础动作 · 目标：自身 · 距离：无</p>
+            <p className="hint">效果：气海为空时取回最低起投气骰</p>
+            <p className="hint" style={{ color: fanzhaoAvail.usable ? "var(--shield-green)" : "var(--hp-red)" }}>
+              {fanzhaoAvail.reasonTags.join("、")}
+            </p>
+          </div>
+        )}
+        {!props.selectedBasicAction && selectedMove && (
+          <p className="hint">{selectedMove.baseEffect}</p>
+        )}
       </div>
+
+      {/* Action cards grid */}
       <div className="action-card-grid">
+        {/* Normal moves */}
         {props.actor.moves.map((move) => {
-          const selected = props.selectedMoveId === move.id;
-          const moveAvailability = canDeclareAction(props.state, props.actor.id, move.id, {
+          const selected = !props.selectedBasicAction && props.selectedMoveId === move.id;
+          const moveAvail = canDeclareAction(props.state, props.actor.id, move.id, {
             yinSlotDiceIds: props.slotDice.yin,
             yangSlotDiceIds: props.slotDice.yang,
           });
-          const disabledReason = moveAvailability.reasons.join("、");
+          const tag = moveAvail.allowed ? "可用" : moveAvail.reasons.join("、");
           return (
             <button
-              className={`action-card ${selected ? "selected" : ""} ${disabledReason ? "warn" : ""}`}
+              className={`action-card ${selected ? "selected" : ""} ${!moveAvail.allowed ? "warn" : ""}`}
               type="button"
               key={move.id}
-              onClick={() => props.setSelectedMoveId(move.id)}
+              onClick={() => { props.setSelectedMoveId(move.id); props.setSelectedBasicAction(null); }}
             >
               <strong>{move.name}</strong>
               <span>{move.timing === "正式出手" ? "招式卡 · 至少一阴一阳" : `${move.category} · ${move.timing}`}</span>
-              <small>{disabledReason || "可选择"}</small>
+              <small>{tag}</small>
             </button>
           );
         })}
-        <button className="action-card" type="button" onClick={() => props.patch((current) => dmOverride(current, "玩家选择基础动作：调息。"))}>
+
+        {/* 调息 card */}
+        <button
+          className={`action-card ${isBreathSelected ? "selected" : ""} ${!regulateBreathAvail.usable ? "warn" : ""}`}
+          type="button"
+          onClick={() => { props.setSelectedBasicAction("regulateBreath"); }}
+        >
           <strong>调息</strong>
-          <span>基础动作卡</span>
-          <small>按规则从息库回气海</small>
+          <span>基础动作 · 目标：自身</span>
+          <small>{regulateBreathAvail.reasonTags.join("、")}</small>
         </button>
-        <button className="action-card" type="button" onClick={() => props.patch((current) => dmOverride(current, "玩家选择基础动作：返照。"))}>
+
+        {/* 返照 card */}
+        <button
+          className={`action-card ${isFanzhaoSelected ? "selected" : ""} ${!fanzhaoAvail.usable ? "warn" : ""}`}
+          type="button"
+          onClick={() => { props.setSelectedBasicAction("fanzhao"); }}
+        >
           <strong>返照</strong>
-          <span>基础动作卡</span>
-          <small>气海为空时可用</small>
+          <span>特殊动作 · 目标：自身</span>
+          <small>{fanzhaoAvail.reasonTags.join("、")}</small>
         </button>
       </div>
-      <p className="hint">{selectedMove?.baseEffect}</p>
-      <div className="mini-dice-list">
-        {actorDice.map((die) => (
-          <button className={props.selectedDice.includes(die.id) ? "die selected" : "die"} type="button" key={die.id} onClick={() => props.toggleDie(die.id)}>
-            {dieLabel(die)}
-          </button>
-        ))}
-      </div>
-      {actorDice.length === 0 ? <p className="empty-state">气海/临气区没有可用气骰。先开始场景或调息。</p> : null}
-      <button className="primary-action" type="button" disabled={!availability.allowed} onClick={() => props.declareFor(props.actor.id, props.selectedTargetId, props.selectedMoveId)}>
-        确认宣言并锁气
+
+      {/* Dice selection — only for normal moves */}
+      {!props.selectedBasicAction && (
+        <>
+          <div className="mini-dice-list">
+            {actorDice.map((die) => (
+              <button className={props.selectedDice.includes(die.id) ? "die selected" : "die"} type="button" key={die.id} onClick={() => props.toggleDie(die.id)}>
+                {dieLabel(die)}
+              </button>
+            ))}
+          </div>
+          {actorDice.length === 0 ? <p className="empty-state">气海/临气区没有可用气骰。先开始场景或调息。</p> : null}
+        </>
+      )}
+
+      {/* Confirm button */}
+      <button className="primary-action" type="button" disabled={confirmDisabled} onClick={handleConfirm}>
+        {confirmLabel}
       </button>
-      {!availability.allowed ? <p className="hint">不可宣言：{availability.reasons.join("、")}</p> : null}
+      {confirmDisabled ? <p className="hint">{confirmHint}</p> : null}
     </section>
   );
 }
@@ -1956,16 +2078,6 @@ function PlayerFlowPanel({
         <button type="button" onClick={onReact} disabled={!hasPending}>应招</button>
         <button type="button" onClick={onOutcome} disabled={!hasPending}>查看落果</button>
       </div>
-    </section>
-  );
-}
-
-function BroadcastPreview({ state }: { state: CombatState }) {
-  return (
-    <section className="panel">
-      <h2>广播结算预览</h2>
-      <p>{state.logs.find((log) => log.public)?.message ?? "暂无公开结算。"}</p>
-      <p className="hint">DM 可在裁定面板修改落果、势变化、退场和公开信息；每次裁定写入日志。</p>
     </section>
   );
 }

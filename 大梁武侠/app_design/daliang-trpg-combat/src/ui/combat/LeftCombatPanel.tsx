@@ -27,7 +27,6 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
   const teammates = state.actors.filter(
     (a) => a.side === "player" && a.id !== actor.id,
   );
-  const enemies = state.actors.filter((a) => a.side !== "player");
 
   const clocks = useMemo(() => {
     const allClocks = getSceneClocks(state.tracks);
@@ -54,23 +53,6 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
       <GamePanel title="场景进度" variant="parchment">
         <SceneClockCompact clocks={clocks} />
       </GamePanel>
-
-      {/* Enemy overview (compact chips) */}
-      {enemies.length > 0 && (
-        <GamePanel title="敌方概览" variant="parchment">
-          <div className="enemy-roster-compact">
-            {enemies.map((enemy) => (
-              <div className="enemy-chip" key={enemy.id}>
-                <span className="enemy-name">{enemy.name}</span>
-                <span className="enemy-momentum">{enemy.momentum}</span>
-                <span className="enemy-hp">
-                  {enemy.hp}/{enemy.maxHp}
-                </span>
-              </div>
-            ))}
-          </div>
-        </GamePanel>
-      )}
 
       {/* Recent log */}
       <GamePanel title="最近动态" variant="subtle">

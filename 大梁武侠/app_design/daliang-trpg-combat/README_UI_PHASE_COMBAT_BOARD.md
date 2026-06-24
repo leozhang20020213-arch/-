@@ -90,6 +90,15 @@
 4. **势条件与距离的联动**：崩势状态下"目标线全开放"的规则尚未实现，当前仅按距离校验。
 5. **移动端适配**：当前交锋布局针对桌面 1366×768+，移动端需要额外响应式处理。
 
+## R3 更新（战场点击联动右侧敌人情报卡）
+
+| 改动 | 说明 |
+|------|------|
+| 战场点击联动 | 点击战场敌人卡 → `setSelectedCombatantId` + `setSelectedTargetId`（已有逻辑），新增：右侧从 EnemyRoster 切换为 EnemyPublicDrawer |
+| 无选中时右侧 | 不再渲染 EnemyRoster（敌方公开卡列表），改为提示"点击战场敌人卡片查看情报" |
+| 关闭情报卡 | × 按钮 → `setSelectedCombatantId(undefined)`，不清除 `selectedTargetId`，目标线保留 |
+| 左侧敌方概览删除 | LeftCombatPanel 中 enemy-roster-compact 已移除（常驻敌人公开卡不再存在） |
+
 ## 如何运行和验证
 
 ```bash

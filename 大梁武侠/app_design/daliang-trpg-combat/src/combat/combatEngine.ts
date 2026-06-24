@@ -1182,6 +1182,83 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
   );
 }
 
+// ============================================================================
+// BASIC ACTION AVAILABILITY (调息 / 返照)
+// ============================================================================
+
+/** Supported basic action types (self-targeting, no enemy target needed) */
+export type BasicActionType = "regulateBreath" | "fanzhao";
+
+/** Unified availability result with short tags for UI badges */
+export interface SkillAvailability {
+  usable: boolean;
+  reasonTags: string[];
+  detailReasons: string[];
+}
+
+/**
+ * Check whether a basic action (调息 / 返照) is currently available for an actor.
+ *
+ * Rules:
+ *   调息: self, no enemy target, no distance, needs rest pool non-empty, needs scene/declare phase
+ *   返照: self, no enemy target, no distance, needs qi sea empty, needs scene/declare phase
+ */
+export function getBasicActionAvailability(
+  state: CombatState,
+  actorId: string,
+  actionType: BasicActionType,
+  _reflectionUsedCount = 0,
+): SkillAvailability {
+  const actor = state.actors.find((a) => a.id === actorId);
+  const detailReasons: string[] = [];
+  const reasonTags: string[] = [];
+
+  if (!actor) {
+    return { usable: false, reasonTags: ["未知角色"], detailReasons: ["未找到角色"] };
+  }
+
+  // Phase check — both actions require scene or declare phase
+  const isActionablePhase = state.phase === "scene" || state.phase === "declare";
+  if (!isActionablePhase) {
+    detailReasons.push("当前时点不允许此动作（仅场景/宣言阶段可用）");
+    reasonTags.push("非当前时点");
+  }
+
+  // Current actor check
+  if (state.activeActorId !== actorId) {
+    detailReasons.push("不是当前行动者");
+    reasonTags.push("非当前行动者");
+  }
+
+  if (actionType === "regulateBreath") {
+    const hasRestDice = state.dice.some(
+      (d) => d.ownerId === actorId && d.zone === "QI_REST",
+    );
+    if (!hasRestDice) {
+      detailReasons.push("息库没有可调息的气骰");
+      reasonTags.push("息库为空");
+    }
+  }
+
+  if (actionType === "fanzhao") {
+    const hasSeaDice = state.dice.some(
+      (d) => d.ownerId === actorId && d.zone === "QI_SEA",
+    );
+    if (hasSeaDice) {
+      detailReasons.push("气海仍有可用气骰，返照仅在气海为空时可用");
+      reasonTags.push("气海未空");
+    }
+    // TODO: when reflection count tracking is implemented, check limit here
+  }
+
+  const usable = detailReasons.length === 0;
+  if (usable) {
+    reasonTags.push("可用");
+  }
+
+  return { usable, reasonTags, detailReasons };
+}
+
 /**
  * expireSource: Remove dice from a source that has expired.
  * - Remove unlocked source dice from QI_SEA and TEMP_QI
