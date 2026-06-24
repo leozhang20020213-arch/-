@@ -17,24 +17,58 @@
 | `src/ui/combat/stage/CombatStage.tsx` | **重写**。接收 state、selectedMove 属性。在 SVG 层渲染动态 TargetLine（仅当选中目标 ≠ 行动者时）。同步 internal/external 选中状态。 |
 | `src/ui/App.tsx` | 更新 CombatStage 包装器传递 state + selectedMove。战场点击敌人自动设置 selectedTargetId（同步下拉选项）。ActionPanel 目标下拉下方新增距离标签（显示距离带 + 合法性）。新增 deriveTargetState 和 Move 导入。 |
 
+## TargetState 接口
+
+```typescript
+interface TargetState {
+  actingActorId: string;
+  selectedTargetId?: string;
+  distanceBand?: "touch" | "close" | "mid" | "far" | "extreme";
+  isRangeValid: boolean;
+  invalidReason?: string;
+}
+```
+
+## BoardActorPosition 接口
+
+```typescript
+interface BoardActorPosition {
+  actorId: string;
+  x: number;
+  y: number;
+}
+```
+
+## 距离映射
+
+| 内部 DistanceBand | 英文 key | 显示标签 |
+|------------------|----------|---------|
+| 贴身 | touch | 贴身 |
+| 近身 | close | 近身 |
+| 短距 | close | 近身 |
+| 中距 | mid | 中距 |
+| 远距 | far | 远距 |
+| 离场 | extreme | 超距 |
+
 ## 目标线行为
 
 | 条件 | 视觉 |
 |------|------|
 | 目标 = 行动者自己 | 无目标线 |
-| 有效距离 | 金色实线 + 箭头 + 距离标签（琥珀色边框） |
-| 无效距离 | 红色虚线 + ⚠警告 + 距离标签（红色边框） |
-| 鼠标悬浮 | tooltip：`沈青 → 短兵客｜近身｜破浪横刀可用` |
-| 角色位置变动 | 目标线实时跟随（基于百分比坐标） |
-| 点击战场角色 | 设置目标并更新高亮 |
+| 有效距离 | 金色实线 + 箭头 + 距离标签（按显示标签） |
+| 无效距离 | 红色虚线 + ⚠警告 + 距离标签（红色边框）+ 确认按钮旁显示原因 |
+| 鼠标悬浮 | SVG `<title>` tooltip：`沈青 → 短兵客｜近身｜破浪横刀可用` |
+| 角色位置变动 | 目标线实时跟随（百分比坐标） |
+| 点击战场角色 | 设置目标并同步更新高亮 + 右侧下拉 |
+| 目标线不阻挡点击 | `pointer-events: none` on SVG group |
 
 ## 距离校验规则
 
-- 解析招式的 `targetRange` 字段，提取距离关键词（贴身/近身/短距/中距/远距）
-- 与实际 `distances` 关系中的距离带比对
+- 解析招式的 `targetRange` 字段，提取距离关键词
+- 与内部 DistanceBand 映射的英文 key 比对
 - "相邻"表示±1档距离允许
-- "自己"/"可及"/"同层"/"道路"/"房间"/"尸身"/"机关" = 总是有效
-- 无法解析的距离文字默认放行（由 DM 裁定）
+- 场景类关键词（自己/可及/道路/房间/尸身/机关/痕迹/同一）= 总是有效
+- 无效时在确认宣言按钮旁显示："⚠ 距离过远：当前近身，招式需要中距"
 
 ## 目标信息三合一
 

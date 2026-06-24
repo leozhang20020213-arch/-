@@ -19,6 +19,8 @@ export interface QiDiceDockProps {
   onConfirm: (yinIds: string[], yangIds: string[]) => void;
   /** Called when the player wants to roll dice from pool into sea */
   onRollToSea?: () => void;
+  /** Distance validation warning (shown near confirm button) */
+  distanceWarning?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   hasSelectedTarget,
   onConfirm,
   onRollToSea,
+  distanceWarning,
 }) => {
   // Local slot assignment state — tracks which dice are in yin/yang slots
   const [yinSlotIds, setYinSlotIds] = useState<string[]>([]);
@@ -207,6 +210,11 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       {!confirmCheck.allowed && confirmCheck.reasons.length > 0 && (
         <p className="qi-confirm-hint">
           {confirmCheck.reasons.join("、")}
+        </p>
+      )}
+      {distanceWarning && (
+        <p className="qi-confirm-hint distance-warn">
+          ⚠ {distanceWarning}
         </p>
       )}
     </div>

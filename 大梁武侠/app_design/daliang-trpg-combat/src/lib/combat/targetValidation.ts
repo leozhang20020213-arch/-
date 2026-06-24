@@ -5,31 +5,63 @@
 
 import type { CombatState, DistanceBand, Move } from "../../combat/types";
 
+// ---- User-facing distance keys (English, per spec) ----
+
+export type TargetDistanceKey = "touch" | "close" | "mid" | "far" | "extreme";
+
 // ---- Data Types ----
 
 export interface TargetState {
   actingActorId: string;
   selectedTargetId?: string;
-  distanceBand?: DistanceBand;
+  distanceBand?: TargetDistanceKey;
   isRangeValid: boolean;
   invalidReason?: string;
 }
 
-export interface BoardPosition {
+export interface BoardActorPosition {
   actorId: string;
   x: number; // percentage 0–100
   y: number; // percentage 0–100
 }
 
-// ---- Distance band ordering (closest → furthest) ----
+// ---- Internal DistanceBand → user-facing key mapping ----
 
-const DISTANCE_ORDER: DistanceBand[] = [
-  "贴身", "近身", "短距", "中距", "远距", "离场",
+const BAND_TO_KEY: Record<DistanceBand, TargetDistanceKey> = {
+  "贴身": "touch",
+  "近身": "close",
+  "短距": "close",   // "短距" ≈ close range for validation purposes
+  "中距": "mid",
+  "远距": "far",
+  "离场": "extreme", // "离场" ≈ extreme range
+};
+
+/** Chinese display label for each user-facing key */
+const KEY_DISPLAY: Record<TargetDistanceKey, string> = {
+  touch: "贴身",
+  close: "近身",
+  mid: "中距",
+  far: "远距",
+  extreme: "超距",
+};
+
+/** Distance keys ordered closest → furthest */
+const KEY_ORDER: TargetDistanceKey[] = [
+  "touch", "close", "mid", "far", "extreme",
 ];
+
+export function bandToKey(band: DistanceBand): TargetDistanceKey {
+  return BAND_TO_KEY[band] ?? "mid";
+}
+
+export function keyToDisplay(key: TargetDistanceKey): string {
+  return KEY_DISPLAY[key] ?? key;
+}
+
+// ---- Core functions ----
 
 /**
  * Find the distance band between two actors from the state's distance relations.
- * Returns undefined if no relation is defined.
  */
 export function getDistanceBetween(
   state: CombatState,
@@ -47,7 +79,7 @@ export function getDistanceBetween(
 /**
  * Check if a distance band is within a move's target range.
  *
- * Target range strings in moves are free-form text like:
+ * Target range strings are free-form text like:
  *   "近身人物目标；主手刀或同类短兵"
  *   "近身或相邻距离"
  *   "道路、房间、尸身周边或机关痕迹"
@@ -62,29 +94,27 @@ export function isDistanceValidForMove(
     return { valid: false, reason: "目标距离未知" };
   }
   if (!targetRangeText) {
-    return { valid: true }; // No range restriction
+    return { valid: true };
   }
 
   const range = targetRangeText.trim();
+  const actualKey = bandToKey(actualBand);
+  const actualDisplay = keyToDisplay(actualKey);
 
-  // "贴身" or "近身" — these specific bands
-  const bandsMentioned = DISTANCE_ORDER.filter((b) => range.includes(b));
+  // "贴身" or "近身" — these specific bands mentioned in the range text
+  const bandsMentioned = KEY_ORDER.filter((k) => range.includes(keyToDisplay(k)));
 
   if (bandsMentioned.length > 0) {
-    // Check if the actual band is in the mentioned set
-    // "近身" usually means "近身 and closer" in fighting context
-    // "中距" means "中距 and closer" for ranged attacks
-    // But let's keep it simple: check exact match + "相邻" for adjacent
-    if (bandsMentioned.includes(actualBand)) {
+    if (bandsMentioned.includes(actualKey)) {
       return { valid: true };
     }
 
-    // "相邻" means the next band closer or further
+    // "相邻" means ±1 band
     if (range.includes("相邻")) {
-      const actualIdx = DISTANCE_ORDER.indexOf(actualBand);
-      for (const b of bandsMentioned) {
-        const bandIdx = DISTANCE_ORDER.indexOf(b);
-        if (Math.abs(actualIdx - bandIdx) <= 1) {
+      const actualIdx = KEY_ORDER.indexOf(actualKey);
+      for (const k of bandsMentioned) {
+        const kIdx = KEY_ORDER.indexOf(k);
+        if (Math.abs(actualIdx - kIdx) <= 1) {
           return { valid: true };
         }
       }
@@ -92,11 +122,11 @@ export function isDistanceValidForMove(
 
     return {
       valid: false,
-      reason: `距离过远：当前${actualBand}，招式需要${bandsMentioned.join("、")}`,
+      reason: `距离过远：当前${actualDisplay}，招式需要${bandsMentioned.map(keyToDisplay).join("、")}`,
     };
   }
 
-  // "道路" "房间" "尸身周边" "机关痕迹" — scene-based targeting, always valid
+  // Scene-based targeting — always valid
   if (
     range.includes("道路") ||
     range.includes("房间") ||
@@ -104,17 +134,13 @@ export function isDistanceValidForMove(
     range.includes("机关") ||
     range.includes("痕迹") ||
     range.includes("自己") ||
-    range.includes("可及")
+    range.includes("可及") ||
+    range.includes("同一")
   ) {
     return { valid: true };
   }
 
-  // "同一" — same actor
-  if (range.includes("同一")) {
-    return { valid: true };
-  }
-
-  // Default: if we can't parse, assume valid (let DM decide)
+  // Can't parse — let DM decide
   return { valid: true };
 }
 
@@ -146,7 +172,7 @@ export function deriveTargetState(
   return {
     actingActorId,
     selectedTargetId,
-    distanceBand: band,
+    distanceBand: band ? bandToKey(band) : undefined,
     isRangeValid: rangeCheck.valid,
     invalidReason: rangeCheck.reason,
   };
@@ -154,16 +180,17 @@ export function deriveTargetState(
 
 /**
  * Get a human-friendly tooltip for the target line.
+ * Format: 沈青 → 短兵客｜近身｜破浪横刀可用
  */
 export function targetLineTooltip(
   fromName: string,
   toName: string,
-  band: DistanceBand | undefined,
+  key: TargetDistanceKey | undefined,
   moveName: string | undefined,
   isValid: boolean,
 ): string {
   const parts = [`${fromName} → ${toName}`];
-  if (band) parts.push(`｜${band}`);
+  if (key) parts.push(`｜${keyToDisplay(key)}`);
   if (moveName) parts.push(`｜${moveName}${isValid ? "可用" : "不可用"}`);
   if (!isValid) parts.push("｜距离不合法");
   return parts.join("");

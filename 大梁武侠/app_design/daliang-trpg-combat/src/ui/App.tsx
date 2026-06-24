@@ -898,6 +898,11 @@ function PlayerCombatDesk(props: DeskProps & {
               selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
               hasSelectedTarget={Boolean(props.selectedTargetId)}
               onRollToSea={() => props.patch((current) => enterScene(current))}
+              distanceWarning={(() => {
+                const m = actor.moves.find((mv) => mv.id === props.selectedMoveId);
+                const ts = deriveTargetState(props.state, props.selectedTargetId, m);
+                return ts.isRangeValid ? undefined : ts.invalidReason;
+              })()}
               onConfirm={(yinIds, yangIds) => {
                 const move = actor.moves.find((m) => m.id === props.selectedMoveId);
                 if (!move || !props.selectedTargetId) return;

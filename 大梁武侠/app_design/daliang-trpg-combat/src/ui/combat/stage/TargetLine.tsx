@@ -1,5 +1,6 @@
 import { type FC } from "react";
-import type { DistanceBand } from "../../../combat/types";
+import type { TargetDistanceKey } from "../../../lib/combat/targetValidation";
+import { keyToDisplay } from "../../../lib/combat/targetValidation";
 
 export interface TargetLineProps {
   /** Start position (acting actor) */
@@ -8,8 +9,8 @@ export interface TargetLineProps {
   /** End position (target actor) */
   x2: number;
   y2: number;
-  /** Distance band between them */
-  band?: DistanceBand;
+  /** Distance key between them */
+  band?: TargetDistanceKey;
   /** Whether the distance is valid for the selected move */
   isValid: boolean;
   /** Invalid reason for tooltip */
@@ -18,21 +19,21 @@ export interface TargetLineProps {
   tooltip: string;
 }
 
-const BAND_COLORS: Record<string, string> = {
-  "贴身": "rgba(194,58,46,0.8)",
-  "近身": "rgba(212,132,58,0.8)",
-  "短距": "rgba(194,168,78,0.7)",
-  "中距": "rgba(107,138,92,0.7)",
-  "远距": "rgba(58,92,122,0.6)",
-  "离场": "rgba(107,107,107,0.5)",
+const BAND_COLORS: Record<TargetDistanceKey, string> = {
+  touch:   "rgba(194,58,46,0.8)",
+  close:   "rgba(212,132,58,0.8)",
+  mid:     "rgba(194,168,78,0.7)",
+  far:     "rgba(58,92,122,0.6)",
+  extreme: "rgba(107,107,107,0.5)",
 };
 
 /**
  * SVG target line — draws from the acting actor to the selected target.
  *
- * - Valid distance: gold/amber glow with band label
- * - Invalid distance: red dashed line with warning
- * - Hover: tooltip with actor names, distance, move availability
+ * - Valid distance: amber/gold arrow with band label
+ * - Invalid distance: red dashed line with ⚠ warning
+ * - Hover: native SVG `<title>` tooltip
+ * - `pointer-events: none` on the group so it never blocks clicks on combatant nodes
  */
 export const TargetLine: FC<TargetLineProps> = ({
   x1,
@@ -51,18 +52,21 @@ export const TargetLine: FC<TargetLineProps> = ({
     ? "rgba(212,180,100,0.9)"
     : "rgba(194,58,46,0.85)";
 
-  const bandColor = band ? BAND_COLORS[band] ?? "rgba(212,180,100,0.9)" : strokeColor;
+  const bandColor = band ? (BAND_COLORS[band] ?? "rgba(212,180,100,0.9)") : strokeColor;
+  const bandLabel = band ? keyToDisplay(band) : "";
 
   return (
-    <g className="target-line-group" role="img" aria-label={tooltip}>
+    <g
+      className="target-line-group"
+      role="img"
+      aria-label={tooltip}
+      style={{ pointerEvents: "none" }}
+    >
       <title>{tooltip}{invalidReason ? ` — ${invalidReason}` : ""}</title>
 
       {/* Outer glow */}
       <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
+        x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={isValid ? "rgba(212,180,100,0.25)" : "rgba(194,58,46,0.2)"}
         strokeWidth="3"
         strokeLinecap="round"
@@ -70,10 +74,7 @@ export const TargetLine: FC<TargetLineProps> = ({
 
       {/* Main target line */}
       <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
+        x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={strokeColor}
         strokeWidth={isValid ? "1.8" : "2"}
         strokeDasharray={isValid ? "none" : "6 3"}
@@ -88,36 +89,32 @@ export const TargetLine: FC<TargetLineProps> = ({
       />
 
       {/* Distance label at midpoint */}
-      {band && (
+      {bandLabel && (
         <>
           <rect
-            x={mx - 18}
-            y={my - 9}
-            width="36"
-            height="18"
+            x={mx - 18} y={my - 9}
+            width="36" height="18"
             rx="5"
             fill={isValid ? "rgba(20,16,10,0.9)" : "rgba(40,10,10,0.9)"}
             stroke={isValid ? bandColor : "rgba(194,58,46,0.7)"}
             strokeWidth="1"
           />
           <text
-            x={mx}
-            y={my + 5}
+            x={mx} y={my + 5}
             textAnchor="middle"
             fill={isValid ? "rgba(247,231,187,0.95)" : "rgba(255,150,150,0.95)"}
             fontSize="7"
             fontWeight="800"
           >
-            {band}
+            {bandLabel}
           </text>
         </>
       )}
 
-      {/* Warning icon for invalid */}
+      {/* Warning icon for invalid distance */}
       {!isValid && (
         <text
-          x={mx}
-          y={my - 12}
+          x={mx} y={my - 12}
           textAnchor="middle"
           fill="rgba(255,100,100,0.9)"
           fontSize="8"
@@ -132,10 +129,8 @@ export const TargetLine: FC<TargetLineProps> = ({
 
 /** Compute arrowhead polygon points pointing toward the target */
 function computeArrowhead(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
+  x1: number, y1: number,
+  x2: number, y2: number,
   size: number,
 ): string {
   const dx = x2 - x1;
@@ -148,7 +143,6 @@ function computeArrowhead(
   const px = -uy * size;
   const py = ux * size;
 
-  // Arrowhead tip at (x2, y2), base points offset back
   const tipX = x2;
   const tipY = y2;
   const baseX = x2 - ux * size * 1.8;
