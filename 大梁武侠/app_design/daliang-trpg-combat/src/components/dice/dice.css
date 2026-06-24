@@ -1,0 +1,312 @@
+/* ==========================================================================
+   2D Qi Dice System — Phase 1 Styles
+   大梁江湖 TRPG · 气骰可视化
+   ========================================================================== */
+
+/* ---- QiDiceTray (气海骰盘) ---- */
+
+.qi-dice-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, rgba(15, 13, 10, 0.95) 0%, rgba(20, 17, 12, 0.92) 100%);
+  border: 1px solid rgba(200, 148, 62, 0.18);
+  border-radius: 10px;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Header */
+.qi-dice-tray__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.qi-dice-tray__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.qi-dice-tray__title-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f7e7bb;
+  letter-spacing: 0.06em;
+}
+
+.qi-dice-tray__subtitle {
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.55);
+}
+
+/* Dice area */
+.qi-dice-tray__dice-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 90px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.qi-dice-tray__dice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  align-content: center;
+  padding: 4px 0;
+}
+
+/* Empty state */
+.qi-dice-tray__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 4px;
+  color: rgba(247, 231, 187, 0.3);
+}
+
+.qi-dice-tray__empty-icon {
+  font-size: 36px;
+  opacity: 0.4;
+}
+
+.qi-dice-tray__empty p {
+  margin: 0;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.qi-dice-tray__empty-hint {
+  font-size: 11px !important;
+  color: rgba(247, 231, 187, 0.2) !important;
+  font-style: normal !important;
+}
+
+/* Footer */
+.qi-dice-tray__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid rgba(200, 148, 62, 0.1);
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.4);
+  flex-shrink: 0;
+}
+
+.qi-dice-tray__last-roll {
+  color: rgba(247, 231, 187, 0.25);
+  font-size: 10px;
+}
+
+/* ==========================================================================
+   QiDie2D — Single Die Card
+   ========================================================================== */
+
+.qi-die-2d {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 4px;
+  border: 2px solid rgba(107, 75, 45, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 150ms ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(180deg, rgba(40, 35, 28, 0.95) 0%, rgba(28, 24, 18, 0.98) 100%);
+}
+
+.qi-die-2d:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.qi-die-2d:active {
+  transform: translateY(0);
+}
+
+.qi-die-2d--selected {
+  border-color: #ffd76b !important;
+  box-shadow: 0 0 12px rgba(255, 215, 107, 0.35) !important;
+}
+
+/* Kind-specific colors — left border accent */
+.qi-die-2d--yin {
+  border-left: 3px solid #3a7ca5;
+  background: linear-gradient(180deg, rgba(15, 25, 40, 0.95) 0%, rgba(10, 18, 28, 0.98) 100%);
+}
+
+.qi-die-2d--yang {
+  border-left: 3px solid #c8782a;
+  background: linear-gradient(180deg, rgba(35, 22, 10, 0.95) 0%, rgba(25, 16, 6, 0.98) 100%);
+}
+
+.qi-die-2d--raw {
+  border-left: 3px solid #8a8a80;
+  background: linear-gradient(180deg, rgba(30, 30, 28, 0.95) 0%, rgba(20, 20, 18, 0.98) 100%);
+}
+
+/* Face label (top-left) */
+.qi-die-2d__face {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(247, 231, 187, 0.6);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.qi-die-2d--yin .qi-die-2d__face {
+  color: #6cb4d4;
+}
+
+.qi-die-2d--yang .qi-die-2d__face {
+  color: #e0a04a;
+}
+
+.qi-die-2d--raw .qi-die-2d__face {
+  color: #b0b0a8;
+}
+
+/* Value (center, large) */
+.qi-die-2d__value {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.02em;
+}
+
+.qi-die-2d--yin .qi-die-2d__value {
+  color: #d4eaff;
+}
+
+.qi-die-2d--yang .qi-die-2d__value {
+  color: #ffe0b0;
+}
+
+.qi-die-2d--raw .qi-die-2d__value {
+  color: #e8e8e0;
+}
+
+/* Sides label (bottom-right) */
+.qi-die-2d__sides {
+  position: absolute;
+  bottom: 3px;
+  right: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(247, 231, 187, 0.5);
+  line-height: 1;
+}
+
+/* Temp mark */
+.qi-die-2d__temp-mark {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #f2c14e;
+  line-height: 1;
+}
+
+/* Lock mark */
+.qi-die-2d__lock-mark {
+  position: absolute;
+  bottom: 3px;
+  left: 5px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #c05040;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   Rolling Animation
+   ========================================================================== */
+
+.qi-die-2d--rolling {
+  animation: diceRollPulse 400ms ease-in-out infinite;
+}
+
+@keyframes diceRollPulse {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(-6deg) scale(1.08); }
+  50%  { transform: rotate(0deg) scale(1.12); }
+  75%  { transform: rotate(6deg) scale(1.08); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ==========================================================================
+   QiDiceToolbar
+   ========================================================================== */
+
+.qi-dice-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.qi-dice-toolbar__btn {
+  padding: 5px 12px;
+  border: 1px solid rgba(200, 148, 62, 0.3);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
+}
+
+.qi-dice-toolbar__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.qi-dice-toolbar__btn--init {
+  background: rgba(74, 122, 92, 0.15);
+  color: #6db88d;
+  border-color: rgba(74, 122, 92, 0.35);
+}
+
+.qi-dice-toolbar__btn--init:hover:not(:disabled) {
+  background: rgba(74, 122, 92, 0.28);
+}
+
+.qi-dice-toolbar__btn--roll {
+  background: rgba(200, 148, 62, 0.15);
+  color: #e0b860;
+  border-color: rgba(200, 148, 62, 0.35);
+}
+
+.qi-dice-toolbar__btn--roll:hover:not(:disabled) {
+  background: rgba(200, 148, 62, 0.28);
+}
+
+.qi-dice-toolbar__btn--reset {
+  background: rgba(160, 140, 120, 0.1);
+  color: #b0a090;
+  border-color: rgba(160, 140, 120, 0.25);
+}
+
+.qi-dice-toolbar__btn--reset:hover:not(:disabled) {
+  background: rgba(160, 140, 120, 0.2);
+}
