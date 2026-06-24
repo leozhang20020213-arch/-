@@ -540,3 +540,4 @@
   border-color: rgba(107, 75, 45, 0.1);
   box-shadow: none;
 }
+.target-distance-info { font-size: 10px; color: var(--ink-subtle); margin-left: 4px; } .target-distance-info.invalid { color: var(--hp-red); font-weight: 600; }

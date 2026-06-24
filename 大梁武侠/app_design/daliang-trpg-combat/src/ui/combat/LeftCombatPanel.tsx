@@ -1,8 +1,10 @@
-import type { FC } from "react";
+import { useMemo, type FC } from "react";
 import type { Actor, CombatState } from "../../combat/types";
+import { getSceneClocks } from "../../combat/sceneClock";
 import { GamePanel } from "../components/GamePanel";
 import { CombatBriefCard } from "../components/CombatBriefCard";
 import { UnitCard } from "../components/UnitCard";
+import { SceneClockCompact } from "./SceneClockCompact";
 
 export interface LeftCombatPanelProps {
   actor: Actor;
@@ -12,8 +14,10 @@ export interface LeftCombatPanelProps {
 
 /**
  * Left combat panel (320px fixed width).
- * Stacks: My combat brief card → Scene goals → Enemy overview → Recent log.
- * Reuses existing GamePanel and CombatBriefCard components.
+ * Stacks: My combat brief card → Scene clocks → Enemy overview → Recent log.
+ *
+ * Scene tracks are now unified as SceneClocks — compact progress bars
+ * with detail moved into expandable toggles instead of wall-of-text.
  */
 export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
   actor,
@@ -24,9 +28,11 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
     (a) => a.side === "player" && a.id !== actor.id,
   );
   const enemies = state.actors.filter((a) => a.side !== "player");
-  const visibleTracks = isDM
-    ? state.tracks
-    : state.tracks.filter((t) => !t.hidden);
+
+  const clocks = useMemo(() => {
+    const allClocks = getSceneClocks(state.tracks);
+    return isDM ? allClocks : allClocks.filter((c) => !c.hidden);
+  }, [state.tracks, isDM]);
 
   return (
     <div className="combat-left-panel">
@@ -44,22 +50,9 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
         </GamePanel>
       )}
 
-      {/* Scene goal / tracks */}
-      <GamePanel title="场景目标" variant="parchment">
-        <p style={{ margin: 0, fontSize: 13, color: "var(--ink-dark)" }}>
-          {state.sceneGoal || "—"}
-        </p>
-        {visibleTracks.map((track) => (
-          <div key={track.id} style={{ marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: "var(--ink-dark)", fontWeight: 600 }}>
-              {track.name}{track.hidden ? "（隐藏）" : ""}
-            </span>
-            <meter min={0} max={track.max} value={track.value} style={{ width: "100%", marginTop: 4 }} />
-            <small style={{ color: "var(--ink-subtle)" }}>
-              {track.value}/{track.max}
-            </small>
-          </div>
-        ))}
+      {/* Scene clocks — unified progress tracks */}
+      <GamePanel title="场景进度" variant="parchment">
+        <SceneClockCompact clocks={clocks} />
       </GamePanel>
 
       {/* Enemy overview (compact chips) */}

@@ -351,3 +351,141 @@
   color: var(--ink-subtle);
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   Scene Clock Compact — Unified progress tracks
+   ========================================================================== */
+
+.scene-clock-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- Clock Row ---- */
+.clock-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.clock-row-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clock-icon {
+  margin-right: 2px;
+  font-size: 12px;
+}
+
+.clock-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-dark);
+  flex: 1;
+}
+
+.clock-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-dark);
+  white-space: nowrap;
+}
+
+.clock-type-label {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(107, 75, 45, 0.12);
+  color: var(--ink-subtle);
+  white-space: nowrap;
+}
+
+/* ---- Progress Bar ---- */
+.clock-bar-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(107, 75, 45, 0.15);
+  overflow: hidden;
+}
+
+.clock-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 500ms ease;
+}
+
+/* ---- Expanded Info ---- */
+.clock-expanded-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.clock-trigger {
+  font-size: 10px;
+  color: var(--ink-subtle);
+  font-style: italic;
+}
+
+.clock-consequence {
+  font-size: 10px;
+  color: var(--hp-red);
+  font-weight: 600;
+}
+
+.clock-detail-btn {
+  font-size: 10px;
+  padding: 1px 8px;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-subtle);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clock-detail-btn:hover {
+  background: rgba(107, 75, 45, 0.08);
+}
+
+.clock-detail-text {
+  width: 100%;
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--ink-dark);
+  line-height: 1.5;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+/* Collapsed row: smaller */
+.clock-row.collapsed .clock-name {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.clock-row.collapsed .clock-bar-track {
+  height: 4px;
+}
+
+/* Hidden count chip */
+.clock-hidden-count {
+  font-size: 10px;
+  color: var(--ink-subtle);
+  font-style: italic;
+  text-align: center;
+}
+}
+
+/* Target line hover cursor */
+.target-line-group { cursor: pointer; }
+.target-line-group:hover line:first-of-type { stroke-opacity: 0.6; }
+
