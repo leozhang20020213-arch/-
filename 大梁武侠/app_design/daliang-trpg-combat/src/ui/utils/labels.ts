@@ -20,11 +20,11 @@ export function phaseLabel(phase: CombatState["phase"]): string {
   const map: Record<CombatState["phase"], string> = {
     setup: "开局",
     initiative: "先攻判定",
-    scene: "情景中",
-    declare: "宣言阶段",
-    intercept_window: "截击窗口",
-    react_window: "应招窗口",
-    outcome: "落果结算",
+    scene: "可宣言",
+    declare: "宣言中",
+    intercept_window: "等待截击",
+    react_window: "等待应招",
+    outcome: "结算中",
     round_end: "轮次结束",
   };
   return map[phase] ?? phase;

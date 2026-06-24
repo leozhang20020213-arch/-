@@ -1,7 +1,8 @@
-import type { FC } from "react";
+import { useMemo, type FC } from "react";
 import type { AppSession, CombatState } from "../../combat/types";
 import type { DrawerId } from "../layouts/MainToolbar";
-import { identityLabel, phaseLabel } from "../utils/labels";
+import { identityLabel } from "../utils/labels";
+import { deriveTurnState, type TurnOrderEntry } from "../../lib/combat/turnOrder";
 
 export interface TopCombatBarProps {
   session: AppSession;
@@ -12,6 +13,8 @@ export interface TopCombatBarProps {
   setDebugView: (v: boolean) => void;
   onHome: () => void;
   onReset: () => void;
+  /** Set of actor IDs who have already acted this round */
+  actedActorIds?: Set<string>;
 }
 
 interface NavBtn {
@@ -39,11 +42,47 @@ const DM_NAV: NavBtn[] = [
   { id: "settings", label: "设置" },
 ];
 
+const MOMENTUM_CLASS: Record<string, string> = {
+  "阴盛": "mom-yin",
+  "阳盛": "mom-yang",
+  "合势": "mom-he",
+  "圆融": "mom-harmony",
+  "崩势": "mom-collapse",
+  "失势": "mom-lost",
+};
+
+/**
+ * A single actor chip in the turn order queue.
+ */
+const TurnChip: FC<{ entry: TurnOrderEntry }> = ({ entry }) => {
+  let chipClass = "turn-chip";
+  if (entry.isCurrent) chipClass += " current";
+  if (entry.hasActed) chipClass += " acted";
+  if (entry.canRespond) chipClass += " can-respond";
+  if (entry.isDying) chipClass += " dying";
+
+  return (
+    <span
+      className={chipClass}
+      title={`${entry.name} · 先后${entry.initiative} · 势${entry.momentum}${entry.hasActed ? " · 已行动" : ""}${entry.canRespond ? " · 可响应" : ""}${entry.isDying ? " · 濒死" : ""}`}
+    >
+      <span className="turn-chip-avatar">
+        {entry.name.charAt(0)}
+      </span>
+      <span className="turn-chip-name">{entry.name}</span>
+      <span className="turn-chip-init">{entry.initiative}</span>
+      {entry.hasActed && <span className="turn-chip-check">✓</span>}
+      {entry.canRespond && <span className="turn-chip-respond-dot" />}
+    </span>
+  );
+};
+
 /**
  * Top combat bar (56px).
- * Merges TitleBar + MainToolbar + RoundStatusBar into one compact row.
+ * Layout: [Game Name] | [Round + Phase] | [Turn Queue Chips] | [Nav] | [Identity + Controls]
  *
- * Layout: [Game Name] | [Round | Actor | Phase] | [Nav buttons | Identity | Save/Home]
+ * The turn queue is the centerpiece — it shows every actor in initiative order
+ * with current/acted/responding status visible at a glance.
  */
 export const TopCombatBar: FC<TopCombatBarProps> = ({
   session,
@@ -54,28 +93,49 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
   setDebugView,
   onHome,
   onReset,
+  actedActorIds,
 }) => {
   const isDM = session.identity === "dm";
   const navItems = isDM ? DM_NAV : PLAYER_NAV;
-  const activeActor = state.actors.find((a) => a.id === state.activeActorId);
-  const roomCode = session.roomCode || "本地";
+
+  const turnState = useMemo(
+    () => deriveTurnState(state, actedActorIds ?? new Set()),
+    [state, actedActorIds],
+  );
+
+  // Separator dots between turn chips (not after the last one)
+  const turnEntries = turnState.order;
 
   return (
-    <header className="combat-topbar">
-      {/* Left: App name */}
+    <header className="combat-topbar" role="banner" aria-label="交锋顶栏">
+      {/* Left: App name (compact) */}
       <div className="combat-topbar__left">
-        <span className="app-name">大梁江湖 TRPG</span>
+        <span className="app-name" title="大梁江湖 TRPG">大梁江湖</span>
       </div>
 
-      {/* Center: Round · Actor · Phase */}
-      <div className="combat-topbar__center">
-        <span className="round-badge">第{state.round}轮</span>
-        <span className="arrow">→</span>
-        <span className="actor-name">{activeActor?.name ?? "—"}</span>
-        <span className="phase-badge">{phaseLabel(state.phase)}</span>
+      {/* Center-left: Round + Phase */}
+      <div className="combat-topbar__round-phase">
+        <span className="round-badge">第{turnState.round}轮</span>
+        <span className="phase-badge">{turnState.shortPhase}</span>
       </div>
 
-      {/* Right: Nav + Identity + Window controls */}
+      {/* Center: Turn order queue */}
+      <div
+        className="combat-topbar__queue"
+        role="list"
+        aria-label={`行动顺序：${turnEntries.map((e) => e.name).join(" → ")}`}
+      >
+        {turnEntries.map((entry, i) => (
+          <span key={entry.actorId} className="turn-chip-wrapper" role="listitem">
+            <TurnChip entry={entry} />
+            {i < turnEntries.length - 1 && (
+              <span className="turn-arrow" aria-hidden="true">→</span>
+            )}
+          </span>
+        ))}
+      </div>
+
+      {/* Right: Nav + Identity + Controls */}
       <div className="combat-topbar__right">
         <nav className="combat-topbar__nav" aria-label="主导航">
           {navItems.map((btn) => (

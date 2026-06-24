@@ -122,6 +122,7 @@ export function App() {
   const [rollDice, setRollDice] = useState<QiDie[] | null>(null);
   const [prompt, setPrompt] = useState<{ title: string; message: string } | null>(null);
   const [selectedCombatantId, setSelectedCombatantId] = useState<string | undefined>();
+  const [actedActorIds, setActedActorIds] = useState<Set<string>>(new Set());
   const lanClientRef = useRef<LanClient | null>(null);
 
   const playerActorId = session.selectedActorId ?? "pc-shen-qing";
@@ -332,6 +333,7 @@ export function App() {
     selectedCombatantId,
     setSelectedCombatantId,
     setPrompt,
+    actedActorIds,
   };
 
   const isDeskRoute =
@@ -787,6 +789,7 @@ function PlayerSceneDesk(props: DeskProps & {
           setDebugView={props.setDebugView}
           onHome={() => props.go("home")}
           onReset={props.resetAll}
+          actedActorIds={props.actedActorIds}
         />
       }
       left={<LeftCombatPanel actor={actor} state={props.state} />}
@@ -880,6 +883,7 @@ function PlayerCombatDesk(props: DeskProps & {
           setDebugView={props.setDebugView}
           onHome={() => props.go("home")}
           onReset={props.resetAll}
+          actedActorIds={props.actedActorIds}
         />
       }
       left={<LeftCombatPanel actor={actor} state={props.state} />}
@@ -983,6 +987,7 @@ function DmSceneDesk(props: DeskProps & {
           setDebugView={props.setDebugView}
           onHome={() => props.go("home")}
           onReset={props.resetAll}
+          actedActorIds={props.actedActorIds}
         />
       }
       left={<LeftCombatPanel actor={props.state.actors[0]} state={props.state} isDM />}
@@ -1080,6 +1085,7 @@ function DmCombatDesk(props: DeskProps & {
           setDebugView={props.setDebugView}
           onHome={() => props.go("home")}
           onReset={props.resetAll}
+          actedActorIds={props.actedActorIds}
         />
       }
       left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
@@ -1209,6 +1215,7 @@ interface DeskProps {
   selectedCombatantId: string | undefined;
   setSelectedCombatantId: (id: string | undefined) => void;
   setPrompt: (p: { title: string; message: string } | null) => void;
+  actedActorIds: Set<string>;
 }
 
 function GameModeHeader({ state, modeLabel }: { state: CombatState; modeLabel: string }) {
