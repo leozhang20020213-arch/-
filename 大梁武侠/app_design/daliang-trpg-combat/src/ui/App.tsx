@@ -54,8 +54,6 @@ import { QiDiceDock } from "./combat/dice/QiDiceDock";
 import { DmControlPanel } from "./combat/dm/DmControlPanel";
 import { PlayerPromptBar } from "./combat/player/PlayerPromptBar";
 import { DebugPanel } from "./debug/DebugPanel";
-import { DiceStoreProvider } from "../store/diceStore";
-import { QiDiceTray as QiDiceTray2D } from "../components/dice/QiDiceTray";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -347,7 +345,7 @@ export function App() {
   if (isDeskRoute) {
     const displayState = debugView && session.developerMode ? state : playerState;
     return (
-      <DiceStoreProvider>
+      <>
         {session.route === "playerScene" ? (
           <PlayerSceneDesk
             {...common}
@@ -412,7 +410,7 @@ export function App() {
         ) : null}
         {prompt ? <PromptModal title={prompt.title} message={prompt.message} onClose={() => setPrompt(null)} /> : null}
         <DebugPanel state={state} session={session} debugView={debugView} setDebugView={setDebugView} />
-      </DiceStoreProvider>
+      </>
     );
   }
 
@@ -810,7 +808,20 @@ function PlayerSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiDiceTray2D minHeight={200} />}
+          qiZone={
+            <section className="panel scene-board" style={{ height: "100%", padding: "12px" }}>
+              <h2>情景动作</h2>
+              <div className="action-card-grid">
+                {["观察", "交涉", "搜查", "移步", "取物", "使用物品"].map((action) => (
+                  <button className="action-card" type="button" key={action}>
+                    <strong>{action}</strong>
+                    <span>情景动作</span>
+                    <small>由 DM 裁定并写入事件</small>
+                  </button>
+                ))}
+              </div>
+            </section>
+          }
         />
       }
       right={
@@ -877,40 +888,35 @@ function PlayerCombatDesk(props: DeskProps & {
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden" }}>
-              <QiDiceTray2D minHeight={160} />
-              <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-                <QiDiceDock
-                  state={props.state}
-                  actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
-                  selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
-                  hasSelectedTarget={Boolean(props.selectedTargetId)}
-                  onConfirm={(yinIds, yangIds) => {
-                    const move = actor.moves.find((m) => m.id === props.selectedMoveId);
-                    if (!move || !props.selectedTargetId) return;
-                    const diceToUse = [...yinIds, ...yangIds];
-                    if (diceToUse.length === 0) {
-                      props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
-                      return;
-                    }
-                    const availability = canDeclareAction(props.state, actor.id, move.id, {
-                      yinSlotDiceIds: yinIds,
-                      yangSlotDiceIds: yangIds,
-                    });
-                    if (!availability.allowed) {
-                      props.setPrompt({ title: "宣言不可用", message: availability.reasons.join("、") });
-                      return;
-                    }
-                    props.patch((current) =>
-                      declareAction(current, actor.id, props.selectedTargetId, move.id, diceToUse, {
-                        yinSlotDiceIds: yinIds,
-                        yangSlotDiceIds: yangIds,
-                      }),
-                    );
-                  }}
-                />
-              </div>
-            </div>
+            <QiDiceDock
+              state={props.state}
+              actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
+              selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
+              hasSelectedTarget={Boolean(props.selectedTargetId)}
+              onConfirm={(yinIds, yangIds) => {
+                const move = actor.moves.find((m) => m.id === props.selectedMoveId);
+                if (!move || !props.selectedTargetId) return;
+                const diceToUse = [...yinIds, ...yangIds];
+                if (diceToUse.length === 0) {
+                  props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
+                  return;
+                }
+                const availability = canDeclareAction(props.state, actor.id, move.id, {
+                  yinSlotDiceIds: yinIds,
+                  yangSlotDiceIds: yangIds,
+                });
+                if (!availability.allowed) {
+                  props.setPrompt({ title: "宣言不可用", message: availability.reasons.join("、") });
+                  return;
+                }
+                props.patch((current) =>
+                  declareAction(current, actor.id, props.selectedTargetId, move.id, diceToUse, {
+                    yinSlotDiceIds: yinIds,
+                    yangSlotDiceIds: yangIds,
+                  }),
+                );
+              }}
+            />
           }
         />
       }
@@ -998,7 +1004,15 @@ function DmSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiDiceTray2D minHeight={200} />}
+          qiZone={
+            <section className="panel scene-board" style={{ height: "100%" }}>
+              <h2>共享情景舞台</h2>
+              <p>夜雨石桥，失镖血箱仍在对岸暗处。</p>
+              <div className="actor-list">
+                {publicObjects.map((actor) => <UnitCard actor={actor} mode={actor.side === "player" ? "teammate" : "enemyDm"} key={actor.id} />)}
+              </div>
+            </section>
+          }
         />
       }
       right={
@@ -1077,32 +1091,27 @@ function DmCombatDesk(props: DeskProps & {
               const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
               const dmActor = props.state.actors.find((a) => a.id === dmActorId) ?? props.state.actors[0];
               return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden" }}>
-                  <QiDiceTray2D minHeight={160} />
-                  <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-                    <QiDiceDock
-                      state={props.state}
-                      actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
-                      selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
-                      hasSelectedTarget={Boolean(props.selectedTargetId)}
-                      onConfirm={(yinIds, yangIds) => {
-                        const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
-                        if (!move || !props.selectedTargetId) return;
-                        const diceToUse = [...yinIds, ...yangIds];
-                        if (diceToUse.length === 0) {
-                          props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
-                          return;
-                        }
-                        props.patch((current) =>
-                          declareAction(current, dmActorId, props.selectedTargetId, move.id, diceToUse, {
-                            yinSlotDiceIds: yinIds,
-                            yangSlotDiceIds: yangIds,
-                          }),
-                        );
-                      }}
-                    />
-                  </div>
-                </div>
+                <QiDiceDock
+                  state={props.state}
+                  actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
+                  selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
+                  hasSelectedTarget={Boolean(props.selectedTargetId)}
+                  onConfirm={(yinIds, yangIds) => {
+                    const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
+                    if (!move || !props.selectedTargetId) return;
+                    const diceToUse = [...yinIds, ...yangIds];
+                    if (diceToUse.length === 0) {
+                      props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
+                      return;
+                    }
+                    props.patch((current) =>
+                      declareAction(current, dmActorId, props.selectedTargetId, move.id, diceToUse, {
+                        yinSlotDiceIds: yinIds,
+                        yangSlotDiceIds: yangIds,
+                      }),
+                    );
+                  }}
+                />
               );
             })()
           }
