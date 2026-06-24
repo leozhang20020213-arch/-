@@ -27,7 +27,7 @@ import {
   saveAppSession,
   saveCombatState,
 } from "../combat/storage";
-import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, Move, QiDie, QiZone } from "../combat/types";
+import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, QiDie, QiZone } from "../combat/types";
 import { createLanClient, type LanClient, type LanConnectionStatus } from "../net/lanClient";
 // PhaserCombatBoard replaced by TacticalCombatStage in PHASE2
 import { QiDiceTray } from "../dice3d/QiDiceTray";
@@ -56,8 +56,6 @@ import { PlayerPromptBar } from "./combat/player/PlayerPromptBar";
 import { DebugPanel } from "./debug/DebugPanel";
 import { DiceStoreProvider } from "../store/diceStore";
 import { QiDiceTray as QiDiceTray2D } from "../components/dice/QiDiceTray";
-import { QiAssignmentBoard } from "../components/dice/QiAssignmentBoard";
-import type { CurrentMoveQiRequirement } from "../types/dice";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -812,7 +810,7 @@ function PlayerSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} minHeight={200} />}
+          qiZone={<QiDiceTray2D minHeight={200} />}
         />
       }
       right={
@@ -879,17 +877,40 @@ function PlayerCombatDesk(props: DeskProps & {
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
-            (() => {
-              const move = actor.moves.find((m) => m.id === props.selectedMoveId);
-              const req = parseMoveRequirement(move, move?.name);
-              return (
-                <QiAssignmentBoard
-                  moveRequirement={req}
-                  hasTarget={Boolean(props.selectedTargetId)}
-                  minHeight={220}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden" }}>
+              <QiDiceTray2D minHeight={160} />
+              <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+                <QiDiceDock
+                  state={props.state}
+                  actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
+                  selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
+                  hasSelectedTarget={Boolean(props.selectedTargetId)}
+                  onConfirm={(yinIds, yangIds) => {
+                    const move = actor.moves.find((m) => m.id === props.selectedMoveId);
+                    if (!move || !props.selectedTargetId) return;
+                    const diceToUse = [...yinIds, ...yangIds];
+                    if (diceToUse.length === 0) {
+                      props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
+                      return;
+                    }
+                    const availability = canDeclareAction(props.state, actor.id, move.id, {
+                      yinSlotDiceIds: yinIds,
+                      yangSlotDiceIds: yangIds,
+                    });
+                    if (!availability.allowed) {
+                      props.setPrompt({ title: "宣言不可用", message: availability.reasons.join("、") });
+                      return;
+                    }
+                    props.patch((current) =>
+                      declareAction(current, actor.id, props.selectedTargetId, move.id, diceToUse, {
+                        yinSlotDiceIds: yinIds,
+                        yangSlotDiceIds: yangIds,
+                      }),
+                    );
+                  }}
                 />
-              );
-            })()
+              </div>
+            </div>
           }
         />
       }
@@ -977,7 +998,7 @@ function DmSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} minHeight={200} />}
+          qiZone={<QiDiceTray2D minHeight={200} />}
         />
       }
       right={
@@ -1055,14 +1076,33 @@ function DmCombatDesk(props: DeskProps & {
             (() => {
               const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
               const dmActor = props.state.actors.find((a) => a.id === dmActorId) ?? props.state.actors[0];
-              const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
-              const req = parseMoveRequirement(move, move?.name);
               return (
-                <QiAssignmentBoard
-                  moveRequirement={req}
-                  hasTarget={Boolean(props.selectedTargetId)}
-                  minHeight={220}
-                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden" }}>
+                  <QiDiceTray2D minHeight={160} />
+                  <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+                    <QiDiceDock
+                      state={props.state}
+                      actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
+                      selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
+                      hasSelectedTarget={Boolean(props.selectedTargetId)}
+                      onConfirm={(yinIds, yangIds) => {
+                        const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
+                        if (!move || !props.selectedTargetId) return;
+                        const diceToUse = [...yinIds, ...yangIds];
+                        if (diceToUse.length === 0) {
+                          props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
+                          return;
+                        }
+                        props.patch((current) =>
+                          declareAction(current, dmActorId, props.selectedTargetId, move.id, diceToUse, {
+                            yinSlotDiceIds: yinIds,
+                            yangSlotDiceIds: yangIds,
+                          }),
+                        );
+                      }}
+                    />
+                  </div>
+                </div>
               );
             })()
           }
@@ -2169,25 +2209,6 @@ function regulateFirstRestDie(
     return;
   }
   patch((current) => regulateBreath(current, actorId, [die.id]));
-}
-
-/** Parse qiNatureThreshold into minYin/minYang counts */
-function parseMoveRequirement(move: Move | undefined, moveName?: string): CurrentMoveQiRequirement | null {
-  if (!move) return null;
-  const threshold = move.qiNatureThreshold ?? "";
-  let minYin = 0;
-  let minYang = 0;
-  if (threshold.includes("至少1阴")) minYin = 1;
-  if (threshold.includes("至少1阳")) minYang = 1;
-  if (threshold.includes("至少2阴")) minYin = 2;
-  if (threshold.includes("至少2阳")) minYang = 2;
-  // "任意气性" → both 0
-  return {
-    moveId: move.id,
-    moveName: moveName ?? move.name,
-    minYin,
-    minYang,
-  };
 }
 
 function dieLabel(die: QiDie) {
