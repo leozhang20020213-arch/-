@@ -890,7 +890,7 @@ function PlayerCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={actor} state={props.state} />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
           qiZone={
             <QiDiceDock
               state={props.state}
@@ -1097,7 +1097,7 @@ function DmCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
           qiZone={
             (() => {
               const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
@@ -1427,10 +1427,6 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
       })
     : { allowed: false, reasons: ["未选择行动"] };
 
-  // Compute target distance info
-  const targetState = deriveTargetState(props.state, props.selectedTargetId, selectedMove);
-  const targetActor = props.enemies.find((e) => e.id === props.selectedTargetId);
-
   return (
     <section className="panel">
       <div className="panel-title">
@@ -1440,17 +1436,11 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
       <div className="form-grid">
         <label>
           目标
-          <select value={props.selectedTargetId} onChange={(event) => props.setSelectedTargetId(event.target.value)}>
+          <select value={props.selectedTargetId} onChange={(event) => { const id = event.target.value; props.setSelectedTargetId(id); props.setSelectedCombatantId(id); }}>
             {props.enemies.map((enemy) => (
               <option key={enemy.id} value={enemy.id}>{enemy.name}</option>
             ))}
           </select>
-          {targetActor && (
-            <span className={`target-distance-info${targetState.isRangeValid ? "" : " invalid"}`}>
-              {targetState.distanceBand ?? "距离未知"}
-              {!targetState.isRangeValid && ` ⚠ ${targetState.invalidReason ?? ""}`}
-            </span>
-          )}
         </label>
         <label>
           招式
@@ -1510,9 +1500,10 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
   );
 }
 
-function CombatStage({ state, selectedId, onSelect, selectedMove }: {
+function CombatStage({ state, selectedId, selectedTargetId, onSelect, selectedMove }: {
   state: CombatState;
   selectedId?: string;
+  selectedTargetId?: string;
   onSelect: (id: string) => void;
   selectedMove?: Move;
 }) {
@@ -1522,6 +1513,7 @@ function CombatStage({ state, selectedId, onSelect, selectedMove }: {
       data={stageData}
       state={state}
       selectedId={selectedId}
+      selectedTargetId={selectedTargetId}
       onSelectCombatant={onSelect}
       selectedMove={selectedMove}
     />

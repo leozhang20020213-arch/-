@@ -1,6 +1,6 @@
 /* ==========================================================================
    Tactical Combat Stage — HTML/SVG battlefield
-   Replaces old cropped Phaser board with positioned nodes + SVG distance lines
+   Replaces old cropped Phaser board with positioned nodes + SVG target line
    ========================================================================== */
 
 /* ---- Tactical Stage Container ---- */
@@ -89,7 +89,31 @@
   opacity: 0.5;
 }
 
-/* ---- SVG Distance Lines ---- */
+/* ---- Battlefield zone labels ---- */
+.battlefield-zone-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(247, 231, 187, 0.12);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  user-select: none;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.zone-player {
+  left: 4%;
+}
+
+.zone-enemy {
+  right: 4%;
+}
+
+/* ---- SVG Layer ---- */
 .distance-svg-layer {
   position: absolute;
   inset: 0;
@@ -108,7 +132,7 @@
 }
 
 /* ==========================================================================
-   Combatant Node
+   Combatant Node — Base
    ========================================================================== */
 .combatant-node {
   position: absolute;
@@ -117,10 +141,10 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  width: 110px;
+  width: 120px;
   padding: 8px;
   border: 1px solid rgba(107, 75, 45, 0.25);
-  border-radius: 6px;
+  border-radius: 8px;
   background: linear-gradient(
     180deg,
     rgba(30, 25, 18, 0.94) 0%,
@@ -128,35 +152,214 @@
   );
   cursor: pointer;
   pointer-events: auto;
-  transition: border-color 200ms ease, box-shadow 200ms ease, transform 150ms ease;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 150ms ease, opacity 200ms ease;
   z-index: 3;
 }
 
-.combatant-node:hover {
+.combatant-node:hover:not(:disabled) {
   border-color: rgba(212, 132, 58, 0.5);
   box-shadow: 0 0 14px rgba(212, 132, 58, 0.2);
   transform: translate(-50%, -50%) scale(1.04);
 }
 
+/* ---- Side tints ---- */
+.combatant-node.side-player {
+  border-left: 3px solid rgba(58, 92, 122, 0.5);
+}
+
+.combatant-node.side-enemy {
+  border-right: 3px solid rgba(194, 58, 46, 0.4);
+}
+
+/* ==========================================================================
+   Combatant Node — CURRENT ACTOR state (strongest highlight)
+   ========================================================================== */
+.combatant-node.current-actor {
+  border-color: rgba(230, 180, 80, 0.85);
+  background: linear-gradient(
+    180deg,
+    rgba(50, 38, 18, 0.96) 0%,
+    rgba(35, 28, 16, 0.94) 100%
+  );
+  box-shadow:
+    0 0 0 3px rgba(230, 180, 80, 0.55),
+    0 0 24px rgba(230, 180, 80, 0.35),
+    0 0 48px rgba(230, 180, 80, 0.15);
+  z-index: 5;
+  animation: currentActorPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes currentActorPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(230, 180, 80, 0.55), 0 0 24px rgba(230, 180, 80, 0.35), 0 0 48px rgba(230, 180, 80, 0.15); }
+  50%      { box-shadow: 0 0 0 5px rgba(230, 180, 80, 0.7), 0 0 32px rgba(230, 180, 80, 0.5), 0 0 56px rgba(230, 180, 80, 0.25); }
+}
+
+.combatant-node.current-actor .combatant-name {
+  color: #f5d89a;
+  font-size: 14px;
+  text-shadow: 0 0 6px rgba(230, 180, 80, 0.3);
+}
+
+/* Current actor dot */
+.current-actor-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f5d89a;
+  border: 2px solid #1a140e;
+  box-shadow: 0 0 8px rgba(230, 180, 80, 0.6);
+  animation: currentActorDotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes currentActorDotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.3); opacity: 0.7; }
+}
+
+/* "行动中" tag */
+.current-tag {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(230, 180, 80, 0.3);
+  color: #f5d89a;
+  font-size: 9px;
+  font-weight: 800;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Combatant Node — TARGETED state
+   ========================================================================== */
+.combatant-node.targeted {
+  border-color: rgba(220, 70, 60, 0.8);
+  box-shadow:
+    0 0 0 2px rgba(220, 70, 60, 0.5),
+    0 0 18px rgba(220, 70, 60, 0.25);
+  z-index: 4;
+}
+
+.combatant-node.targeted .combatant-name {
+  color: #f5c8c0;
+}
+
+/* Current actor + targeted dual state */
+.combatant-node.current-actor.targeted {
+  border-color: rgba(230, 180, 80, 0.85);
+  box-shadow:
+    0 0 0 2px rgba(220, 70, 60, 0.55),
+    0 0 0 5px rgba(230, 180, 80, 0.45),
+    0 0 24px rgba(230, 180, 80, 0.35),
+    0 0 18px rgba(220, 70, 60, 0.2);
+}
+
+/* "目标" tag */
+.target-tag {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(220, 70, 60, 0.3);
+  color: #f5c8c0;
+  font-size: 9px;
+  font-weight: 800;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Target crosshair corners */
+.target-corners {
+  position: absolute;
+  inset: -3px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.target-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: rgba(220, 70, 60, 0.7);
+  border-style: solid;
+}
+
+.target-corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+.target-corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+.target-corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+.target-corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+/* ==========================================================================
+   Combatant Node — SELECTED state (clicked but not current/targeted)
+   ========================================================================== */
 .combatant-node.selected {
   border-color: var(--yang-die);
   box-shadow:
-    0 0 0 2px rgba(212, 132, 58, 0.45),
-    0 0 18px rgba(212, 132, 58, 0.25);
+    0 0 0 2px rgba(212, 132, 58, 0.35),
+    0 0 14px rgba(212, 132, 58, 0.15);
 }
 
-.combatant-node.dying {
-  border-color: rgba(194, 58, 46, 0.5);
-  opacity: 0.75;
+/* ==========================================================================
+   Combatant Node — DEFEATED state
+   ========================================================================== */
+.combatant-node.defeated {
+  opacity: 0.45;
+  border-color: rgba(80, 40, 40, 0.4);
+  background: rgba(20, 12, 10, 0.85);
+  cursor: not-allowed;
 }
+
+.combatant-node.defeated:hover {
+  transform: translate(-50%, -50%);
+  box-shadow: none;
+}
+
+.combatant-defeated-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 26, 26, 0.45);
+  border-radius: 8px;
+  color: #faa;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Combatant Node — UNTARGETABLE state
+   ========================================================================== */
+.combatant-node.untargetable {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.combatant-node.untargetable:hover {
+  transform: translate(-50%, -50%);
+  box-shadow: none;
+  border-color: rgba(107, 75, 45, 0.25);
+}
+
+/* ==========================================================================
+   Combatant Node — Internal elements
+   ========================================================================== */
 
 /* Avatar */
 .combatant-avatar {
-  width: 36px;
-  height: 36px;
+  position: relative;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   border: 2px solid rgba(107, 75, 45, 0.35);
-  overflow: hidden;
+  overflow: visible;
   background: rgba(42, 34, 24, 0.8);
   display: flex;
   align-items: center;
@@ -164,14 +367,24 @@
   flex-shrink: 0;
 }
 
+.combatant-node.current-actor .combatant-avatar {
+  border-color: rgba(230, 180, 80, 0.6);
+  box-shadow: 0 0 10px rgba(230, 180, 80, 0.3);
+}
+
+.combatant-node.targeted .combatant-avatar {
+  border-color: rgba(220, 70, 60, 0.6);
+}
+
 .combatant-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 .combatant-avatar-placeholder {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--ink-light);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -204,7 +417,7 @@
 
 .combatant-hp-bar {
   flex: 1;
-  height: 5px;
+  height: 6px;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(107, 75, 45, 0.2);
@@ -284,22 +497,6 @@
   white-space: nowrap;
 }
 
-/* Dying overlay */
-.combatant-dying-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(139, 26, 26, 0.35);
-  border-radius: 6px;
-  color: #faa;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  pointer-events: none;
-}
-
 /* ==========================================================================
    Scene Objective Mini
    ========================================================================== */
@@ -353,7 +550,18 @@
 }
 
 /* ==========================================================================
-   Scene Clock Compact — Unified progress tracks
+   Target Line — SVG styles
+   ========================================================================== */
+.target-line-group {
+  cursor: default;
+}
+
+.target-line-group line {
+  transition: stroke 300ms ease;
+}
+
+/* ==========================================================================
+   Scene Clock Compact — Unified progress tracks (in left panel)
    ========================================================================== */
 
 .scene-clock-compact {
@@ -483,8 +691,3 @@
   font-style: italic;
   text-align: center;
 }
-
-/* Target line hover cursor */
-.target-line-group { cursor: pointer; }
-.target-line-group:hover line:first-of-type { stroke-opacity: 0.6; }
-
