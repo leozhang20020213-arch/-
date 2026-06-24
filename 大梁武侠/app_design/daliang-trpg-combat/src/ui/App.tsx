@@ -49,6 +49,7 @@ import { RightCombatPanel } from "./combat/RightCombatPanel";
 import { PhaseActionBar } from "./combat/PhaseActionBar";
 import { CombatStage as TacticalCombatStage } from "./combat/stage/CombatStage";
 import { buildStageData } from "../data/mockCombatData";
+import { EnemyPublicDrawer } from "./combat/enemy/EnemyPublicDrawer";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -853,6 +854,9 @@ function PlayerCombatDesk(props: DeskProps & {
 }) {
   const actor = props.state.actors.find((item) => item.id === props.actorId) ?? props.state.actors[0];
   const enemies = props.state.actors.filter((item) => item.side !== "player");
+  const selectedEnemy = props.selectedCombatantId
+    ? enemies.find((e) => e.id === props.selectedCombatantId)
+    : undefined;
 
   return (
     <CombatShell
@@ -892,7 +896,17 @@ function PlayerCombatDesk(props: DeskProps & {
       right={
         <RightCombatPanel
           actions={<ActionPanel {...props} actor={actor} enemies={enemies} />}
-          enemies={<EnemyRoster actors={enemies} mode="public" />}
+          enemies={
+            selectedEnemy ? (
+              <EnemyPublicDrawer
+                actor={selectedEnemy}
+                mode="player"
+                onClose={() => props.setSelectedCombatantId(undefined)}
+              />
+            ) : (
+              <EnemyRoster actors={enemies} mode="public" />
+            )
+          }
           flowButtons={
             <PlayerFlowPanel
               onStartScene={props.onStartScene}
@@ -1005,6 +1019,9 @@ function DmCombatDesk(props: DeskProps & {
 }) {
   const players = props.state.actors.filter((actor) => actor.side === "player");
   const enemies = props.state.actors.filter((actor) => actor.side !== "player");
+  const selectedEnemy = props.selectedCombatantId
+    ? enemies.find((e) => e.id === props.selectedCombatantId)
+    : undefined;
 
   return (
     <CombatShell
@@ -1044,7 +1061,17 @@ function DmCombatDesk(props: DeskProps & {
       right={
         <RightCombatPanel
           actions={<DmControlPanel {...props} />}
-          enemies={<BroadcastPreview state={props.state} />}
+          enemies={
+            selectedEnemy ? (
+              <EnemyPublicDrawer
+                actor={selectedEnemy}
+                mode="dm"
+                onClose={() => props.setSelectedCombatantId(undefined)}
+              />
+            ) : (
+              <BroadcastPreview state={props.state} />
+            )
+          }
           flowButtons={
             <section className="panel">
               <h2>敌人库</h2>

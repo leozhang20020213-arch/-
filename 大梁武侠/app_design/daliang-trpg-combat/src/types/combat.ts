@@ -57,3 +57,36 @@ export interface StageData {
   objectives: SceneObjective[];
   selectedCombatantId?: string;
 }
+
+// ==========================================================================
+// Enemy Public Info — shown in right panel when an enemy is selected
+// ==========================================================================
+
+/** Application mode (drives visibility of DM-only fields) */
+export type AppMode = "player" | "dm";
+
+/** Public-facing enemy info shown when a combatant node is clicked */
+export interface EnemyPublicInfo {
+  id: string;
+  name: string;
+  hp: number;
+  maxHp: number;
+  momentum: string;
+  statuses: string[];
+  /** Flavor / scene description */
+  description: string;
+  /** Public weaknesses (short bullet list) */
+  publicWeaknesses: string[];
+  /** General behavior tendency (short text) */
+  behaviorHint: string;
+  /** Known moves (names only) */
+  knownMoves: string[];
+  /** DM-only: hidden goal */
+  hiddenGoal?: string;
+  /** DM-only: hidden statuses */
+  hiddenStatuses?: string[];
+  /** DM-only: loot or clue on defeat */
+  lootOrClue?: string;
+  /** DM-only: private note */
+  dmNote?: string;
+}
