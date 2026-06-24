@@ -70,3 +70,25 @@ export const DIE_KIND_LABEL: Record<QiDieKind, string> = {
   yang: "阳",
   raw: "原",
 };
+
+// ==========================================================================
+// Phase 2: Slot Types for Drag-and-Drop
+// ==========================================================================
+
+/** 槽位类型 */
+export type QiSlotType = "yinSlot" | "yangSlot";
+
+/** 单槽骰子分配快照 */
+export interface QiSlotAssignment {
+  slot: QiSlotType;
+  dice: QiDieData[];
+  requiredMin: number;
+}
+
+/** 当前选中招式的气性门槛 */
+export interface CurrentMoveQiRequirement {
+  moveId: string;
+  moveName: string;
+  minYin: number;
+  minYang: number;
+}
