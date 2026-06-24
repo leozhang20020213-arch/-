@@ -61,11 +61,11 @@ export function createQiDie(input: CreateQiDieInput): QiDieData {
  */
 export function createStarterQiDice(): QiDieData[] {
   return [
-    createQiDie({ id: "yin-d6-1", kind: "yin", sides: 6, location: "qiSea" }),
-    createQiDie({ id: "yin-d6-2", kind: "yin", sides: 6, location: "qiSea" }),
-    createQiDie({ id: "yang-d6-1", kind: "yang", sides: 6, location: "qiSea" }),
-    createQiDie({ id: "yang-d6-2", kind: "yang", sides: 6, location: "qiSea" }),
-    createQiDie({ id: "raw-d4-1", kind: "raw", sides: 4, location: "qiSea" }),
-    createQiDie({ id: "raw-d4-2", kind: "raw", sides: 4, location: "qiSea" }),
+    createQiDie({ id: "yin-d6-1", kind: "yin", sides: 6, value: 1, location: "qiSea" }),
+    createQiDie({ id: "yin-d6-2", kind: "yin", sides: 6, value: 1, location: "qiSea" }),
+    createQiDie({ id: "yang-d6-1", kind: "yang", sides: 6, value: 1, location: "qiSea" }),
+    createQiDie({ id: "yang-d6-2", kind: "yang", sides: 6, value: 1, location: "qiSea" }),
+    createQiDie({ id: "raw-d4-1", kind: "raw", sides: 4, value: 1, location: "qiSea" }),
+    createQiDie({ id: "raw-d4-2", kind: "raw", sides: 4, value: 1, location: "qiSea" }),
   ];
 }
