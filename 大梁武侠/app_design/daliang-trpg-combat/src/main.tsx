@@ -8,6 +8,7 @@ import "./styles.css";
 import "./styles/combat-shell.css";
 import "./styles/combat-stage.css";
 import "./styles/enemy-card.css";
+import "./styles/qi-dice.css";
 import "./styles/overrides.css";
 
 createRoot(document.getElementById("root")!).render(

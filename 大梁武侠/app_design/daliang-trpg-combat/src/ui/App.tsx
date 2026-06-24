@@ -50,6 +50,7 @@ import { PhaseActionBar } from "./combat/PhaseActionBar";
 import { CombatStage as TacticalCombatStage } from "./combat/stage/CombatStage";
 import { buildStageData } from "../data/mockCombatData";
 import { EnemyPublicDrawer } from "./combat/enemy/EnemyPublicDrawer";
+import { QiDiceDock } from "./combat/dice/QiDiceDock";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -328,6 +329,7 @@ export function App() {
     resetAll,
     selectedCombatantId,
     setSelectedCombatantId,
+    setPrompt,
   };
 
   const isDeskRoute =
@@ -877,18 +879,34 @@ function PlayerCombatDesk(props: DeskProps & {
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
-            <QiZoneBoard
-              dice={props.state.dice.filter((die) => die.ownerId === actor.id)}
-              activeActorId={actor.id}
-              selectedDice={props.selectedDice}
-              slotDice={props.slotDice}
-              slotHint={props.slotHint}
-              phase={props.state.phase}
-              onToggleDie={props.toggleDie}
-              onAssignDieToSlot={props.assignDieToSlot}
-              onRemoveFromSlot={props.removeDieFromSlot}
-              onCommitRollResults={props.commitRollResults}
-              onRollDice={props.setRollDice}
+            <QiDiceDock
+              state={props.state}
+              actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
+              selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
+              hasSelectedTarget={Boolean(props.selectedTargetId)}
+              onConfirm={(yinIds, yangIds) => {
+                const move = actor.moves.find((m) => m.id === props.selectedMoveId);
+                if (!move || !props.selectedTargetId) return;
+                const diceToUse = [...yinIds, ...yangIds];
+                if (diceToUse.length === 0) {
+                  props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
+                  return;
+                }
+                const availability = canDeclareAction(props.state, actor.id, move.id, {
+                  yinSlotDiceIds: yinIds,
+                  yangSlotDiceIds: yangIds,
+                });
+                if (!availability.allowed) {
+                  props.setPrompt({ title: "宣言不可用", message: availability.reasons.join("、") });
+                  return;
+                }
+                props.patch((current) =>
+                  declareAction(current, actor.id, props.selectedTargetId, move.id, diceToUse, {
+                    yinSlotDiceIds: yinIds,
+                    yangSlotDiceIds: yangIds,
+                  }),
+                );
+              }}
             />
           }
         />
@@ -1042,19 +1060,33 @@ function DmCombatDesk(props: DeskProps & {
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
-            <QiZoneBoard
-              dice={props.state.dice}
-              activeActorId={props.session.selectedActorId ?? "pc-shen-qing"}
-              selectedDice={props.selectedDice}
-              slotDice={props.slotDice}
-              slotHint={props.slotHint}
-              phase={props.state.phase}
-              onToggleDie={props.toggleDie}
-              onAssignDieToSlot={props.assignDieToSlot}
-              onRemoveFromSlot={props.removeDieFromSlot}
-              onCommitRollResults={props.commitRollResults}
-              onRollDice={props.setRollDice}
-            />
+            (() => {
+              const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
+              const dmActor = props.state.actors.find((a) => a.id === dmActorId) ?? props.state.actors[0];
+              return (
+                <QiDiceDock
+                  state={props.state}
+                  actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
+                  selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
+                  hasSelectedTarget={Boolean(props.selectedTargetId)}
+                  onConfirm={(yinIds, yangIds) => {
+                    const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
+                    if (!move || !props.selectedTargetId) return;
+                    const diceToUse = [...yinIds, ...yangIds];
+                    if (diceToUse.length === 0) {
+                      props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
+                      return;
+                    }
+                    props.patch((current) =>
+                      declareAction(current, dmActorId, props.selectedTargetId, move.id, diceToUse, {
+                        yinSlotDiceIds: yinIds,
+                        yangSlotDiceIds: yangIds,
+                      }),
+                    );
+                  }}
+                />
+              );
+            })()
           }
         />
       }
@@ -1115,6 +1147,7 @@ interface DeskProps {
   resetAll: () => void;
   selectedCombatantId: string | undefined;
   setSelectedCombatantId: (id: string | undefined) => void;
+  setPrompt: (p: { title: string; message: string } | null) => void;
 }
 
 function GameModeHeader({ state, modeLabel }: { state: CombatState; modeLabel: string }) {
