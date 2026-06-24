@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "case_id": "select_move_target_enemy",
+      "start_state": "IDLE",
+      "card_type": "招式卡",
+      "card_name": "【占位：招式名】",
+      "target_type": "敌人",
+      "line_type": "目标线",
+      "next_states": [
+        "CARD_SELECTED",
+        "TARGET_SELECTED",
+        "DECLARATION_PREVIEW"
+      ]
+    },
+    {
+      "case_id": "select_tiaoxi_self",
+      "start_state": "IDLE",
+      "card_type": "调息卡",
+      "card_name": "调息",
+      "target_type": "自己",
+      "line_type": "目标线",
+      "next_states": [
+        "CARD_SELECTED",
+        "TARGET_SELECTED",
+        "DECLARATION_PREVIEW"
+      ]
+    },
+    {
+      "case_id": "select_response_card",
+      "start_state": "RESPONSE_OPEN",
+      "card_type": "响应卡",
+      "card_name": "【占位：响应名】",
+      "target_type": "当前卡",
+      "line_type": "响应线",
+      "next_states": [
+        "CARD_SELECTED",
+        "TARGET_SELECTED",
+        "RESOLUTION_PREVIEW"
+      ]
+    },
+    {
+      "case_id": "open_bag_drawer",
+      "start_state": "IDLE",
+      "button": "背包",
+      "drawer": "背包抽屉",
+      "next_states": [
+        "IDLE"
+      ]
+    }
+  ]
+}

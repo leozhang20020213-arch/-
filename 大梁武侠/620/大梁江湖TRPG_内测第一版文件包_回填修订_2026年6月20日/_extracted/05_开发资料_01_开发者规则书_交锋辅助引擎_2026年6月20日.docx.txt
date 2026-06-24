@@ -1,0 +1,27 @@
+大梁江湖TRPG 开发者规则书
+交锋辅助引擎 · 内测第一版回填修订 · 2026年6月20日
+一、App边界
+App只辅助交锋、气骰、状态、长效被动、场景轨和日志回放。不处理完整自由叙事、NPC自然语言对话、玩家推理正确性、世界观开放裁定。
+二、核心区域枚举
+三、气骰生命周期
+进入场景时，从气池取常规气骰，投掷后进入气海。一个场景内，气海点数不因情景/交锋切换自动重投。进入另一个新场景时，重新从气池投出。
+临时骰在宣言时投，锁气时确定气性。成招并产生效果后进入息库；若被截击成功导致宣言不合法，锁气骰直接进入息库。截击方、应招方与正常招式一样，结算后进入息库。息库回气海不重投。
+四、主要流程伪代码
+enter_scene(scene_id): for die in character.qi_pool.available: roll(die); move(die, QI_SEA)
+declare_action(actor, move, target, dice): validate_target(); move(dice, QI_LOCK); set_temp_qi_nature_if_any()
+intercept_success_makes_illegal(action): action.cancelled=true; move(action.locked_dice, QI_REST); log()
+resolve_move(action): check_formed(); calculate_base_effect(); calculate_slot_triggers(); open_react_window(); apply_outcome(); move(used_dice, QI_REST)
+use_reflection(actor): require actor.qi_sea.empty; consume_action(); die=min(actor.qi_rest.available); move(die, QI_SEA); no_reroll()
+expire_source(source_id): remove_unlocked_source_dice(); if locked_then_revalidate(); no_rollback_applied_outcomes()
+五、必须保留的手动入口
+DM手动开始新场景。
+DM手动确认情景转交锋。
+DM手动修正气骰来源失效。
+DM手动写入关系事实、名望事实与自由裁定。
+DM手动覆盖错误校验，但必须写入日志。
+六、第一版验收标准
+能创建角色并录入气骰来源。
+能进入场景并生成气海。
+能声明行动、锁气、触发截击、成招、应招、落果。
+能处理返照、调息、装备/药物来源失效。
+能记录完整日志并回放每一步气骰去向。

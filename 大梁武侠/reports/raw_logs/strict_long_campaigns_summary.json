@@ -1,0 +1,55 @@
+{
+  "campaigns": [
+    {
+      "campaign": {
+        "id": "SLC01",
+        "title": "京畿暗账长团",
+        "seed": 9101,
+        "focus": "调查、官府、人情、把柄",
+        "cycles": [
+          "失银账册",
+          "船工灭口",
+          "北仓暗渠",
+          "亲兵假令",
+          "商会账房",
+          "皇城外证"
+        ]
+      },
+      "raw_path": "reports\\raw_logs\\strict_long_SLC01_seed_9101.jsonl"
+    },
+    {
+      "campaign": {
+        "id": "SLC02",
+        "title": "北地断碑长团",
+        "seed": 9202,
+        "focus": "秘境、武学、高手、轻功",
+        "cycles": [
+          "断碑委托",
+          "雪岭追踪",
+          "古墓机关",
+          "门派遗债",
+          "高手邀斗",
+          "残谱归属"
+        ]
+      },
+      "raw_path": "reports\\raw_logs\\strict_long_SLC02_seed_9202.jsonl"
+    },
+    {
+      "campaign": {
+        "id": "SLC03",
+        "title": "南海潮生长团",
+        "seed": 9303,
+        "focus": "商路、名望、家庭、产业、海盗",
+        "cycles": [
+          "海商护送",
+          "盐仓人情",
+          "宗族旧债",
+          "海盗夜袭",
+          "产业抉择",
+          "南海潮会"
+        ]
+      },
+      "raw_path": "reports\\raw_logs\\strict_long_SLC03_seed_9303.jsonl"
+    }
+  ]
+}

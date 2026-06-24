@@ -1,0 +1,28 @@
+{
+  "execution_result_values": [
+    "未开始",
+    "待执行",
+    "通过",
+    "冲突",
+    "缺失",
+    "需改",
+    "暂缓",
+    "无法判断"
+  ],
+  "rule_mapping_record": {
+    "rule_id": "string",
+    "source_file": "string",
+    "chapter": "string",
+    "position": "string",
+    "excerpt": "string",
+    "input_trigger": "string",
+    "resolution": "string",
+    "affected_resources": [
+      "string"
+    ],
+    "database_refs": [
+      "string"
+    ],
+    "status": "通过|冲突|缺失|需改|无法判断"
+  }
+}

@@ -1,0 +1,34 @@
+# Dependency and build artifacts
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+
+# Local toolchains and virtual environments
+大梁武侠/app_design/tools/
+大梁武侠/app_design/**/.venv/
+大梁武侠/app_design/**/venv/
+大梁武侠/app_design/**/apk-unity-venv/
+
+# Reverse-engineered or bulky extracted app assets
+大梁武侠/app_design/apk-decoded/
+大梁武侠/app_design/apk-extracted-textures/
+大梁武侠/app_design/dice-lab/
+大梁武侠/app_design/dice-lab.7z
+
+# Local backups and scratch output
+大梁武侠/app_design/ui_backups/
+大梁武侠/app_design/**/.godot/
+*.tmp
+*.log
+
+# Workspace mount/probe artifacts
+_docker_direct_touch_test.txt
+_simple_mount_test*.txt
+_openhands_permission_test/
+
+# Empty accidental clone directory
+大梁武侠/-/

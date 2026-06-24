@@ -1,0 +1,18 @@
+{
+  "project": "大梁武侠TRPG_v0.42整改",
+  "current_iteration": 0,
+  "current_task_id": null,
+  "last_task_id": null,
+  "last_status": "not_started",
+  "blocking_items": [],
+  "completed_tasks": [],
+  "artifacts": [],
+  "next_recommended_task": "A01",
+  "quality_gates": {
+    "input_complete": false,
+    "review_output_complete": false,
+    "p0_conflicts_fixed": false,
+    "ui_design_ready": false,
+    "app_scope_frozen": false
+  }
+}

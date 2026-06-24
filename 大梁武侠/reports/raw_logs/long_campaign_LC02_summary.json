@@ -1,0 +1,229 @@
+{
+  "campaign": {
+    "campaign_id": "LC02",
+    "title": "北地断碑：秘境与门派债",
+    "seed": 2026060902,
+    "region": "北地/边关/古碑秘境",
+    "premise": "一块断碑牵出旧门派遗债、秘境残页和高手挑战。",
+    "tone": "秘境、武学、强者压制"
+  },
+  "participants": {
+    "players": [
+      {
+        "name": "卢青",
+        "agent_file": "agents/long_campaign/player_defender_luqing.md",
+        "player_type": "新手玩家",
+        "role": "防御型镖师",
+        "attr_die": "d8",
+        "skill_die": "d6",
+        "weapon": "长枪",
+        "tags": [
+          "防御型",
+          "长枪",
+          "护队",
+          "新手"
+        ]
+      },
+      {
+        "name": "沈照",
+        "agent_file": "agents/long_campaign/player_story_shenzhao.md",
+        "player_type": "剧情玩家",
+        "role": "社交/调查型捕快",
+        "attr_die": "d8",
+        "skill_die": "d6",
+        "weapon": "单刀",
+        "tags": [
+          "社交",
+          "调查",
+          "官府",
+          "证据"
+        ]
+      },
+      {
+        "name": "贺骁",
+        "agent_file": "agents/long_campaign/player_combat_hexiao.md",
+        "player_type": "战斗玩家",
+        "role": "爆发型刀客",
+        "attr_die": "d8",
+        "skill_die": "d8",
+        "weapon": "单刀",
+        "tags": [
+          "爆发型",
+          "单刀",
+          "高手对招"
+        ]
+      },
+      {
+        "name": "燕七",
+        "agent_file": "agents/long_campaign/player_builder_yanqi.md",
+        "player_type": "普通构筑玩家",
+        "role": "远程/暗器型巧手",
+        "attr_die": "d8",
+        "skill_die": "d6",
+        "weapon": "暗器",
+        "tags": [
+          "远程",
+          "暗器",
+          "机关",
+          "构筑"
+        ]
+      },
+      {
+        "name": "白闲",
+        "agent_file": "agents/long_campaign/player_casual_baixian.md",
+        "player_type": "随性玩家",
+        "role": "均衡型说书人",
+        "attr_die": "d8",
+        "skill_die": "d6",
+        "weapon": "杂器",
+        "tags": [
+          "均衡",
+          "表演",
+          "诈唬",
+          "环境互动"
+        ]
+      },
+      {
+        "name": "方逐",
+        "agent_file": "agents/long_campaign/player_mobile_fangzhu.md",
+        "player_type": "普通玩家",
+        "role": "机动型游侠",
+        "attr_die": "d8",
+        "skill_die": "d6",
+        "weapon": "短刀",
+        "tags": [
+          "机动型",
+          "轻功",
+          "追逐",
+          "支援"
+        ]
+      }
+    ],
+    "dm": {
+      "name": "长团普通DM",
+      "agent_file": "agents/long_campaign/dm_long_campaign.md",
+      "role": "普通长团主持人"
+    },
+    "supervisor": {
+      "name": "长战役监管记录器",
+      "agent_file": "agents/long_campaign/supervisor_long_campaign.md",
+      "role": "规则裁判/记录器"
+    }
+  },
+  "log_path": "reports\\raw_logs\\long_campaign_LC02_seed_2026060902.jsonl",
+  "cycles": 6,
+  "final_resources": {
+    "名望": 5,
+    "人情": 6,
+    "情报": 3,
+    "把柄": 3,
+    "伤势": 14,
+    "仇敌": 5,
+    "弟子钩子": 1,
+    "家庭钩子": 0,
+    "产业钩子": 0,
+    "危机": 35,
+    "解密": 4,
+    "战役得利": 9
+  },
+  "usage": [
+    {
+      "rule_id": "LONG_CONFLICT",
+      "rule_name": "长期战役冲突/战斗",
+      "chapter": "长团",
+      "category": "战斗/冲突",
+      "opportunities": 6,
+      "triggered_count": 6,
+      "player_initiated_count": 6,
+      "dm_initiated_count": 0,
+      "changed_outcome_count": 6,
+      "ignored_count": 0,
+      "ambiguity_count": 6,
+      "total_resolution_time": 60.0,
+      "notes": "",
+      "average_resolution_time": 10.0
+    },
+    {
+      "rule_id": "LONG_CRISIS",
+      "rule_name": "长期战役危机/代价推进",
+      "chapter": "长团",
+      "category": "情景",
+      "opportunities": 18,
+      "triggered_count": 18,
+      "player_initiated_count": 0,
+      "dm_initiated_count": 18,
+      "changed_outcome_count": 18,
+      "ignored_count": 0,
+      "ambiguity_count": 0,
+      "total_resolution_time": 54.0,
+      "notes": "",
+      "average_resolution_time": 3.0
+    },
+    {
+      "rule_id": "LONG_SCENE_CHECK",
+      "rule_name": "长期战役情景检定",
+      "chapter": "长团",
+      "category": "情景",
+      "opportunities": 18,
+      "triggered_count": 18,
+      "player_initiated_count": 18,
+      "dm_initiated_count": 0,
+      "changed_outcome_count": 18,
+      "ignored_count": 0,
+      "ambiguity_count": 0,
+      "total_resolution_time": 126.0,
+      "notes": "",
+      "average_resolution_time": 7.0
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "I0001",
+      "tag": "【太惩罚】",
+      "scene": "北地断碑：秘境与门派债 第1循环",
+      "text": "成功但代价继续累积，长团中形成行动疲劳。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并测试危机增长阈值。"
+    },
+    {
+      "issue_id": "I0002",
+      "tag": "【太惩罚】",
+      "scene": "北地断碑：秘境与门派债 第1循环",
+      "text": "成功但代价继续累积，长团中形成行动疲劳。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并测试危机增长阈值。"
+    },
+    {
+      "issue_id": "I0003",
+      "tag": "【太惩罚】",
+      "scene": "北地断碑：秘境与门派债 第1循环",
+      "text": "成功但代价继续累积，长团中形成行动疲劳。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并测试危机增长阈值。"
+    },
+    {
+      "issue_id": "I0004",
+      "tag": "【太惩罚】",
+      "scene": "北地断碑：秘境与门派债 第2循环",
+      "text": "成功但代价继续累积，长团中形成行动疲劳。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并测试危机增长阈值。"
+    },
+    {
+      "issue_id": "I0005",
+      "tag": "【太惩罚】",
+      "scene": "北地断碑：秘境与门派债 第4循环",
+      "text": "成功但代价继续累积，长团中形成行动疲劳。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并测试危机增长阈值。"
+    },
+    {
+      "issue_id": "I0006",
+      "tag": "【太惩罚】",
+      "scene": "北地断碑：秘境与门派债 第5循环",
+      "text": "成功但代价继续累积，长团中形成行动疲劳。",
+      "severity": "high",
+      "recommendation": "补高代价成功话术，并测试危机增长阈值。"
+    }
+  ]
+}
