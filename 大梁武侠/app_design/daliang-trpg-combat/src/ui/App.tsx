@@ -27,7 +27,8 @@ import {
   saveAppSession,
   saveCombatState,
 } from "../combat/storage";
-import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, QiDie, QiZone } from "../combat/types";
+import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, Move, QiDie, QiZone } from "../combat/types";
+import { deriveTargetState } from "../lib/combat/targetValidation";
 import { createLanClient, type LanClient, type LanConnectionStatus } from "../net/lanClient";
 // PhaserCombatBoard replaced by TacticalCombatStage in PHASE2
 import { QiDiceRollOverlay } from "../dice3d/QiDiceRollOverlay";
@@ -889,7 +890,7 @@ function PlayerCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={actor} state={props.state} />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
           qiZone={
             <QiDiceDock
               state={props.state}
@@ -1091,7 +1092,7 @@ function DmCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
           qiZone={
             (() => {
               const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
@@ -1421,6 +1422,10 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
       })
     : { allowed: false, reasons: ["未选择行动"] };
 
+  // Compute target distance info
+  const targetState = deriveTargetState(props.state, props.selectedTargetId, selectedMove);
+  const targetActor = props.enemies.find((e) => e.id === props.selectedTargetId);
+
   return (
     <section className="panel">
       <div className="panel-title">
@@ -1435,6 +1440,12 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
               <option key={enemy.id} value={enemy.id}>{enemy.name}</option>
             ))}
           </select>
+          {targetActor && (
+            <span className={`target-distance-info${targetState.isRangeValid ? "" : " invalid"}`}>
+              {targetState.distanceBand ?? "距离未知"}
+              {!targetState.isRangeValid && ` ⚠ ${targetState.invalidReason ?? ""}`}
+            </span>
+          )}
         </label>
         <label>
           招式
@@ -1494,17 +1505,20 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
   );
 }
 
-function CombatStage({ state, selectedId, onSelect }: {
+function CombatStage({ state, selectedId, onSelect, selectedMove }: {
   state: CombatState;
   selectedId?: string;
   onSelect: (id: string) => void;
+  selectedMove?: Move;
 }) {
   const stageData = buildStageData(state);
   return (
     <TacticalCombatStage
       data={stageData}
+      state={state}
       selectedId={selectedId}
       onSelectCombatant={onSelect}
+      selectedMove={selectedMove}
     />
   );
 }
