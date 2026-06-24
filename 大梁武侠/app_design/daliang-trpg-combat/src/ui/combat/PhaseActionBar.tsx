@@ -1,61 +1,123 @@
 import type { FC } from "react";
 import type { CombatState } from "../../combat/types";
-import { phaseLabel } from "../utils/labels";
+import {
+  getAvailablePhaseActions,
+  getPhaseHint,
+  toDisplayPhase,
+} from "../../lib/combat/combatPhaseMachine";
 
 export interface PhaseActionBarProps {
   state: CombatState;
+  /** Whether current user is DM */
+  isDM: boolean;
+  /** Whether move + target + slotted dice are ready */
+  hasSelectedMove?: boolean;
+  hasSelectedTarget?: boolean;
+  hasSlottedDice?: boolean;
+  /** Action callbacks — called when a phase button is clicked */
+  onStartScene?: () => void;
+  onEnterDeclaration?: () => void;
+  onConfirmDeclaration?: () => void;
+  onOpenResponse?: () => void;
+  onIntercept?: () => void;
+  onReact?: () => void;
+  onSkipResponse?: () => void;
+  onResolveResult?: () => void;
+  onApplyMomentum?: () => void;
+  onNextRound?: () => void;
 }
-
-interface PhaseStep {
-  phase: CombatState["phase"] | "momentum";
-  label: string;
-}
-
-const COMBAT_FLOW: PhaseStep[] = [
-  { phase: "declare", label: "宣言" },
-  { phase: "intercept_window", label: "截击" },
-  { phase: "react_window", label: "成招/应招" },
-  { phase: "outcome", label: "落果" },
-  { phase: "momentum", label: "势变化" },
-  { phase: "round_end", label: "轮次结束" },
-];
 
 /**
- * Phase action bar (48px bottom bar).
- * Shows the combat phase flow as a sequence of steps.
- * Active phase is highlighted in gold; past phases in green.
- * This is currently a READ-ONLY indicator — Phase 2+ will add clickable buttons.
+ * Phase action bar (48px bottom bar) — state-machine driven.
+ *
+ * Shows ONLY the buttons available for the current phase.
+ * Disabled reasons go into a unified hint label, NOT on the buttons.
+ * Player/DM labels differ where appropriate.
  */
-export const PhaseActionBar: FC<PhaseActionBarProps> = ({ state }) => {
-  const currentIdx = COMBAT_FLOW.findIndex((s) => s.phase === state.phase);
+export const PhaseActionBar: FC<PhaseActionBarProps> = ({
+  state,
+  isDM,
+  hasSelectedMove,
+  hasSelectedTarget,
+  hasSlottedDice,
+  onStartScene,
+  onEnterDeclaration,
+  onConfirmDeclaration,
+  onOpenResponse,
+  onIntercept,
+  onReact,
+  onSkipResponse,
+  onResolveResult,
+  onApplyMomentum,
+  onNextRound,
+}) => {
+  const displayPhase = toDisplayPhase(state.phase);
   const hasPending = Boolean(state.pendingAction);
+
+  const actions = getAvailablePhaseActions({
+    phase: state.phase,
+    hasPendingAction: hasPending,
+    hasSelectedMove: hasSelectedMove ?? false,
+    hasSelectedTarget: hasSelectedTarget ?? false,
+    hasSlottedDice: hasSlottedDice ?? false,
+    isDM,
+    round: state.round,
+  });
+
+  // Filter to only visible actions for current role
+  const visibleActions = actions.filter(
+    (a) => a.visibleTo === "both" || a.visibleTo === (isDM ? "dm" : "player"),
+  );
+
+  const hint = getPhaseHint(state.phase, isDM, hasPending);
+
+  // Map action type to click handler
+  function handleClick(type: string) {
+    switch (type) {
+      case "START_SCENE": onStartScene?.(); break;
+      case "START_DECLARATION": onEnterDeclaration?.(); break;
+      case "CONFIRM_DECLARATION": onConfirmDeclaration?.(); break;
+      case "OPEN_RESPONSE_WINDOW": onOpenResponse?.(); break;
+      case "DECLARE_INTERCEPT": onIntercept?.(); break;
+      case "DECLARE_RESPONSE": onReact?.(); break;
+      case "SKIP_RESPONSE": onSkipResponse?.(); break;
+      case "RESOLVE_RESULT": onResolveResult?.(); break;
+      case "APPLY_MOMENTUM": onApplyMomentum?.(); break;
+      case "NEXT_ROUND": onNextRound?.(); break;
+    }
+  }
+
+  function actionLabel(a: typeof visibleActions[0]): string {
+    if (isDM && a.dmLabel) return a.dmLabel;
+    if (!isDM && a.playerLabel) return a.playerLabel;
+    return a.label;
+  }
+
+  // Collect disabled reasons for display
+  const disabledHints = visibleActions
+    .filter((a) => !a.enabled && a.disabledReason)
+    .map((a) => a.disabledReason);
 
   return (
     <div className="combat-phasebar">
-      <span className="combat-phasebar__label">交锋阶段</span>
+      <span className="combat-phasebar__label">{displayPhase}</span>
 
-      <div className="combat-phasebar__steps">
-        {COMBAT_FLOW.map((step, idx) => {
-          const isActive = step.phase === state.phase;
-          const isDone =
-            currentIdx >= 0 && idx < currentIdx;
-          return (
-            <span key={step.phase}>
-              {idx > 0 && <span className="combat-phasebar__arrow">→</span>}
-              <span
-                className={`combat-phasebar__step${isActive ? " active" : ""}${isDone ? " done" : ""}`}
-              >
-                {step.label}
-              </span>
-            </span>
-          );
-        })}
+      <div className="combat-phasebar__actions">
+        {visibleActions.map((a) => (
+          <button
+            key={a.type}
+            className={`combat-phasebar__btn${a.enabled ? "" : " disabled"}`}
+            type="button"
+            disabled={!a.enabled}
+            onClick={() => handleClick(a.type)}
+          >
+            {actionLabel(a)}
+          </button>
+        ))}
       </div>
 
       <span className="combat-phasebar__hint">
-        {hasPending
-          ? "有待结算宣言"
-          : `当前阶段：${phaseLabel(state.phase)}`}
+        {disabledHints.length > 0 ? disabledHints.join(" · ") : hint}
       </span>
     </div>
   );

@@ -838,7 +838,7 @@ function PlayerSceneDesk(props: DeskProps & {
           }
         />
       }
-      bottom={<PhaseActionBar state={props.state} />}
+      bottom={<PhaseActionBar state={props.state} isDM={false} />}
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
   );
@@ -936,7 +936,15 @@ function PlayerCombatDesk(props: DeskProps & {
           }
         />
       }
-      bottom={<PhaseActionBar state={props.state} />}
+      bottom={
+        <PhaseActionBar
+          state={props.state}
+          isDM={false}
+          onStartScene={props.onStartScene}
+          onEnterDeclaration={props.onStartScene}
+          onResolveResult={props.onOutcome}
+        />
+      }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
   );
@@ -1014,7 +1022,14 @@ function DmSceneDesk(props: DeskProps & {
           }
         />
       }
-      bottom={<PhaseActionBar state={props.state} />}
+      bottom={
+        <PhaseActionBar
+          state={props.state}
+          isDM
+          onStartScene={props.onStartScene}
+          onEnterDeclaration={props.onStartScene}
+        />
+      }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={props.state.actors[0]} role="dm" /> : null}
     />
   );
@@ -1115,7 +1130,23 @@ function DmCombatDesk(props: DeskProps & {
           hint="DM 可查看全部隐藏信息"
         />
       }
-      bottom={<PhaseActionBar state={props.state} />}
+      bottom={
+        <PhaseActionBar
+          state={props.state}
+          isDM
+          onStartScene={props.onStartScene}
+          onEnterDeclaration={props.onStartScene}
+          onIntercept={props.onIntercept}
+          onReact={props.onReact}
+          onSkipResponse={props.onForm}
+          onResolveResult={props.onOutcome}
+          onNextRound={props.onEndRound}
+          onApplyMomentum={() => {
+            const active = props.state.actors.find((a) => a.id === props.state.activeActorId);
+            if (active) props.onMomentum(active.id, active.momentum);
+          }}
+        />
+      }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={players[0] ?? props.state.actors[0]} role="dm" /> : null}
     />
   );

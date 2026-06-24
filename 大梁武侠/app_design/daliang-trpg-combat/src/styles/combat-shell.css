@@ -354,43 +354,37 @@
   flex-shrink: 0;
 }
 
-.combat-phasebar__steps {
+.combat-phasebar__actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
   justify-content: center;
 }
 
-.combat-phasebar__step {
-  padding: 4px 14px;
-  border: 1px solid rgba(107, 75, 45, 0.2);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--ink-muted);
+.combat-phasebar__btn {
+  padding: 5px 16px;
+  border: 1px solid rgba(212, 132, 58, 0.3);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--btn-hover) 0%, var(--btn-primary) 100%);
+  color: #fff9ee;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
   white-space: nowrap;
-  transition: all 200ms ease;
+  transition: opacity 200ms ease, box-shadow 200ms ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-.combat-phasebar__step.active {
-  border-color: var(--yang-die);
-  background: rgba(212, 132, 58, 0.15);
-  color: var(--yang-die);
-  box-shadow: 0 0 8px rgba(212, 132, 58, 0.15);
+.combat-phasebar__btn:hover:not(:disabled) {
+  box-shadow: 0 3px 14px rgba(212, 132, 58, 0.3);
 }
 
-.combat-phasebar__step.done {
-  border-color: rgba(74, 122, 92, 0.3);
-  background: rgba(74, 122, 92, 0.08);
-  color: var(--shield-green);
-}
-
-.combat-phasebar__arrow {
-  color: var(--ink-muted);
-  font-size: 10px;
-  flex-shrink: 0;
+.combat-phasebar__btn:disabled,
+.combat-phasebar__btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .combat-phasebar__hint {
@@ -399,6 +393,10 @@
   font-style: italic;
   white-space: nowrap;
   flex-shrink: 0;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
 }
 
 /* --------------------------------------------------------------------------
