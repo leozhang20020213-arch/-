@@ -24,23 +24,23 @@ export interface QiDiceDockProps {
 }
 
 /**
- * QiDiceDock — the single, canonical qi dice assignment area.
+ * QiDiceDock — the complete qi resource dashboard.
  *
- * Layout:
+ * Resource flow (top → bottom):
  *   ┌─────────────────────────────────────────┐
- *   │ TemporaryQiPool (临气 — if any)          │
- *   ├──────────────────────┬──────────────────┤
- *   │ QiPool (气海)         │ CurrentMoveSlots │
- *   │  draggable dice      │  阴槽 | 阳槽     │
- *   │                      │                  │
- *   ├──────────────────────┴──────────────────┤
- *   │ RestPool (息库/锁气/气池 stats)          │
+ *   │ 临气区 (TemporaryQiPool)                 │  ← temp dice from items/effects
+ *   │   always visible, even when empty        │
  *   ├─────────────────────────────────────────┤
- *   │ [确认宣言并锁气]  ← enabled/disabled     │
+ *   │ ┌── 气海 (QiPool) ──┬─ 阴阳槽 (Slots) ─┐│  ← active work area
+ *   │ │  available dice   │  阴槽 │ 阳槽      ││
+ *   │ │  drag → slots     │                   ││
+ *   │ └───────────────────┴───────────────────┘│
+ *   ├─────────────────────────────────────────┤
+ *   │ 息库 (RestPool)                          │  ← recuperable / locked / pool
+ *   │   expanded zone with stats + detail      │
+ *   ├─────────────────────────────────────────┤
+ *   │ [确认宣言并锁气]                          │
  *   └─────────────────────────────────────────┘
- *
- * Dice can be pre-assigned to slots even without a selected move.
- * The confirm button shows why it's disabled when requirements aren't met.
  */
 export const QiDiceDock: FC<QiDiceDockProps> = ({
   state,
@@ -51,7 +51,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   onRollToSea,
   distanceWarning,
 }) => {
-  // Local slot assignment state — tracks which dice are in yin/yang slots
+  // Local slot assignment state
   const [yinSlotIds, setYinSlotIds] = useState<string[]>([]);
   const [yangSlotIds, setYangSlotIds] = useState<string[]>([]);
   const [dragError, setDragError] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
 
   // Whether drag is allowed now
   const canDrag = Boolean(
-    (state.phase === "declare" || state.phase === "scene"),
+    state.phase === "declare" || state.phase === "scene",
   );
 
   // Resolve slot dice objects
@@ -107,7 +107,6 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       return;
     }
 
-    // Remove from other slot if present, add to yin
     setYangSlotIds((prev) => prev.filter((id) => id !== dieId));
     setYinSlotIds((prev) => (prev.includes(dieId) ? prev : [...prev, dieId]));
   }
@@ -133,11 +132,9 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   }
 
   function handleClickDie(dieId: string) {
-    // Toggle: if in a slot, remove
     if (assignedIds.has(dieId)) {
       handleRemoveFromSlot(dieId);
     }
-    // Clicking a sea die doesn't auto-assign — drag required
   }
 
   const yinTotal = yinDice.reduce((sum, d) => sum + (d.value ?? 0), 0);
@@ -145,7 +142,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
 
   return (
     <div className="qi-dice-dock">
-      {/* Temporary Qi */}
+      {/* ── 1. Temporary Qi (临气区) — always visible ── */}
       <TemporaryQiPool
         dice={tempDice}
         assignedIds={assignedIds}
@@ -154,7 +151,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
         onClickDie={handleClickDie}
       />
 
-      {/* Main area: Qi Sea + Move Slots */}
+      {/* ── 2. Main area: Qi Sea (气海) + Move Slots (阴阳槽) ── */}
       <div className="qi-dock-main">
         <QiPool
           dice={seaDice}
@@ -183,7 +180,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
         <div className="qi-drag-error">{dragError}</div>
       )}
 
-      {/* Slot summary (visible before move is selected, for pre-selection) */}
+      {/* Pre-selection hint */}
       {!selectedMove && (yinSlotIds.length + yangSlotIds.length > 0) && (
         <div className="qi-preselect-hint">
           已预选 {yinSlotIds.length + yangSlotIds.length} 枚气骰（阴{yinTotal}点 / 阳{yangTotal}点）
@@ -191,14 +188,14 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
         </div>
       )}
 
-      {/* Rest / Locked / Pool stats */}
+      {/* ── 3. Rest Pool (息库 — expanded zone) ── */}
       <RestPool
         restDice={restDice}
         lockedDice={lockedDice}
         poolDice={poolDice}
       />
 
-      {/* Confirm button */}
+      {/* ── 4. Confirm button ── */}
       <button
         className={`qi-confirm-btn${confirmCheck.allowed ? "" : " disabled"}`}
         type="button"

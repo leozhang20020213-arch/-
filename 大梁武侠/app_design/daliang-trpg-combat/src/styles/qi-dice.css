@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Qi Dice Dock — Card-game-style dice assignment area
+   Qi Dice Dock — Complete resource dashboard
+   Resource flow: 临气 → 气海 → 阴阳槽 → 息库
    ========================================================================== */
 
 .qi-dice-dock {
@@ -58,9 +59,9 @@
 }
 
 /* Nature border colors */
-.qi-die-card.die-yin  { border-left-color: #3a6b8a; }   /* cool blue tone for yin */
-.qi-die-card.die-yang { border-left-color: #c8783c; }   /* warm amber for yang */
-.qi-die-card.die-raw  { border-left-color: #8a8578; }   /* stone grey for raw */
+.qi-die-card.die-yin  { border-left-color: #3a6b8a; }
+.qi-die-card.die-yang { border-left-color: #c8783c; }
+.qi-die-card.die-raw  { border-left-color: #8a8578; }
 
 /* Assigned (in slot): dimmed but still clickable to remove */
 .qi-die-card.assigned {
@@ -134,6 +135,153 @@
 .qi-die-lock-mark {
   color: #8b3a3a;
   background: rgba(194, 58, 46, 0.2);
+}
+
+/* ==========================================================================
+   Temporary Qi Zone (临气区) — always visible
+   ========================================================================== */
+.temp-qi-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(232, 198, 126, 0.04);
+  border: 1px solid rgba(232, 198, 126, 0.12);
+  border-radius: 6px;
+  flex-shrink: 0;
+  min-height: 38px;
+}
+
+.temp-qi-zone.has-dice {
+  background: rgba(232, 198, 126, 0.07);
+  border-color: rgba(232, 198, 126, 0.2);
+}
+
+.temp-qi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.temp-qi-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.temp-qi-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(247, 231, 187, 0.55);
+  letter-spacing: 0.06em;
+}
+
+.has-dice .temp-qi-title {
+  color: rgba(247, 231, 187, 0.75);
+}
+
+.temp-qi-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(247, 231, 187, 0.35);
+}
+
+.has-dice .temp-qi-count {
+  color: #f7e7bb;
+}
+
+.temp-qi-sum {
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.4);
+}
+
+.temp-qi-sources {
+  font-size: 10px;
+  color: rgba(200, 180, 130, 0.4);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.temp-qi-detail-btn {
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid rgba(232, 198, 126, 0.15);
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(247, 231, 187, 0.4);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.temp-qi-detail-btn:hover {
+  background: rgba(232, 198, 126, 0.08);
+  color: rgba(247, 231, 187, 0.6);
+}
+
+.temp-qi-dice {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.temp-qi-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.temp-qi-empty-text {
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.25);
+  font-style: italic;
+}
+
+.temp-qi-empty-hint {
+  font-size: 10px;
+  color: rgba(247, 231, 187, 0.15);
+}
+
+/* Temp detail (expandable) */
+.temp-qi-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0 0;
+  border-top: 1px solid rgba(232, 198, 126, 0.08);
+}
+
+.temp-qi-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.temp-qi-detail-die {
+  color: rgba(247, 231, 187, 0.6);
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.temp-qi-detail-source {
+  color: rgba(200, 180, 130, 0.4);
+  font-style: italic;
+}
+
+.temp-qi-detail-tag {
+  padding: 0px 5px;
+  border-radius: 3px;
+  background: rgba(242, 193, 78, 0.2);
+  color: #c8943e;
+  font-size: 9px;
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -432,105 +580,153 @@
 }
 
 /* ==========================================================================
-   Temporary Qi
+   Rest Pool Zone (息库) — expanded proper zone
    ========================================================================== */
-.temp-qi-area {
+.rest-pool-zone {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  background: rgba(232, 198, 126, 0.06);
-  border: 1px solid rgba(232, 198, 126, 0.15);
-  border-radius: 5px;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid rgba(232, 198, 126, 0.1);
+  border-radius: 6px;
+  background: rgba(232, 198, 126, 0.03);
   flex-shrink: 0;
-  min-height: 40px;
+  overflow: hidden;
 }
 
-.temp-qi-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(247, 231, 187, 0.5);
-  flex-shrink: 0;
-  letter-spacing: 0.05em;
+/* ── 息库 main section ── */
+.rest-pool-main {
+  padding: 6px 10px;
 }
 
-.temp-qi-dice {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-/* ==========================================================================
-   Rest Pool / Stats Bar
-   ========================================================================== */
-.rest-pool-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 5px 10px;
-  font-size: 11px;
-  color: rgba(247, 231, 187, 0.5);
+.rest-pool-main.has-dice {
   background: rgba(232, 198, 126, 0.04);
-  border: 1px solid rgba(232, 198, 126, 0.08);
-  border-radius: 5px;
-  flex-shrink: 0;
 }
 
-.rest-stat {
+.rest-pool-header {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.rest-stat strong {
-  color: rgba(247, 231, 187, 0.7);
+.rest-pool-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
-.rest-stat.has-dice strong {
-  color: rgba(247, 231, 187, 0.85);
-}
-
-.rest-stat.locked {
-  color: rgba(247, 231, 187, 0.3);
-}
-
-.rest-stat.pool {
+.rest-pool-title {
+  font-size: 12px;
+  font-weight: 700;
   color: rgba(247, 231, 187, 0.55);
+  letter-spacing: 0.06em;
 }
 
-.rest-stat.empty {
-  font-style: italic;
-  opacity: 0.4;
+.has-dice .rest-pool-title {
+  color: rgba(247, 231, 187, 0.75);
 }
 
-.rest-points {
-  font-size: 10px;
+.rest-pool-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(247, 231, 187, 0.35);
+}
+
+.has-dice .rest-pool-count {
+  color: #f7e7bb;
+}
+
+.rest-pool-sum {
+  font-size: 11px;
   color: rgba(247, 231, 187, 0.4);
 }
 
-.rest-detail-pop {
-  position: relative;
-  margin-left: auto;
-}
-
-.rest-detail-trigger {
+.rest-pool-detail-btn {
   font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid rgba(232, 198, 126, 0.15);
+  border-radius: 4px;
+  background: transparent;
   color: rgba(247, 231, 187, 0.35);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.rest-detail-popover {
-  position: absolute;
-  bottom: 120%;
-  right: 0;
-  padding: 8px 10px;
-  border: 1px solid rgba(232, 198, 126, 0.2);
-  border-radius: 4px;
-  background: rgba(9, 9, 8, 0.97);
+.rest-pool-detail-btn:hover {
+  background: rgba(232, 198, 126, 0.08);
+  color: rgba(247, 231, 187, 0.55);
+}
+
+/* Dice chips preview (息库内骰子小列表) */
+.rest-pool-dice-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.rest-pool-die-chip {
   font-size: 10px;
-  color: rgba(247, 231, 187, 0.6);
-  min-width: 180px;
-  z-index: 10;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 4px;
+  color: rgba(247, 231, 187, 0.55);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rest-pool-empty-hint {
+  font-size: 10px;
+  color: rgba(247, 231, 187, 0.2);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* ── 锁气 / 气池 secondary row ── */
+.rest-pool-secondary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 10px;
+  border-top: 1px solid rgba(232, 198, 126, 0.06);
+  font-size: 10px;
+}
+
+.rest-secondary-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: rgba(247, 231, 187, 0.3);
+}
+
+.rest-secondary-stat strong {
+  color: rgba(247, 231, 187, 0.45);
+  font-weight: 700;
+}
+
+.rest-secondary-stat.locked-stat {
+  color: rgba(247, 231, 187, 0.25);
+}
+
+.rest-secondary-stat.pool-stat {
+  color: rgba(247, 231, 187, 0.35);
+}
+
+.rest-secondary-points {
+  font-size: 9px;
+  color: rgba(247, 231, 187, 0.25);
+}
+
+.rest-secondary-stat.empty-stat {
+  opacity: 0.5;
+}
+
+/* ── Expandable detail ── */
+.rest-pool-detail {
+  padding: 6px 10px;
+  border-top: 1px solid rgba(232, 198, 126, 0.08);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -538,28 +734,48 @@
 
 .rest-detail-group {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.rest-detail-zone {
+.rest-detail-group.locked-group {
+  opacity: 0.6;
+}
+
+.rest-detail-zone-label {
+  font-size: 10px;
   font-weight: 700;
-  color: rgba(247, 231, 187, 0.7);
-  margin-right: 4px;
+  color: rgba(247, 231, 187, 0.55);
+  letter-spacing: 0.05em;
+}
+
+.rest-detail-dice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .rest-detail-die {
   font-size: 9px;
-  padding: 1px 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-  white-space: nowrap;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: 4px;
+  color: rgba(247, 231, 187, 0.55);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.locked-detail .rest-detail-zone,
-.locked-detail .rest-detail-die {
-  color: rgba(247, 231, 187, 0.35);
+.rest-detail-die.locked-die {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.rest-detail-source {
+  font-size: 8px;
+  color: rgba(200, 180, 130, 0.35);
+  font-style: italic;
 }
 
 /* ==========================================================================

@@ -67,6 +67,8 @@ export const CombatantNode: FC<CombatantNodeProps> = ({
   if (!canBeTargeted && !isCurrentActor) classes.push("untargetable");
   if (combatant.side === "player") classes.push("side-player");
   if (combatant.side === "enemy") classes.push("side-enemy");
+  if (combatant.side === "ally") classes.push("side-ally");
+  if (combatant.side === "neutral") classes.push("side-neutral");
 
   const isClickable = canBeTargeted || isCurrentActor;
 

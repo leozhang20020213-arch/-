@@ -2,38 +2,35 @@
 // Mock Combat Data — Tactical Stage Adapter
 // Converts existing CombatState / Actor data into StageData for the
 // new HTML/SVG tactical stage component.
+//
+// Refactored (2025-06): Slot-based positioning replaces hardcoded x/y.
+// Actors are auto-assigned to predefined BoardSlots by side.
 // ==========================================================================
 
 import type { Actor, CombatState, DistanceRelation } from "../combat/types";
-import type { Combatant, DistanceEdge, SceneObjective, StageData } from "../types/combat";
+import type { ActorPlacement, Combatant, CombatSide, DistanceEdge, SceneObjective, StageData } from "../types/combat";
+import {
+  assignActorsToSlots,
+  getSlotForPlacement,
+} from "../lib/combat/boardLayout";
 
 /** Default scene tags for the bridge-rain campaign */
 const DEFAULT_SCENE_TAGS = ["雨夜", "仓门", "堤岸", "货堆"];
 
-/**
- * Position presets for combatants on the tactical stage.
- * Players cluster on the left side, enemies on the right.
- * With horizontal cards (~170px), up to 5 combatants can fit per side
- * without overlapping when spread across y: 15%–85%.
- */
-function positionFor(index: number, total: number, side: "player" | "enemy" | "neutral"): { x: number; y: number } {
-  // Distribute vertically to fit up to 5 cards without overlap
-  const yMin = 18;
-  const yMax = 82;
-  const step = total > 1 ? (yMax - yMin) / (total - 1) : 0;
-  const y = total === 1 ? 50 : yMin + index * step;
+// ==========================================================================
+// Side normalization
+// ==========================================================================
 
-  switch (side) {
-    case "player":
-      // Players on left side, spread slightly for readability
-      return { x: 12 + (index % 3) * 6, y };
-    case "enemy":
-      // Enemies on right side, spread slightly
-      return { x: 80 + (index % 3) * 6, y };
-    case "neutral":
-      return { x: 45 + index * 5, y };
-  }
+/** Map Actor.side → CombatSide ("pressure" falls to "enemy") */
+function normalizeSide(side: Actor["side"]): CombatSide {
+  if (side === "pressure") return "enemy";
+  if (side === "player") return "player";
+  return "enemy";
 }
+
+// ==========================================================================
+// Slot-based actor → Combatant conversion
+// ==========================================================================
 
 /** Map an Actor's statuses to a string array (public names only) */
 function mapStatuses(actor: Actor): string[] {
@@ -42,43 +39,76 @@ function mapStatuses(actor: Actor): string[] {
     .map((s) => s.name);
 }
 
-/** Map Actor.side → Combatant.side ("pressure" falls to "enemy") */
-function normalizeSide(side: Actor["side"]): Combatant["side"] {
-  if (side === "pressure") return "enemy";
-  return side as Combatant["side"];
-}
-
-/** Map a single Actor to a Combatant */
-export function actorToCombatant(actor: Actor, index: number, total: number): Combatant {
-  const pos = positionFor(index, total, normalizeSide(actor.side));
-  return {
-    id: actor.id,
-    name: actor.name,
-    side: normalizeSide(actor.side),
-    hp: actor.hp,
-    maxHp: actor.maxHp,
-    momentum: actor.momentum,
-    statuses: mapStatuses(actor),
-    x: pos.x,
-    y: pos.y,
-  };
-}
-
-/** Map an array of Actors to Combatants with side-grouped positioning */
+/**
+ * Convert a list of Actors to Combatants using slot-based positioning.
+ *
+ * Actors are grouped by side, then auto-assigned to the first available
+ * BoardSlot on their side. If a side runs out of slots, actors overflow
+ * with a fallback position (stacked at the last slot + offset).
+ */
 export function actorsToCombatants(actors: Actor[]): Combatant[] {
-  const players = actors.filter((a) => a.side === "player");
-  const enemies = actors.filter((a) => a.side === "enemy" || a.side === "pressure");
+  // Group actors by normalized side
+  const actorsBySide = new Map<CombatSide, Actor[]>();
+  for (const a of actors) {
+    const side = normalizeSide(a.side);
+    if (!actorsBySide.has(side)) actorsBySide.set(side, []);
+    actorsBySide.get(side)!.push(a);
+  }
 
-  return [
-    ...players.map((a, i) => actorToCombatant(a, i, players.length)),
-    ...enemies.map((a, i) => actorToCombatant(a, i, enemies.length)),
-  ];
+  // Assign slots side by side
+  const allPlacements: ActorPlacement[] = [];
+  for (const [side, sideActors] of actorsBySide) {
+    const actorIds = sideActors.map((a) => ({ id: a.id, side }));
+    const placements = assignActorsToSlots(actorIds);
+    allPlacements.push(...placements);
+  }
+
+  // Map actors to combatants with slot positions
+  const placementMap = new Map(allPlacements.map((p) => [p.actorId, p]));
+
+  return actors.map((actor) => {
+    const placement = placementMap.get(actor.id);
+    let x: number;
+    let y: number;
+    let slotId: string | undefined;
+
+    if (placement) {
+      const slot = getSlotForPlacement(placement);
+      if (slot) {
+        x = slot.x;
+        y = slot.y;
+        slotId = slot.id;
+      } else {
+        // Fallback: should not happen
+        x = 50;
+        y = 50;
+      }
+    } else {
+      // No slot available — stack at bottom of side with offset
+      const side = normalizeSide(actor.side);
+      x = side === "player" ? 6 : side === "enemy" ? 94 : 50;
+      y = 88;
+    }
+
+    return {
+      id: actor.id,
+      name: actor.name,
+      side: normalizeSide(actor.side),
+      hp: actor.hp,
+      maxHp: actor.maxHp,
+      momentum: actor.momentum,
+      statuses: mapStatuses(actor),
+      x,
+      y,
+      slotId,
+    };
+  });
 }
 
 /** Map DistanceRelation[] to DistanceEdge[] */
 export function distancesToEdges(distances: DistanceRelation[]): DistanceEdge[] {
   return distances
-    .filter((d) => d.public !== false) // keep public + undefined (default public)
+    .filter((d) => d.public !== false)
     .map((d) => ({
       from: d.fromActorId,
       to: d.toActorId,
@@ -102,7 +132,7 @@ export function tracksToObjectives(
 
 /**
  * Build full StageData from a CombatState.
- * This is the primary adapter — call it from your combat desk.
+ * Uses slot-based positioning via actorsToCombatants().
  */
 export function buildStageData(state: CombatState): StageData {
   return {
@@ -114,14 +144,16 @@ export function buildStageData(state: CombatState): StageData {
   };
 }
 
-/**
- * Static mock data for standalone development / testing
- * without a running CombatState.
- */
+// ==========================================================================
+// Static mock data for standalone development / testing
+// Positions use the same slot grid as the runtime system.
+// ==========================================================================
+
 export const MOCK_STAGE_DATA: StageData = {
   sceneName: "旧堤仓",
   sceneTags: ["雨夜", "仓门", "堤岸", "货堆"],
   combatants: [
+    // ---- Player side (left, slots: player-main-*) ----
     {
       id: "pc-shen-qing",
       name: "沈青",
@@ -130,8 +162,9 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 40,
       momentum: "阴盛",
       statuses: [],
-      x: 12,
-      y: 35,
+      x: 14,  // player-main-0
+      y: 28,
+      slotId: "player-main-0",
     },
     {
       id: "pc-wei",
@@ -141,9 +174,11 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 45,
       momentum: "阳盛",
       statuses: [],
-      x: 18,
-      y: 65,
+      x: 14,  // player-main-1
+      y: 50,
+      slotId: "player-main-1",
     },
+    // ---- Enemy side (right, slots: enemy-front-*) ----
     {
       id: "enemy-short-blade",
       name: "短兵客",
@@ -152,8 +187,9 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 45,
       momentum: "阳盛",
       statuses: ["破口"],
-      x: 80,
-      y: 18,
+      x: 86,  // enemy-front-0
+      y: 20,
+      slotId: "enemy-front-0",
     },
     {
       id: "enemy-porter",
@@ -163,8 +199,9 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 30,
       momentum: "失势",
       statuses: ["流血"],
-      x: 86,
-      y: 42,
+      x: 86,  // enemy-front-1
+      y: 38,
+      slotId: "enemy-front-1",
     },
     {
       id: "enemy-lookout",
@@ -174,8 +211,9 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 35,
       momentum: "阴盛",
       statuses: ["迟滞"],
-      x: 83,
-      y: 66,
+      x: 86,  // enemy-front-2
+      y: 56,
+      slotId: "enemy-front-2",
     },
     {
       id: "enemy-archer",
@@ -185,8 +223,9 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 25,
       momentum: "合势",
       statuses: [],
-      x: 89,
-      y: 84,
+      x: 86,  // enemy-front-3
+      y: 74,
+      slotId: "enemy-front-3",
     },
   ],
   distances: [

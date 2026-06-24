@@ -16,11 +16,36 @@ export type MomentumFace =
   | "崩势"
   | "失势";
 
+/** Combat side for slot assignment */
+export type CombatSide = "player" | "enemy" | "ally" | "neutral";
+
+/** A board slot — a predefined anchor position on the tactical stage */
+export interface BoardSlot {
+  id: string;
+  side: CombatSide;
+  /** Row index (0 = front row) */
+  row: number;
+  /** Column index (0 = leftmost) */
+  col: number;
+  /** X position on stage (0–100 percentage) */
+  x: number;
+  /** Y position on stage (0–100 percentage) */
+  y: number;
+  /** Slot label (e.g. "主位1", "前排3") */
+  label: string;
+}
+
+/** Maps an actor to a board slot */
+export interface ActorPlacement {
+  actorId: string;
+  slotId: string;
+}
+
 /** A combatant node rendered on the tactical stage */
 export interface Combatant {
   id: string;
   name: string;
-  side: "player" | "enemy" | "neutral";
+  side: CombatSide;
   hp: number;
   maxHp: number;
   momentum: MomentumFace;
@@ -31,6 +56,8 @@ export interface Combatant {
   x: number;
   /** Y position on stage (0–100 percentage) */
   y: number;
+  /** ID of the BoardSlot this combatant occupies (for layout tracking) */
+  slotId?: string;
 }
 
 /** A distance edge connecting two combatants */

@@ -23,20 +23,23 @@ export interface CombatStageProps {
 /**
  * Tactical Combat Stage — the main battlefield.
  *
- * Layout:
- *   ┌─ Scene header (name + tags) ──────────┐
- *   │   SVG overlay:                          │
- *   │     - Target line (dynamic, one line)   │
- *   │   Combatant nodes (absolute positioned) │
- *   └─ Scene objectives (progress bars) ──────┘
+ * Layout (slot-based, side-partitioned):
+ *   ┌─ Scene header (name + tags) ────────────────────┐
+ *   │   ┌── Player Zone ──┬─ Center ──┬─ Enemy Zone ─┐ │
+ *   │   │  combatant cards │  target   │ combatant     │ │
+ *   │   │  (slot-aligned)  │  line(s)  │ cards         │ │
+ *   │   │                  │  labels   │ (slot-aligned)│ │
+ *   │   └─────────────────┴───────────┴──────────────┘ │
+ *   └─ Scene objectives (progress bars) ──────────────┘
  *
  * Key design decisions:
- *   - Only ONE target line is shown: from {activeActorId} → {selectedTargetId}
- *   - Static distance lines between all pairs are HIDDEN (clutter)
+ *   - Combatants positioned by slot system (x,y in 0–100% viewBox space)
+ *   - Side zones rendered as visual containers with labels
+ *   - Only ONE target line shown: from {activeActorId} → {selectedTargetId}
  *   - Current actor card gets the "current-actor" gold glow
  *   - Selected target card gets the "targeted" red ring
  *   - Defeated actors are dimmed and unclickable
- *   - Clicking an enemy on stage sets it as the selected target
+ *   - Zone labels ("我方" / "敌方") shown as headers
  */
 export const CombatStage: FC<CombatStageProps> = ({
   data,
@@ -62,7 +65,6 @@ export const CombatStage: FC<CombatStageProps> = ({
   }
 
   // ---- Determine the effective target ID ----
-  // Priority: external selectedTargetId > selectedId (stage click) > internal
   const effectiveTargetId = selectedTargetId ?? activeSelected;
 
   // Derive target state for the target line
@@ -97,20 +99,51 @@ export const CombatStage: FC<CombatStageProps> = ({
       )
     : "";
 
-  // ---- Determine which actors are defeated ----
+  // ---- Determine which actors are defeated / targetable ----
   const defeatedIds = new Set(
     state.actors
       .filter((a) => a.hp <= 0)
       .map((a) => a.id),
   );
 
-  // ---- Determine which actors can be targeted ----
-  // Enemy and pressure actors that are alive can be targeted
   const targetableIds = new Set(
     state.actors
       .filter((a) => a.side !== "player" && a.hp > 0)
       .map((a) => a.id),
   );
+
+  // ---- Group combatants by side ----
+  const playerCombatants = data.combatants.filter((c) => c.side === "player");
+  const enemyCombatants = data.combatants.filter((c) => c.side === "enemy");
+  const allyCombatants = data.combatants.filter((c) => c.side === "ally");
+  const neutralCombatants = data.combatants.filter((c) => c.side === "neutral");
+
+  // ---- Render a single combatant node with all state computed ----
+  function renderCombatant(c: (typeof data.combatants)[number]) {
+    const isCurrent = c.id === state.activeActorId;
+    const isTarget = c.id === effectiveTargetId;
+    const isDefeated = defeatedIds.has(c.id);
+    const canTarget = targetableIds.has(c.id);
+
+    return (
+      <CombatantNode
+        key={c.id}
+        combatant={c}
+        isSelected={activeSelected === c.id && !isCurrent && !isTarget}
+        isCurrentActor={isCurrent}
+        isTargeted={isTarget}
+        isDefeated={isDefeated}
+        canBeTargeted={canTarget}
+        onSelect={handleSelect}
+      />
+    );
+  }
+
+  const playerCount = playerCombatants.length;
+  const enemyCount = enemyCombatants.length;
+  const allyCount = allyCombatants.length;
+  const neutralCount = neutralCombatants.length;
+  const hasOthers = allyCount > 0 || neutralCount > 0;
 
   return (
     <div className="tactical-stage">
@@ -124,15 +157,51 @@ export const CombatStage: FC<CombatStageProps> = ({
         </div>
       </div>
 
-      {/* ---- Battlefield area (nodes + SVG lines) ---- */}
+      {/* ---- Battlefield area (nodes + SVG lines + side zones) ---- */}
       <div className="tactical-battlefield">
         {/* Atmospheric background */}
         <div className="battlefield-bg">
           <div className="rain-overlay" />
           <div className="ground-texture" />
-          {/* Side zone labels */}
-          <div className="battlefield-zone-label zone-player">我方</div>
-          <div className="battlefield-zone-label zone-enemy">敌方</div>
+        </div>
+
+        {/* Side zone backgrounds — visual containers for each faction */}
+        <div className="side-zones-layer">
+          {/* Player zone (left) */}
+          <div className={`side-zone-bg player-zone-bg${playerCount > 0 ? " has-actors" : ""}`}>
+            <div className="side-zone-label-top">
+              <span className="side-zone-title">我方</span>
+              <span className="side-zone-count">{playerCount}人</span>
+            </div>
+          </div>
+
+          {/* Enemy zone (right) */}
+          <div className={`side-zone-bg enemy-zone-bg${enemyCount > 0 ? " has-actors" : ""}`}>
+            <div className="side-zone-label-top enemy-label-top">
+              <span className="side-zone-count">{enemyCount}人</span>
+              <span className="side-zone-title">敌方</span>
+            </div>
+          </div>
+
+          {/* Ally zone (bottom-left, only when present) */}
+          {allyCount > 0 && (
+            <div className="side-zone-bg ally-zone-bg has-actors">
+              <div className="side-zone-label-top">
+                <span className="side-zone-title">友方</span>
+                <span className="side-zone-count">{allyCount}人</span>
+              </div>
+            </div>
+          )}
+
+          {/* Neutral zone (bottom-center, only when present) */}
+          {neutralCount > 0 && (
+            <div className="side-zone-bg neutral-zone-bg has-actors">
+              <div className="side-zone-label-top">
+                <span className="side-zone-title">其他</span>
+                <span className="side-zone-count">{neutralCount}人</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SVG target line layer */}
@@ -141,7 +210,6 @@ export const CombatStage: FC<CombatStageProps> = ({
           viewBox="0 0 100 100"
           preserveAspectRatio="xMidYMid meet"
         >
-          {/* Only the active target line — static distance lines removed */}
           {showTargetLine && (
             <TargetLine
               x1={actingCombatant!.x}
@@ -158,28 +226,35 @@ export const CombatStage: FC<CombatStageProps> = ({
           )}
         </svg>
 
-        {/* Combatant nodes layer */}
+        {/* Combatant nodes layer — absolutely positioned in viewBox space */}
         <div className="combatant-layer">
-          {data.combatants.map((c) => {
-            const isCurrent = c.id === state.activeActorId;
-            const isTarget = c.id === effectiveTargetId;
-            const isDefeated = defeatedIds.has(c.id);
-            const canTarget = targetableIds.has(c.id);
+          {/* Player cards */}
+          {playerCombatants.map(renderCombatant)}
 
-            return (
-              <CombatantNode
-                key={c.id}
-                combatant={c}
-                isSelected={activeSelected === c.id && !isCurrent && !isTarget}
-                isCurrentActor={isCurrent}
-                isTargeted={isTarget}
-                isDefeated={isDefeated}
-                canBeTargeted={canTarget}
-                onSelect={handleSelect}
-              />
-            );
-          })}
+          {/* Enemy cards */}
+          {enemyCombatants.map(renderCombatant)}
+
+          {/* Ally cards */}
+          {allyCombatants.map(renderCombatant)}
+
+          {/* Neutral cards */}
+          {neutralCombatants.map(renderCombatant)}
+
+          {/* Empty state hints */}
+          {data.combatants.length === 0 && (
+            <div className="battlefield-empty">
+              <span>暂无角色入场</span>
+            </div>
+          )}
         </div>
+
+        {/* Center-field distance / interaction hint */}
+        {hasOthers && (
+          <div className="battlefield-extra-zones-hint">
+            {allyCount > 0 && <span>友方 {allyCount}人</span>}
+            {neutralCount > 0 && <span>其他 {neutralCount}</span>}
+          </div>
+        )}
       </div>
 
       {/* ---- Scene objectives ---- */}

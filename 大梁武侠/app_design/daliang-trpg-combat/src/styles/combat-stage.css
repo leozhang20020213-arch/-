@@ -1,6 +1,7 @@
 /* ==========================================================================
    Tactical Combat Stage — HTML/SVG battlefield
-   Horizontal compact combatant cards, single SVG target line, zone labels.
+   Slot-based side-partitioned layout: Player (left) | Center | Enemy (right).
+   Combatant cards positioned by percentage coordinates from BoardSlots.
    ========================================================================== */
 
 /* ---- Tactical Stage Container ---- */
@@ -89,28 +90,164 @@
   opacity: 0.45;
 }
 
-/* ---- Battlefield zone labels ---- */
-.battlefield-zone-label {
+/* ==========================================================================
+   Side Zone Backgrounds — Visual faction containers
+   ========================================================================== */
+
+.side-zones-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.side-zone-bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+  border: 1px dashed transparent;
+  transition: border-color 300ms ease, background 300ms ease;
+}
+
+/* Player zone — left side (~0–32% of battlefield) */
+.player-zone-bg {
+  left: 0;
+  width: 25%;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 92, 122, 0.06) 0%,
+    rgba(58, 92, 122, 0.02) 60%,
+    transparent 100%
+  );
+  border-right: 1px solid rgba(58, 92, 122, 0.12);
+}
+
+.player-zone-bg.has-actors {
+  border-right-color: rgba(58, 92, 122, 0.2);
+}
+
+/* Enemy zone — right side (~75–100% of battlefield) */
+.enemy-zone-bg {
+  right: 0;
+  width: 25%;
+  background: linear-gradient(
+    270deg,
+    rgba(194, 58, 46, 0.06) 0%,
+    rgba(194, 58, 46, 0.02) 60%,
+    transparent 100%
+  );
+  border-left: 1px solid rgba(194, 58, 46, 0.12);
+}
+
+.enemy-zone-bg.has-actors {
+  border-left-color: rgba(194, 58, 46, 0.2);
+}
+
+/* Ally zone — lower-left (~28–42% from left, 72–92% from top) */
+.ally-zone-bg {
+  left: 28%;
+  width: 14%;
+  top: 72%;
+  bottom: 4%;
+  background: linear-gradient(
+    180deg,
+    rgba(107, 138, 92, 0.06) 0%,
+    rgba(107, 138, 92, 0.02) 80%
+  );
+  border: 1px solid rgba(107, 138, 92, 0.15);
+}
+
+.ally-zone-bg.has-actors {
+  border-color: rgba(107, 138, 92, 0.25);
+}
+
+/* Neutral zone — center-bottom (~42–58% from left, 72–92% from top) */
+.neutral-zone-bg {
+  left: 42%;
+  width: 16%;
+  top: 72%;
+  bottom: 4%;
+  background: linear-gradient(
+    180deg,
+    rgba(130, 130, 130, 0.04) 0%,
+    rgba(130, 130, 130, 0.01) 80%
+  );
+  border: 1px solid rgba(130, 130, 130, 0.12);
+}
+
+.neutral-zone-bg.has-actors {
+  border-color: rgba(130, 130, 130, 0.2);
+}
+
+/* ---- Side Zone Labels ---- */
+.side-zone-label-top {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+}
+
+.enemy-label-top {
+  left: auto;
+  right: 8px;
+  justify-content: flex-end;
+}
+
+.side-zone-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(247, 231, 187, 0.35);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.player-zone-bg.has-actors .side-zone-title {
+  color: rgba(140, 180, 220, 0.55);
+}
+
+.enemy-zone-bg.has-actors .side-zone-title {
+  color: rgba(220, 140, 130, 0.55);
+}
+
+.side-zone-count {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(247, 231, 187, 0.25);
+}
+
+.has-actors .side-zone-count {
+  color: rgba(247, 231, 187, 0.4);
+}
+
+/* ---- Extra zones hint (bottom bar) ---- */
+.battlefield-extra-zones-hint {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  font-size: 10px;
+  color: rgba(247, 231, 187, 0.3);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---- Battlefield empty state ---- */
+.battlefield-empty {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  color: rgba(247, 231, 187, 0.08);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  user-select: none;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.zone-player {
-  left: 2%;
-}
-
-.zone-enemy {
-  right: 2%;
+  color: rgba(247, 231, 187, 0.2);
+  font-style: italic;
 }
 
 /* ---- SVG Layer ---- */
@@ -165,11 +302,19 @@
 
 /* ---- Side tints —— top border for horizontal cards ---- */
 .combatant-node.side-player {
-  border-top: 3px solid rgba(58, 92, 122, 0.5);
+  border-left: 3px solid rgba(58, 92, 122, 0.5);
 }
 
 .combatant-node.side-enemy {
-  border-top: 3px solid rgba(194, 58, 46, 0.4);
+  border-left: 3px solid rgba(194, 58, 46, 0.5);
+}
+
+.combatant-node.side-ally {
+  border-left: 3px solid rgba(107, 138, 92, 0.5);
+}
+
+.combatant-node.side-neutral {
+  border-left: 3px solid rgba(130, 130, 130, 0.4);
 }
 
 /* ==========================================================================
