@@ -57,6 +57,7 @@ import { DebugPanel } from "./debug/DebugPanel";
 import { DiceStoreProvider } from "../store/diceStore";
 import { QiDiceTray as QiDiceTray2D } from "../components/dice/QiDiceTray";
 import { QiAssignmentBoard } from "../components/dice/QiAssignmentBoard";
+import { QiZonePanel } from "../components/dice/QiZonePanel";
 import type { CurrentMoveQiRequirement } from "../types/dice";
 
 const zoneLabels: Record<QiZone, string> = {
@@ -812,7 +813,7 @@ function PlayerSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} targetName="" minHeight={200} />}
+          qiZone={<QiZonePanel minHeight={220} />}
         />
       }
       right={
@@ -885,12 +886,15 @@ function PlayerCombatDesk(props: DeskProps & {
               const targetActor = enemies.find((e) => e.id === props.selectedTargetId);
               const tName = targetActor?.name ?? "";
               return (
-                <QiAssignmentBoard
-                  moveRequirement={req}
-                  hasTarget={Boolean(props.selectedTargetId)}
-                  targetName={tName}
-                  minHeight={220}
-                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden" }}>
+                  <QiZonePanel minHeight={180} />
+                  <QiAssignmentBoard
+                    moveRequirement={req}
+                    hasTarget={Boolean(props.selectedTargetId)}
+                    targetName={tName}
+                    minHeight={200}
+                  />
+                </div>
               );
             })()
           }
@@ -980,7 +984,7 @@ function DmSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} targetName="" minHeight={200} />}
+          qiZone={<QiZonePanel minHeight={220} />}
         />
       }
       right={
@@ -1063,12 +1067,15 @@ function DmCombatDesk(props: DeskProps & {
               const tgt = props.state.actors.find((a) => a.id === props.selectedTargetId);
               const tName = tgt?.name ?? "";
               return (
-                <QiAssignmentBoard
-                  moveRequirement={req}
-                  hasTarget={Boolean(props.selectedTargetId)}
-                  targetName={tName}
-                  minHeight={220}
-                />
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, height: "100%", overflow: "hidden" }}>
+                  <QiZonePanel minHeight={180} />
+                  <QiAssignmentBoard
+                    moveRequirement={req}
+                    hasTarget={Boolean(props.selectedTargetId)}
+                    targetName={tName}
+                    minHeight={200}
+                  />
+                </div>
               );
             })()
           }
