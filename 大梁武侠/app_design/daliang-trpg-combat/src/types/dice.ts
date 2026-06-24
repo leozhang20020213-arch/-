@@ -92,3 +92,25 @@ export interface CurrentMoveQiRequirement {
   minYin: number;
   minYang: number;
 }
+
+// ==========================================================================
+// Phase 3: Declaration Lock & Rest Pool Flow
+// ==========================================================================
+
+/** 一次锁气宣言的完整快照 */
+export interface LockedQiDeclaration {
+  id: string;
+  moveId: string;
+  moveName: string;
+  targetId: string;
+  targetName: string;
+  yinDice: QiDieData[];
+  yangDice: QiDieData[];
+  createdAt: number;
+}
+
+/** 宣言生命周期 */
+export type QiDeclarationStatus =
+  | "draft"      // 未确认，可编辑
+  | "locked"     // 已锁气，等待响应
+  | "resolved";  // 已结算，骰入息库

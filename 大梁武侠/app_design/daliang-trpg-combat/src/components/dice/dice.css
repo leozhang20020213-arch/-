@@ -581,3 +581,227 @@
   transition: opacity 120ms ease;
   pointer-events: none;
 }
+
+/* ==========================================================================
+   Phase 3: Declaration Lock & Rest Pool
+   ========================================================================== */
+
+/* ---- QiRequirementStatus ---- */
+
+.qi-req-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  font-size: 11px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(200, 148, 62, 0.08);
+}
+
+.qi-req-status--empty {
+  color: rgba(247, 231, 187, 0.25);
+  font-style: italic;
+}
+
+.qi-req-status__move {
+  font-weight: 700;
+  color: #e0b860;
+}
+
+.qi-req-status__slot {
+  color: rgba(247, 231, 187, 0.45);
+  font-weight: 600;
+}
+
+.qi-req-status__slot.met {
+  color: #6db88d;
+}
+
+/* ---- QiDeclarationSummary ---- */
+
+.qi-decl-summary {
+  padding: 8px 10px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.qi-decl-summary--locked {
+  background: rgba(200, 148, 62, 0.08);
+  border: 1px solid rgba(200, 148, 62, 0.25);
+}
+
+.qi-decl-summary--resolved {
+  background: rgba(74, 122, 92, 0.08);
+  border: 1px solid rgba(74, 122, 92, 0.25);
+}
+
+.qi-decl-summary__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.qi-decl-summary__badge {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.qi-decl-summary--locked .qi-decl-summary__badge {
+  color: #e0b860;
+}
+
+.qi-decl-summary--resolved .qi-decl-summary__badge {
+  color: #6db88d;
+}
+
+.qi-decl-summary__move {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5e6c8;
+}
+
+.qi-decl-summary__detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.55);
+  margin-bottom: 6px;
+}
+
+.qi-decl-summary__time {
+  margin-left: auto;
+  color: rgba(247, 231, 187, 0.25);
+  font-size: 10px;
+}
+
+.qi-decl-summary__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.qi-decl-summary__btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid;
+}
+
+.qi-decl-summary__btn--resolve {
+  background: rgba(74, 122, 92, 0.15);
+  color: #6db88d;
+  border-color: rgba(74, 122, 92, 0.35);
+}
+
+.qi-decl-summary__btn--resolve:hover {
+  background: rgba(74, 122, 92, 0.28);
+}
+
+.qi-decl-summary__btn--reset {
+  background: rgba(160, 120, 80, 0.1);
+  color: rgba(247, 231, 187, 0.45);
+  border-color: rgba(160, 120, 80, 0.2);
+}
+
+.qi-decl-summary__btn--reset:hover {
+  background: rgba(160, 120, 80, 0.18);
+}
+
+/* ---- Confirm Button ---- */
+
+.qi-assignment-board__confirm-btn {
+  margin-left: auto;
+  padding: 6px 18px;
+  border: 1px solid rgba(200, 148, 62, 0.5);
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgba(212, 150, 70, 0.35) 0%, rgba(180, 120, 40, 0.25) 100%);
+  color: #ffebc0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 150ms ease, box-shadow 150ms ease;
+  flex-shrink: 0;
+}
+
+.qi-assignment-board__confirm-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(220, 160, 80, 0.45) 0%, rgba(190, 130, 50, 0.35) 100%);
+  box-shadow: 0 2px 12px rgba(212, 132, 58, 0.2);
+}
+
+.qi-assignment-board__confirm-btn:disabled,
+.qi-assignment-board__confirm-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: rgba(80, 70, 50, 0.15);
+  border-color: rgba(107, 75, 45, 0.2);
+  color: rgba(247, 231, 187, 0.3);
+}
+
+.qi-assignment-board__confirm-hint {
+  font-size: 10px;
+  color: rgba(247, 231, 187, 0.35);
+  font-style: italic;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+
+/* ---- Status Badge ---- */
+
+.qi-assignment-board__status-badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.qi-assignment-board__status-badge--locked {
+  background: rgba(200, 148, 62, 0.15);
+  color: #e0b860;
+  border: 1px solid rgba(200, 148, 62, 0.3);
+}
+
+.qi-assignment-board__status-badge--resolved {
+  background: rgba(74, 122, 92, 0.15);
+  color: #6db88d;
+  border: 1px solid rgba(74, 122, 92, 0.3);
+}
+
+/* ---- Rest Pool ---- */
+
+.qi-assignment-board__rest-pool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-top: 1px solid rgba(200, 148, 62, 0.1);
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.4);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.qi-assignment-board__rest-label {
+  font-weight: 700;
+  color: rgba(247, 231, 187, 0.55);
+}
+
+.qi-assignment-board__rest-detail {
+  color: rgba(247, 231, 187, 0.3);
+  font-size: 10px;
+}
+
+.qi-assignment-board__rest-hint {
+  margin-left: auto;
+  color: rgba(247, 231, 187, 0.2);
+  font-size: 10px;
+  font-style: italic;
+}

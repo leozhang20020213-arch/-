@@ -1,9 +1,9 @@
 // ==========================================================================
 // QiAssignmentBoard — Main drag-and-drop dice assignment layout.
-// Phase 2: 气海 (draggable dice) → 阴槽 / 阳槽 (drop targets).
+// Phase 3: adds confirm/lock declaration, rest pool flow.
 // ==========================================================================
 
-import { type FC, useState, useCallback, type DragEvent } from "react";
+import { type FC, useState, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -17,8 +17,11 @@ import type { CurrentMoveQiRequirement } from "../../types/dice";
 import { QiDiceTray } from "./QiDiceTray";
 import { QiDropSlot } from "./QiDropSlot";
 import { QiDie2D } from "./QiDie2D";
+import { QiRequirementStatus } from "./QiRequirementStatus";
+import { QiDeclarationSummary } from "./QiDeclarationSummary";
 import { useDiceStore } from "../../store/diceStore";
 import { getDropRejectReason } from "../../lib/dice/diceAssignment";
+import { canConfirmQiDeclaration } from "../../lib/dice/qiDeclaration";
 import "./dice.css";
 
 export interface QiAssignmentBoardProps {
@@ -26,27 +29,20 @@ export interface QiAssignmentBoardProps {
   moveRequirement: CurrentMoveQiRequirement | null;
   /** Whether a target is selected */
   hasTarget: boolean;
+  /** Current target name */
+  targetName?: string;
   /** Minimum height */
   minHeight?: number;
 }
 
 /**
- * QiAssignmentBoard — the complete dice assignment area.
- *
- * Layout (horizontal on wide screens):
- * ┌──────────────────────┬────────────┬────────────┐
- * │    气海 (QiDiceTray)  │  阴槽       │  阳槽       │
- * │   [D6] [D6] [D4]    │  [D6] [D4] │  [D6]      │
- * │   draggable dice     │  drop zone │  drop zone │
- * └──────────────────────┴────────────┴────────────┘
- *
- * Uses @dnd-kit for drag and drop.
- * Validation via diceAssignment.ts rules.
+ * QiAssignmentBoard — the complete dice assignment + declaration area.
  */
 export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
   moveRequirement,
   hasTarget,
-  minHeight = 240,
+  targetName = "",
+  minHeight = 260,
 }) => {
   const {
     state,
@@ -55,23 +51,43 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
     clearCurrentAssignment,
     getAssignedYinDice,
     getAssignedYangDice,
+    getRestPoolDice,
+    lockDeclaration,
+    resolveDeclaration,
+    resetDeclaration,
   } = useDiceStore();
 
   const [activeDragDieId, setActiveDragDieId] = useState<string | null>(null);
   const [rejectMessage, setRejectMessage] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const assignedYin = getAssignedYinDice();
   const assignedYang = getAssignedYangDice();
+  const restPoolDice = getRestPoolDice();
+
+  const isLocked = state.declarationStatus === "locked";
+  const isResolved = state.declarationStatus === "resolved";
 
   // A move must be selected AND a target must be selected to allow drops
-  const canDrop = Boolean(moveRequirement?.moveId && hasTarget);
+  // Also: cannot drag when locked
+  const canDrop = Boolean(moveRequirement?.moveId && hasTarget && !isLocked && !isResolved);
 
-  // Configure pointer sensor for reliable drag
+  // Confirm check
+  const yinTotal = assignedYin.reduce((s, d) => s + d.value, 0);
+  const yangTotal = assignedYang.reduce((s, d) => s + d.value, 0);
+
+  const confirmCheck = canConfirmQiDeclaration({
+    requirement: moveRequirement,
+    targetId: state.targetId,
+    targetName,
+    yinDice: assignedYin,
+    yangDice: assignedYang,
+    declarationStatus: state.declarationStatus,
+  });
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 6, // 6px movement before drag starts (prevents accidental drag)
-      },
+      activationConstraint: { distance: 6 },
     }),
   );
 
@@ -91,10 +107,7 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
       setActiveDragDieId(null);
 
       const { over } = event;
-      if (!over) {
-        // Dropped outside any target — snaps back
-        return;
-      }
+      if (!over) return;
 
       const targetSlot = String(over.id).replace(/^slot-/, "");
       if (targetSlot !== "yinSlot" && targetSlot !== "yangSlot") return;
@@ -102,7 +115,6 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
       const die = state.qiDice.find((d) => d.id === dieId);
       if (!die) return;
 
-      // Check reject reason
       const reason = getDropRejectReason(die, targetSlot as "yinSlot" | "yangSlot");
       if (reason) {
         setRejectMessage(reason);
@@ -110,12 +122,41 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
         return;
       }
 
-      // Valid — assign
       assignDieToSlot(dieId, targetSlot as "yinSlot" | "yangSlot");
       setRejectMessage(null);
     },
     [state.qiDice, assignDieToSlot],
   );
+
+  // ---- Confirm handler ----
+  const handleConfirm = useCallback(() => {
+    setConfirmError(null);
+    if (!confirmCheck.ok) {
+      setConfirmError(confirmCheck.reasons.join("、"));
+      setTimeout(() => setConfirmError(null), 2500);
+      return;
+    }
+    if (!moveRequirement?.moveId) return;
+    lockDeclaration(
+      moveRequirement.moveId,
+      moveRequirement.moveName,
+      state.targetId ?? "",
+      targetName,
+      assignedYin,
+      assignedYang,
+    );
+  }, [confirmCheck, moveRequirement, state.targetId, targetName, assignedYin, assignedYang, lockDeclaration]);
+
+  // ---- Resolve handler ----
+  const handleResolve = useCallback(() => {
+    resolveDeclaration();
+  }, [resolveDeclaration]);
+
+  // ---- Reset handler ----
+  const handleReset = useCallback(() => {
+    resetDeclaration();
+    clearCurrentAssignment();
+  }, [resetDeclaration, clearCurrentAssignment]);
 
   return (
     <DndContext
@@ -124,38 +165,53 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
       onDragEnd={handleDragEnd}
     >
       <div className="qi-assignment-board" style={{ minHeight }}>
-        {/* Top bar: assignment flow hint */}
+        {/* Flow hint */}
         <div className="qi-assignment-board__flow-hint">
-          <span className="qi-assignment-board__step">
-            ① 选择招式
-          </span>
+          <span className="qi-assignment-board__step">① 选招</span>
           <span className="qi-assignment-board__arrow">→</span>
-          <span className="qi-assignment-board__step">
-            ② 选择目标
-          </span>
+          <span className="qi-assignment-board__step">② 选目标</span>
           <span className="qi-assignment-board__arrow">→</span>
           <span className={`qi-assignment-board__step${canDrop ? " qi-assignment-board__step--active" : ""}`}>
             ③ 拖骰入槽
           </span>
+          <span className="qi-assignment-board__arrow">→</span>
+          <span className={`qi-assignment-board__step${isLocked ? " qi-assignment-board__step--active" : ""}`}>
+            ④ 锁气
+          </span>
           {moveRequirement?.moveName && (
             <span className="qi-assignment-board__current-move">
-              当前招式：{moveRequirement.moveName}
-              {moveRequirement.minYin > 0 && ` · 阴≥${moveRequirement.minYin}`}
-              {moveRequirement.minYang > 0 && ` · 阳≥${moveRequirement.minYang}`}
+              {moveRequirement.moveName}
+              {targetName ? ` → ${targetName}` : ""}
+            </span>
+          )}
+          {state.declarationStatus !== "draft" && (
+            <span className={`qi-assignment-board__status-badge qi-assignment-board__status-badge--${state.declarationStatus}`}>
+              {state.declarationStatus === "locked" ? "🔒 已锁气" : "✅ 已结算"}
             </span>
           )}
         </div>
 
-        {/* Reject message toast */}
+        {/* Requirement status */}
+        {!isLocked && !isResolved && (
+          <QiRequirementStatus
+            requirement={moveRequirement}
+            yinCount={assignedYin.length}
+            yangCount={assignedYang.length}
+            yinTotal={yinTotal}
+            yangTotal={yangTotal}
+          />
+        )}
+
+        {/* Reject / error toasts */}
         {rejectMessage && (
-          <div className="qi-assignment-board__reject-toast">
-            {rejectMessage}
-          </div>
+          <div className="qi-assignment-board__reject-toast">{rejectMessage}</div>
+        )}
+        {confirmError && (
+          <div className="qi-assignment-board__reject-toast">{confirmError}</div>
         )}
 
         {/* Main area: Sea + Slots */}
         <div className="qi-assignment-board__main">
-          {/* 气海 — source of draggable dice */}
           <div className="qi-assignment-board__sea">
             <QiDiceTray
               minHeight={minHeight - 60}
@@ -164,7 +220,6 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
             />
           </div>
 
-          {/* 阴槽 */}
           <div className="qi-assignment-board__slot">
             <QiDropSlot
               type="yinSlot"
@@ -175,7 +230,6 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
             />
           </div>
 
-          {/* 阳槽 */}
           <div className="qi-assignment-board__slot">
             <QiDropSlot
               type="yangSlot"
@@ -187,23 +241,60 @@ export const QiAssignmentBoard: FC<QiAssignmentBoardProps> = ({
           </div>
         </div>
 
-        {/* Footer: clear assignment */}
-        {(assignedYin.length > 0 || assignedYang.length > 0) && (
+        {/* Action bar: confirm / footer */}
+        {!isLocked && !isResolved && (
           <div className="qi-assignment-board__footer">
-            <span>阴槽 {assignedYin.length} 枚（合值 {assignedYin.reduce((s, d) => s + d.value, 0)}）</span>
-            <span>阳槽 {assignedYang.length} 枚（合值 {assignedYang.reduce((s, d) => s + d.value, 0)}）</span>
+            <span>阴槽 {assignedYin.length} 枚（合{yinTotal}）</span>
+            <span>阳槽 {assignedYang.length} 枚（合{yangTotal}）</span>
+            {(assignedYin.length > 0 || assignedYang.length > 0) && (
+              <button
+                type="button"
+                className="qi-assignment-board__clear-btn"
+                onClick={clearCurrentAssignment}
+              >
+                清空槽位
+              </button>
+            )}
             <button
               type="button"
-              className="qi-assignment-board__clear-btn"
-              onClick={clearCurrentAssignment}
+              className={`qi-assignment-board__confirm-btn${confirmCheck.ok ? "" : " disabled"}`}
+              disabled={!confirmCheck.ok}
+              onClick={handleConfirm}
             >
-              清空槽位
+              确认宣言并锁气
             </button>
+            {!confirmCheck.ok && confirmCheck.reasons.length > 0 && (
+              <span className="qi-assignment-board__confirm-hint">
+                {confirmCheck.reasons.join("、")}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Declaration summary (when locked or resolved) */}
+        {state.activeDeclaration && (isLocked || isResolved) && (
+          <QiDeclarationSummary
+            declaration={state.activeDeclaration}
+            status={state.declarationStatus}
+            onResolve={isLocked ? handleResolve : undefined}
+            onReset={handleReset}
+          />
+        )}
+
+        {/* Rest pool indicator */}
+        {restPoolDice.length > 0 && (
+          <div className="qi-assignment-board__rest-pool">
+            <span className="qi-assignment-board__rest-label">息库</span>
+            <span>{restPoolDice.length} 枚</span>
+            <span className="qi-assignment-board__rest-detail">
+              {restPoolDice.map((d) => `${d.face}D${d.sides}=${d.value}`).join("、")}
+            </span>
+            <span className="qi-assignment-board__rest-hint">需调息/回气取回</span>
           </div>
         )}
       </div>
 
-      {/* Drag overlay: show the die being dragged */}
+      {/* Drag overlay */}
       <DragOverlay dropAnimation={null}>
         {activeDragDie ? (
           <div style={{ opacity: 0.85, transform: "scale(1.08)" }}>
