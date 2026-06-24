@@ -239,13 +239,51 @@
 }
 
 /* ==========================================================================
-   Rolling Animation
+   Rolling Animation — Phase 5
+   2D 气骰投掷动画：每枚骰子 500-900ms，数字快速跳动
    ========================================================================== */
 
 .qi-die-2d--rolling {
-  animation: diceRollPulse 400ms ease-in-out infinite;
+  /* Base rolling class — marks the die as "in animation" */
+  pointer-events: none;
 }
 
+.qi-die-2d--animating {
+  /* Apply the shake/rotate/scale animation while numbers are changing */
+  animation: qi-die-roll 600ms ease-in-out infinite;
+}
+
+@keyframes qi-die-roll {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); }
+  25%  { transform: translateY(-6px) rotate(-8deg) scale(1.04); }
+  50%  { transform: translateY(3px) rotate(9deg) scale(0.98); }
+  75%  { transform: translateY(-3px) rotate(-4deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+/* ---- qi-die-face-value — the central number ---- */
+
+.qi-die-face-value--spinning {
+  /* Subtle color shift while numbers are spinning */
+  color: #ffd76b !important;
+  text-shadow: 0 0 8px rgba(255, 215, 107, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ---- qi-die-kind-mark — nature label (阴/阳/原) ---- */
+
+.qi-die-kind-mark {
+  /* Inherits from .qi-die-2d__face — ensures readability during roll */
+  transition: color 150ms ease;
+}
+
+/* ---- qi-die-sides-mark — sides label (D4/D6/etc.) ---- */
+
+.qi-die-sides-mark {
+  /* Inherits from .qi-die-2d__sides — ensures readability during roll */
+  transition: color 150ms ease;
+}
+
+/* Keep old keyframes for reference; replaced by qi-die-roll above */
 @keyframes diceRollPulse {
   0%   { transform: rotate(0deg) scale(1); }
   25%  { transform: rotate(-6deg) scale(1.08); }

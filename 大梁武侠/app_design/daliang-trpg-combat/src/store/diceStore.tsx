@@ -41,6 +41,11 @@ export interface DiceStoreState {
   activeDeclaration: LockedQiDeclaration | null;
   /** Whether return light has been used this combat */
   hasUsedReturnLight: boolean;
+  // Phase 5: rolling animation
+  /** Whether dice are currently animating a roll */
+  isRolling: boolean;
+  /** Per-die display values during rolling animation (dieId → temp display number) */
+  rollingDisplayValues: Record<string, number>;
 }
 
 const initialState: DiceStoreState = {
@@ -56,6 +61,8 @@ const initialState: DiceStoreState = {
   declarationStatus: "draft",
   activeDeclaration: null,
   hasUsedReturnLight: false,
+  isRolling: false,
+  rollingDisplayValues: {},
 };
 
 // ---- Actions ----
@@ -80,7 +87,11 @@ export type DiceStoreAction =
   // Phase 4
   | { type: "REGULATE_BREATH" }
   | { type: "RETURN_LIGHT" }
-  | { type: "RESET_RETURN_LIGHT" };
+  | { type: "RESET_RETURN_LIGHT" }
+  // Phase 5: rolling animation
+  | { type: "START_ROLLING" }
+  | { type: "UPDATE_ROLLING_DISPLAY"; displayValues: Record<string, number> }
+  | { type: "FINISH_ROLLING"; values: Array<{ dieId: string; value: number }> };
 
 // ---- Reducer ----
 
@@ -224,6 +235,24 @@ function diceReducer(state: DiceStoreState, action: DiceStoreAction): DiceStoreS
     }
     case "RESET_RETURN_LIGHT": {
       return { ...state, hasUsedReturnLight: false };
+    }
+    // ---- Phase 5 ----
+    case "START_ROLLING": {
+      return { ...state, isRolling: true, rollingDisplayValues: {} };
+    }
+    case "UPDATE_ROLLING_DISPLAY": {
+      return { ...state, rollingDisplayValues: { ...state.rollingDisplayValues, ...action.displayValues } };
+    }
+    case "FINISH_ROLLING": {
+      const valueMap = new Map(action.values.map((v) => [v.dieId, v.value]));
+      const updated = state.qiDice.map((die) => {
+        const newVal = valueMap.get(die.id);
+        if (newVal !== undefined && die.location === "qiSea") {
+          return { ...die, value: newVal };
+        }
+        return die;
+      });
+      return { ...state, qiDice: updated, lastRollAt: Date.now(), isRolling: false, rollingDisplayValues: {} };
     }
     default:
       return state;
