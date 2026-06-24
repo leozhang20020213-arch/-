@@ -8,7 +8,6 @@ import type { QiDieData, QiDieLocation, QiSlotType, CurrentMoveQiRequirement, Lo
 import { createStarterQiDice, rollQiDie } from "../lib/dice/diceRoll";
 import { canDropDieToSlot } from "../lib/dice/diceAssignment";
 import { lockQiDeclaration, moveLockedDiceToRestPool } from "../lib/dice/qiDeclaration";
-import { recoverFromRestPool, useReturnLight } from "../lib/dice/qiRecovery";
 
 // ---- State ----
 
@@ -39,8 +38,6 @@ export interface DiceStoreState {
   declarationStatus: QiDeclarationStatus;
   /** Active locked declaration (null if none) */
   activeDeclaration: LockedQiDeclaration | null;
-  /** Whether return light has been used this combat */
-  hasUsedReturnLight: boolean;
 }
 
 const initialState: DiceStoreState = {
@@ -55,7 +52,6 @@ const initialState: DiceStoreState = {
   targetName: "",
   declarationStatus: "draft",
   activeDeclaration: null,
-  hasUsedReturnLight: false,
 };
 
 // ---- Actions ----
@@ -76,11 +72,7 @@ export type DiceStoreAction =
   | { type: "SET_TARGET"; targetId: string | null; targetName: string }
   | { type: "LOCK_DECLARATION"; moveId: string; moveName: string; targetId: string; targetName: string; yinDice: QiDieData[]; yangDice: QiDieData[] }
   | { type: "RESOLVE_DECLARATION" }
-  | { type: "RESET_DECLARATION" }
-  // Phase 4
-  | { type: "REGULATE_BREATH" }
-  | { type: "RETURN_LIGHT" }
-  | { type: "RESET_RETURN_LIGHT" };
+  | { type: "RESET_DECLARATION" };
 
 // ---- Reducer ----
 
@@ -213,18 +205,6 @@ function diceReducer(state: DiceStoreState, action: DiceStoreAction): DiceStoreS
         assignedYangDiceIds: [],
       };
     }
-    // ---- Phase 4 ----
-    case "REGULATE_BREATH": {
-      const result = recoverFromRestPool(state.qiDice);
-      return { ...state, qiDice: result.dice, lastRollAt: Date.now() };
-    }
-    case "RETURN_LIGHT": {
-      const result = useReturnLight(state.qiDice);
-      return { ...state, qiDice: result.dice, hasUsedReturnLight: true, lastRollAt: Date.now() };
-    }
-    case "RESET_RETURN_LIGHT": {
-      return { ...state, hasUsedReturnLight: false };
-    }
     default:
       return state;
   }
@@ -257,10 +237,6 @@ interface DiceStoreContextValue {
   resolveDeclaration: () => void;
   resetDeclaration: () => void;
   getLockedDice: () => QiDieData[];
-  // Phase 4
-  regulateBreath: () => void;
-  returnLight: () => void;
-  resetReturnLight: () => void;
 }
 
 const DiceStoreContext = createContext<DiceStoreContextValue | null>(null);
@@ -344,20 +320,6 @@ export function DiceStoreProvider({ children }: { children: ReactNode }) {
     [state.qiDice],
   );
 
-  // Phase 4
-  const regulateBreath = useCallback(
-    () => dispatch({ type: "REGULATE_BREATH" }),
-    [],
-  );
-  const returnLight = useCallback(
-    () => dispatch({ type: "RETURN_LIGHT" }),
-    [],
-  );
-  const resetReturnLight = useCallback(
-    () => dispatch({ type: "RESET_RETURN_LIGHT" }),
-    [],
-  );
-
   const value: DiceStoreContextValue = {
     state,
     dispatch,
@@ -381,10 +343,6 @@ export function DiceStoreProvider({ children }: { children: ReactNode }) {
     resolveDeclaration,
     resetDeclaration,
     getLockedDice,
-    // Phase 4
-    regulateBreath,
-    returnLight,
-    resetReturnLight,
   };
 
   return (
