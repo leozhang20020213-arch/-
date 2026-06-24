@@ -4,6 +4,17 @@
 
 重构"大梁江湖 TRPG"的【交锋主区域】，重点处理：目标线、距离、交锋角色布局、当前行动者表达、重复信息去除。
 
+## R2 更新（拉长区域 + 横向卡片 + 缩小骰子）
+
+| 改动 | 说明 |
+|------|------|
+| 交锋区/骰子区高度 | 56% / 44%（原 48% / flex 1），不再互相覆盖 |
+| 角色卡 → 横向 | 170×~40px，avatar(30px) + name+hp+momentum 横向排列 |
+| 骰子缩小 | 50×64px（原 64×80px），点数 22px（原 26px） |
+| 息库/临气区 | 增加背景+边框圆角，更明显可见 |
+| 5人同列 | 竖排分布 y: 18%→82%，支持 2玩家 + 4敌人 同时显示 |
+| 新增mock角色 | 魏长兴(队友)、望风探子、暗处弓手 |
+
 ## 改动文件清单
 
 ### 战场核心组件
@@ -23,7 +34,12 @@
 | 文件 | 改动说明 |
 |------|----------|
 | `src/styles/combat-stage.css` | **全面更新** — 新增 `.current-actor`（金辉脉冲动画）、`.targeted`（红色锁定框+四角标）、`.defeated`（灰色退场覆层）、`.untargetable`（灰度不可点击）、`.side-player` / `.side-enemy`（阵营色条）、`.current-tag` / `.target-tag`（标签）、`.current-actor-dot`（脉冲指示点）、`.target-corners`（四角锁定标）、`.battlefield-zone-label`（我方/敌方区域标签） |
-| `src/styles/combat-shell.css` | 新增 `.current-actor-badge` 顶部条样式（金辉勋章） |
+| `src/styles/combat-shell.css` | 新增 `.current-actor-badge` 顶部条样式（金辉勋章）；交锋区56%/骰子区44% |
+| `src/styles/qi-dice.css` | 骰子缩小至50×64px，息库/临气区背景+圆角更显眼 |
+| `src/data/mockCombatData.ts` | 竖排分布 y:18%→82%，支持6角色；新增魏长兴/望风探子/暗处弓手 |
+| `src/data/seed.ts` | 新增4个Actor定义和对应骰子、距离关系 |
+| `src/ui/combat/stage/CombatantNode.tsx` | 横向布局 flex-direction:row，缩小头像/HP/动量 |
+| `src/styles/combat-stage.css` | 全量重写：横向卡片、缩小尺寸、zone标签、调整间距 |
 
 ## 实现的关键交互
 
@@ -98,7 +114,7 @@ npm run preview        # 预览构建结果
 ## 构建/检查结果
 
 ```
-npm run build  → ✅ PASS (tsc + vite build, 3.87s)
+npm run build  → ✅ PASS (tsc + vite build, 3.72s)
 npm run test:all → ✅ 68 pass / 0 fail
 npm run lint  → ❌ 不存在（项目无 lint 脚本）
 ```

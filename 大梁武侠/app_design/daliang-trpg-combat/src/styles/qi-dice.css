@@ -35,16 +35,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  width: 64px;
-  min-width: 64px;
-  height: 80px;
-  padding: 4px 6px 5px;
+  width: 50px;
+  min-width: 50px;
+  height: 64px;
+  padding: 3px 4px 4px;
   border: 1.5px solid rgba(107, 75, 45, 0.35);
   border-left-width: 4px;
-  border-radius: 6px;
+  border-radius: 5px;
   background: linear-gradient(175deg, #faf5ea 0%, #ede1cc 100%);
   cursor: grab;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
   transition: transform 100ms ease, box-shadow 100ms ease, opacity 200ms ease;
   flex-shrink: 0;
   user-select: none;
@@ -86,7 +86,7 @@
 
 /* ---- Sides label (top-left) ---- */
 .qi-die-sides {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--ink-subtle);
   line-height: 1;
@@ -96,7 +96,7 @@
 
 /* ---- Value (center, large) ---- */
 .qi-die-value {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 900;
   color: var(--ink-dark);
   line-height: 1;
@@ -107,11 +107,11 @@
 .qi-die-footer {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 
 .qi-die-nature {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   color: var(--ink-dark);
   line-height: 1;
@@ -119,10 +119,10 @@
 
 .qi-die-temp-mark,
 .qi-die-lock-mark {
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 800;
-  padding: 0px 3px;
-  border-radius: 3px;
+  padding: 0px 2px;
+  border-radius: 2px;
   line-height: 1.2;
 }
 
@@ -193,7 +193,7 @@
 .qi-pool-dice {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   align-content: flex-start;
   overflow-y: auto;
   flex: 1;
@@ -394,7 +394,7 @@
 .slot-dice {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
   flex: 1;
   align-content: flex-start;
   min-height: 0;
@@ -438,19 +438,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 6px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(232, 198, 126, 0.1);
-  border-radius: 4px;
+  padding: 4px 8px;
+  background: rgba(232, 198, 126, 0.06);
+  border: 1px solid rgba(232, 198, 126, 0.15);
+  border-radius: 5px;
   flex-shrink: 0;
-  min-height: 36px;
+  min-height: 40px;
 }
 
 .temp-qi-label {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(247, 231, 187, 0.4);
+  color: rgba(247, 231, 187, 0.5);
   flex-shrink: 0;
+  letter-spacing: 0.05em;
 }
 
 .temp-qi-dice {
@@ -466,10 +467,12 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-size: 11px;
   color: rgba(247, 231, 187, 0.5);
-  border-top: 1px solid rgba(232, 198, 126, 0.08);
+  background: rgba(232, 198, 126, 0.04);
+  border: 1px solid rgba(232, 198, 126, 0.08);
+  border-radius: 5px;
   flex-shrink: 0;
 }
 

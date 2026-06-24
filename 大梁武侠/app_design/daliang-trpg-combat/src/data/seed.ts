@@ -594,6 +594,79 @@ const actorPorter: Actor = {
   dmNote: "隐藏目标：趁乱将木箱搬上船；木箱上船后立即撤退。3人集群共享气血。",
 };
 
+const actorWei: Actor = {
+  id: "pc-wei",
+  name: "魏长兴",
+  side: "player",
+  sixRoots: { 顶门: 4, 目窍: 5, 心口: 4, 丹田: 3, 命门: 4, 步根: 5 },
+  innerArts: [],
+  tableAttrs: { 气血: 7, 护体: 3, 爆发: 3, 回气: 3, 观照: 4, 身势: 5 },
+  maxHp: 20,
+  hp: 20,
+  momentum: "阳盛",
+  moves: [] as Move[],
+  responses: [],
+  quickActions: [] as QuickAction[],
+  inventory: [] as InventoryItem[],
+  responseQuotaUsed: 0,
+  maxResponseQuota: 1,
+  statuses: [] as StatusEffect[],
+  publicNote: "预设队友。",
+};
+
+const actorLookout: Actor = {
+  id: "enemy-lookout",
+  name: "望风探子",
+  side: "enemy",
+  sixRoots: { 顶门: 3, 目窍: 5, 心口: 3, 丹田: 3, 命门: 3, 步根: 4 },
+  innerArts: [],
+  tableAttrs: { 气血: 5, 护体: 1, 爆发: 2, 回气: 2, 观照: 5, 身势: 3 },
+  maxHp: 10,
+  hp: 10,
+  momentum: "阴盛",
+  moves: [] as Move[],
+  responses: [],
+  quickActions: [] as QuickAction[],
+  inventory: [] as InventoryItem[],
+  responseQuotaUsed: 0,
+  maxResponseQuota: 1,
+  statuses: [] as StatusEffect[],
+  hiddenStatuses: [] as StatusEffect[],
+  publicWeakness: "单独放哨，被近身后慌乱。",
+  hiddenGoal: "发现异常时吹哨报信",
+  behaviorHint: "优先维持距离，被发现后尝试逃跑报信",
+  entryCondition: "旧堤仓屋顶或高处",
+  publicNote: "集群敌人。单独放哨，被近身后慌乱。",
+  dmNote: "吹哨会触发巡检注意+3。",
+};
+
+const actorArcher: Actor = {
+  id: "enemy-archer",
+  name: "暗处弓手",
+  side: "enemy",
+  sixRoots: { 顶门: 4, 目窍: 5, 心口: 3, 丹田: 4, 命门: 3, 步根: 3 },
+  innerArts: [],
+  tableAttrs: { 气血: 4, 护体: 1, 爆发: 3, 回气: 2, 观照: 4, 身势: 2 },
+  maxHp: 8,
+  hp: 8,
+  momentum: "合势",
+  moves: [] as Move[],
+  responses: [],
+  quickActions: [] as QuickAction[],
+  inventory: [] as InventoryItem[],
+  responseQuotaUsed: 0,
+  maxResponseQuota: 1,
+  statuses: [] as StatusEffect[],
+  hiddenStatuses: [] as StatusEffect[],
+  publicWeakness: "近战极弱，被近身即失去威胁。",
+  hiddenGoal: "掩护同伙撤离时放冷箭",
+  behaviorHint: "始终保持中远距，优先射击接近木箱者",
+  entryCondition: "玩家进入旧堤仓后2轮登场",
+  lootOrClue: "箭筒上有水会标记",
+  publicNote: "远程敌人。近战极弱，被近身即失去威胁。",
+  dmNote: "2轮后从暗处出现，优先射击接近木箱的玩家。",
+};
+
 // ============================================================
 // SCENE TRACKS
 // ============================================================
@@ -642,12 +715,30 @@ const porterDice: QiDie[] = [
   die("bp-d3", "黑衣脚夫·本命·阳", "enemy-porter", "yang", 6),
 ];
 
+const weiDice: QiDie[] = [
+  die("wei-d1", "魏长兴·本命·阴", "pc-wei", "yin", 6),
+  die("wei-d2", "魏长兴·本命·阳", "pc-wei", "yang", 6),
+];
+
+const lookoutDice: QiDie[] = [
+  die("lo-d1", "望风探子·本命·中", "enemy-lookout", "raw", 6),
+];
+
+const archerDice: QiDie[] = [
+  die("ar-d1", "暗处弓手·本命·中", "enemy-archer", "raw", 6),
+];
+
 // ============================================================
 // DISTANCE RELATIONS
 // ============================================================
 
 const distances = [
   { id: "dist-shen-short-blade", fromActorId: "pc-shen-qing", toActorId: "enemy-short-blade", band: "近身" as const, height: "同层" as const, entangled: false, public: true },
+  { id: "dist-shen-porter", fromActorId: "pc-shen-qing", toActorId: "enemy-porter", band: "中距" as const, height: "同层" as const, entangled: false, public: true },
+  { id: "dist-shen-lookout", fromActorId: "pc-shen-qing", toActorId: "enemy-lookout", band: "中距" as const, height: "同层" as const, entangled: false, public: true },
+  { id: "dist-shen-archer", fromActorId: "pc-shen-qing", toActorId: "enemy-archer", band: "远距" as const, height: "高处" as const, entangled: false, public: true },
+  { id: "dist-wei-short-blade", fromActorId: "pc-wei", toActorId: "enemy-short-blade", band: "中距" as const, height: "同层" as const, entangled: false, public: true },
+  { id: "dist-wei-porter", fromActorId: "pc-wei", toActorId: "enemy-porter", band: "近身" as const, height: "同层" as const, entangled: false, public: true },
   { id: "dist-short-blade-porter", fromActorId: "enemy-short-blade", toActorId: "enemy-porter", band: "短距" as const, height: "同层" as const, entangled: false, public: false },
 ];
 
@@ -663,8 +754,8 @@ export function createSeedState(): CombatState {
     round: 1,
     phase: "setup",
     activeActorId: "pc-shen-qing",
-    actors: structuredClone([actorShenQing, actorShortBlade, actorPorter] as Actor[]),
-    dice: structuredClone([...shenQingDice, ...shortBladeDice, ...porterDice]),
+    actors: structuredClone([actorShenQing, actorWei, actorShortBlade, actorPorter, actorLookout, actorArcher] as Actor[]),
+    dice: structuredClone([...shenQingDice, ...shortBladeDice, ...porterDice, ...weiDice, ...lookoutDice, ...archerDice]),
     tracks: structuredClone([trackClue, trackPatrol, trackEscape]),
     distances: structuredClone(distances),
     pendingAction: undefined,

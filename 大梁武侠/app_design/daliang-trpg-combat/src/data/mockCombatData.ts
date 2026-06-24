@@ -12,23 +12,26 @@ const DEFAULT_SCENE_TAGS = ["雨夜", "仓门", "堤岸", "货堆"];
 
 /**
  * Position presets for combatants on the tactical stage.
- * Players cluster on the left side (x: 15–35%), enemies on the right (x: 65–85%).
- * Neutral units center (x: 45–55%).
+ * Players cluster on the left side, enemies on the right.
+ * With horizontal cards (~170px), up to 5 combatants can fit per side
+ * without overlapping when spread across y: 15%–85%.
  */
 function positionFor(index: number, total: number, side: "player" | "enemy" | "neutral"): { x: number; y: number } {
-  const yBase = 50;
-  const spread = Math.min(total * 18, 60);
-  const startY = yBase - spread / 2;
-  const step = total > 1 ? spread / (total - 1) : 0;
-  const y = startY + index * step;
+  // Distribute vertically to fit up to 5 cards without overlap
+  const yMin = 18;
+  const yMax = 82;
+  const step = total > 1 ? (yMax - yMin) / (total - 1) : 0;
+  const y = total === 1 ? 50 : yMin + index * step;
 
   switch (side) {
     case "player":
-      return { x: 18 + index * 8, y };
+      // Players on left side, spread slightly for readability
+      return { x: 12 + (index % 3) * 6, y };
     case "enemy":
-      return { x: 72 + index * 8, y };
+      // Enemies on right side, spread slightly
+      return { x: 80 + (index % 3) * 6, y };
     case "neutral":
-      return { x: 45 + index * 6, y };
+      return { x: 45 + index * 5, y };
   }
 }
 
@@ -127,8 +130,19 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 40,
       momentum: "阴盛",
       statuses: [],
+      x: 12,
+      y: 35,
+    },
+    {
+      id: "pc-wei",
+      name: "魏长兴",
+      side: "player",
+      hp: 38,
+      maxHp: 45,
+      momentum: "阳盛",
+      statuses: [],
       x: 18,
-      y: 30,
+      y: 65,
     },
     {
       id: "enemy-short-blade",
@@ -138,8 +152,8 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 45,
       momentum: "阳盛",
       statuses: ["破口"],
-      x: 72,
-      y: 30,
+      x: 80,
+      y: 18,
     },
     {
       id: "enemy-porter",
@@ -149,13 +163,41 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 30,
       momentum: "失势",
       statuses: ["流血"],
-      x: 78,
-      y: 70,
+      x: 86,
+      y: 42,
+    },
+    {
+      id: "enemy-lookout",
+      name: "望风探子",
+      side: "enemy",
+      hp: 24,
+      maxHp: 35,
+      momentum: "阴盛",
+      statuses: ["迟滞"],
+      x: 83,
+      y: 66,
+    },
+    {
+      id: "enemy-archer",
+      name: "暗处弓手",
+      side: "enemy",
+      hp: 18,
+      maxHp: 25,
+      momentum: "合势",
+      statuses: [],
+      x: 89,
+      y: 84,
     },
   ],
   distances: [
     { from: "pc-shen-qing", to: "enemy-short-blade", band: "近身" },
     { from: "pc-shen-qing", to: "enemy-porter", band: "中距" },
+    { from: "pc-shen-qing", to: "enemy-lookout", band: "中距" },
+    { from: "pc-shen-qing", to: "enemy-archer", band: "远距" },
+    { from: "pc-wei", to: "enemy-short-blade", band: "中距" },
+    { from: "pc-wei", to: "enemy-porter", band: "近身" },
+    { from: "pc-wei", to: "enemy-lookout", band: "中距" },
+    { from: "pc-wei", to: "enemy-archer", band: "远距" },
   ],
   objectives: [
     { id: "obj-blood-chest", title: "找到血镖箱", current: 1, target: 3 },

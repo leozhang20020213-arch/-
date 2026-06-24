@@ -439,8 +439,8 @@
 }
 
 .combat-stage-area {
-  flex: 0 0 48%;
-  min-height: 240px;
+  flex: 0 0 56%;
+  min-height: 280px;
   overflow: hidden;
   border: 1px solid var(--border-panel);
   border-radius: 8px;
@@ -449,8 +449,8 @@
 }
 
 .combat-qi-area {
-  flex: 1;
-  min-height: 320px;
+  flex: 0 0 44%;
+  min-height: 280px;
   overflow: hidden;
   border: 1px solid rgba(212, 132, 58, 0.2);
   border-radius: 8px;
@@ -644,10 +644,11 @@
 
 @media (max-height: 820px) {
   .combat-stage-area {
-    flex: 0 0 42%;
+    flex: 0 0 50%;
     min-height: 200px;
   }
   .combat-qi-area {
-    min-height: 280px;
+    flex: 0 0 50%;
+    min-height: 240px;
   }
 }

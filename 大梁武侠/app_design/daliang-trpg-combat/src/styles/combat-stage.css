@@ -1,6 +1,6 @@
 /* ==========================================================================
    Tactical Combat Stage — HTML/SVG battlefield
-   Replaces old cropped Phaser board with positioned nodes + SVG target line
+   Horizontal compact combatant cards, single SVG target line, zone labels.
    ========================================================================== */
 
 /* ---- Tactical Stage Container ---- */
@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
+  padding: 4px 10px;
   background: linear-gradient(180deg, rgba(20, 16, 10, 0.95), rgba(15, 12, 8, 0.9));
   border-bottom: 1px solid rgba(107, 75, 45, 0.15);
   flex-shrink: 0;
@@ -27,7 +27,7 @@
 }
 
 .stage-scene-name {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #f5e6c8;
   letter-spacing: 0.04em;
@@ -36,16 +36,16 @@
 
 .stage-scene-tags {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .stage-tag {
-  padding: 2px 8px;
+  padding: 2px 6px;
   border: 1px solid rgba(107, 75, 45, 0.3);
   border-radius: 999px;
   background: rgba(42, 34, 24, 0.6);
   color: var(--ink-subtle);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -70,8 +70,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 30% 50%, rgba(58, 92, 122, 0.08), transparent 55%),
-    radial-gradient(ellipse at 70% 50%, rgba(212, 132, 58, 0.06), transparent 55%),
+    radial-gradient(ellipse at 30% 40%, rgba(58, 92, 122, 0.06), transparent 60%),
+    radial-gradient(ellipse at 70% 40%, rgba(212, 132, 58, 0.04), transparent 60%),
     linear-gradient(180deg, #0a0806 0%, #100d09 40%, #0d0b08 100%);
 }
 
@@ -83,10 +83,10 @@
       92deg,
       transparent,
       transparent 2px,
-      rgba(255, 255, 255, 0.015) 2px,
-      rgba(255, 255, 255, 0.015) 4px
+      rgba(255, 255, 255, 0.012) 2px,
+      rgba(255, 255, 255, 0.012) 4px
     );
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 /* ---- Battlefield zone labels ---- */
@@ -94,10 +94,10 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: rgba(247, 231, 187, 0.12);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: rgba(247, 231, 187, 0.08);
   writing-mode: vertical-rl;
   text-orientation: mixed;
   user-select: none;
@@ -106,11 +106,11 @@
 }
 
 .zone-player {
-  left: 4%;
+  left: 2%;
 }
 
 .zone-enemy {
-  right: 4%;
+  right: 2%;
 }
 
 /* ---- SVG Layer ---- */
@@ -132,19 +132,20 @@
 }
 
 /* ==========================================================================
-   Combatant Node — Base
+   Combatant Node — BASE (horizontal card)
+   Compact layout: avatar | name+hp+momentum | statuses
    ========================================================================== */
 .combatant-node {
   position: absolute;
   transform: translate(-50%, -50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  width: 120px;
-  padding: 8px;
+  gap: 6px;
+  width: 170px;
+  padding: 5px 7px;
   border: 1px solid rgba(107, 75, 45, 0.25);
-  border-radius: 8px;
+  border-radius: 6px;
   background: linear-gradient(
     180deg,
     rgba(30, 25, 18, 0.94) 0%,
@@ -162,17 +163,17 @@
   transform: translate(-50%, -50%) scale(1.04);
 }
 
-/* ---- Side tints ---- */
+/* ---- Side tints —— top border for horizontal cards ---- */
 .combatant-node.side-player {
-  border-left: 3px solid rgba(58, 92, 122, 0.5);
+  border-top: 3px solid rgba(58, 92, 122, 0.5);
 }
 
 .combatant-node.side-enemy {
-  border-right: 3px solid rgba(194, 58, 46, 0.4);
+  border-top: 3px solid rgba(194, 58, 46, 0.4);
 }
 
 /* ==========================================================================
-   Combatant Node — CURRENT ACTOR state (strongest highlight)
+   Combatant Node — CURRENT ACTOR state
    ========================================================================== */
 .combatant-node.current-actor {
   border-color: rgba(230, 180, 80, 0.85);
@@ -182,35 +183,35 @@
     rgba(35, 28, 16, 0.94) 100%
   );
   box-shadow:
-    0 0 0 3px rgba(230, 180, 80, 0.55),
-    0 0 24px rgba(230, 180, 80, 0.35),
-    0 0 48px rgba(230, 180, 80, 0.15);
+    0 0 0 2px rgba(230, 180, 80, 0.55),
+    0 0 18px rgba(230, 180, 80, 0.35),
+    0 0 36px rgba(230, 180, 80, 0.12);
   z-index: 5;
   animation: currentActorPulse 2.2s ease-in-out infinite;
 }
 
 @keyframes currentActorPulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(230, 180, 80, 0.55), 0 0 24px rgba(230, 180, 80, 0.35), 0 0 48px rgba(230, 180, 80, 0.15); }
-  50%      { box-shadow: 0 0 0 5px rgba(230, 180, 80, 0.7), 0 0 32px rgba(230, 180, 80, 0.5), 0 0 56px rgba(230, 180, 80, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 2px rgba(230, 180, 80, 0.55), 0 0 18px rgba(230, 180, 80, 0.35), 0 0 36px rgba(230, 180, 80, 0.12); }
+  50%      { box-shadow: 0 0 0 4px rgba(230, 180, 80, 0.7), 0 0 26px rgba(230, 180, 80, 0.5), 0 0 44px rgba(230, 180, 80, 0.22); }
 }
 
 .combatant-node.current-actor .combatant-name {
   color: #f5d89a;
-  font-size: 14px;
-  text-shadow: 0 0 6px rgba(230, 180, 80, 0.3);
+  font-size: 12px;
+  text-shadow: 0 0 4px rgba(230, 180, 80, 0.3);
 }
 
 /* Current actor dot */
 .current-actor-dot {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 12px;
-  height: 12px;
+  top: -3px;
+  left: -3px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #f5d89a;
   border: 2px solid #1a140e;
-  box-shadow: 0 0 8px rgba(230, 180, 80, 0.6);
+  box-shadow: 0 0 6px rgba(230, 180, 80, 0.6);
   animation: currentActorDotPulse 1.4s ease-in-out infinite;
 }
 
@@ -222,12 +223,12 @@
 /* "行动中" tag */
 .current-tag {
   display: inline-block;
-  margin-left: 4px;
-  padding: 1px 5px;
+  margin-left: 3px;
+  padding: 0px 4px;
   border-radius: 999px;
   background: rgba(230, 180, 80, 0.3);
   color: #f5d89a;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   vertical-align: middle;
   white-space: nowrap;
@@ -240,7 +241,7 @@
   border-color: rgba(220, 70, 60, 0.8);
   box-shadow:
     0 0 0 2px rgba(220, 70, 60, 0.5),
-    0 0 18px rgba(220, 70, 60, 0.25);
+    0 0 12px rgba(220, 70, 60, 0.2);
   z-index: 4;
 }
 
@@ -250,48 +251,47 @@
 
 /* Current actor + targeted dual state */
 .combatant-node.current-actor.targeted {
-  border-color: rgba(230, 180, 80, 0.85);
   box-shadow:
-    0 0 0 2px rgba(220, 70, 60, 0.55),
-    0 0 0 5px rgba(230, 180, 80, 0.45),
-    0 0 24px rgba(230, 180, 80, 0.35),
-    0 0 18px rgba(220, 70, 60, 0.2);
+    0 0 0 2px rgba(220, 70, 60, 0.5),
+    0 0 0 4px rgba(230, 180, 80, 0.45),
+    0 0 20px rgba(230, 180, 80, 0.3),
+    0 0 14px rgba(220, 70, 60, 0.15);
 }
 
 /* "目标" tag */
 .target-tag {
   display: inline-block;
-  margin-left: 4px;
-  padding: 1px 5px;
+  margin-left: 3px;
+  padding: 0px 4px;
   border-radius: 999px;
   background: rgba(220, 70, 60, 0.3);
   color: #f5c8c0;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
   vertical-align: middle;
   white-space: nowrap;
 }
 
-/* Target crosshair corners */
+/* Target crosshair corners — smaller for horizontal card */
 .target-corners {
   position: absolute;
-  inset: -3px;
+  inset: -2px;
   pointer-events: none;
   z-index: 0;
 }
 
 .target-corner {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   border-color: rgba(220, 70, 60, 0.7);
   border-style: solid;
 }
 
-.target-corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
-.target-corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
-.target-corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
-.target-corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+.target-corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
+.target-corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
+.target-corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
+.target-corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
 
 /* ==========================================================================
    Combatant Node — SELECTED state (clicked but not current/targeted)
@@ -299,17 +299,17 @@
 .combatant-node.selected {
   border-color: var(--yang-die);
   box-shadow:
-    0 0 0 2px rgba(212, 132, 58, 0.35),
-    0 0 14px rgba(212, 132, 58, 0.15);
+    0 0 0 1px rgba(212, 132, 58, 0.35),
+    0 0 10px rgba(212, 132, 58, 0.12);
 }
 
 /* ==========================================================================
    Combatant Node — DEFEATED state
    ========================================================================== */
 .combatant-node.defeated {
-  opacity: 0.45;
-  border-color: rgba(80, 40, 40, 0.4);
-  background: rgba(20, 12, 10, 0.85);
+  opacity: 0.4;
+  border-color: rgba(80, 40, 40, 0.35);
+  background: rgba(20, 12, 10, 0.8);
   cursor: not-allowed;
 }
 
@@ -324,12 +324,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(139, 26, 26, 0.45);
-  border-radius: 8px;
+  background: rgba(139, 26, 26, 0.4);
+  border-radius: 6px;
   color: #faa;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   pointer-events: none;
 }
 
@@ -337,7 +337,7 @@
    Combatant Node — UNTARGETABLE state
    ========================================================================== */
 .combatant-node.untargetable {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
   filter: grayscale(0.6);
 }
@@ -349,14 +349,15 @@
 }
 
 /* ==========================================================================
-   Combatant Node — Internal elements
+   Combatant Node — Internal elements (horizontal layout)
    ========================================================================== */
 
-/* Avatar */
+/* Avatar — smaller */
 .combatant-avatar {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
   border-radius: 50%;
   border: 2px solid rgba(107, 75, 45, 0.35);
   overflow: visible;
@@ -369,7 +370,7 @@
 
 .combatant-node.current-actor .combatant-avatar {
   border-color: rgba(230, 180, 80, 0.6);
-  box-shadow: 0 0 10px rgba(230, 180, 80, 0.3);
+  box-shadow: 0 0 8px rgba(230, 180, 80, 0.25);
 }
 
 .combatant-node.targeted .combatant-avatar {
@@ -384,41 +385,43 @@
 }
 
 .combatant-avatar-placeholder {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--ink-light);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Info */
+/* Info column — vertical within the row */
 .combatant-info {
   display: flex;
   flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.combatant-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f5e6c8;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* HP bar — thinner */
+.combatant-hp-row {
+  display: flex;
   align-items: center;
   gap: 3px;
   width: 100%;
 }
 
-.combatant-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: #f5e6c8;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* HP bar */
-.combatant-hp-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-}
-
 .combatant-hp-bar {
   flex: 1;
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(107, 75, 45, 0.2);
   overflow: hidden;
@@ -431,68 +434,70 @@
 }
 
 .combatant-hp-text {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-/* Momentum pill */
+/* Momentum pill — smaller */
 .combatant-momentum {
-  padding: 1px 8px;
+  padding: 0px 6px;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   border: 1px solid transparent;
   white-space: nowrap;
+  line-height: 1.4;
 }
 
 .combatant-momentum.shi-yin {
-  background: rgba(58, 92, 122, 0.8);
+  background: rgba(58, 92, 122, 0.75);
   color: #c8d8e8;
-  border-color: rgba(58, 92, 122, 0.6);
+  border-color: rgba(58, 92, 122, 0.55);
 }
 .combatant-momentum.shi-yang {
-  background: rgba(212, 132, 58, 0.8);
+  background: rgba(212, 132, 58, 0.75);
   color: #fce0c0;
-  border-color: rgba(212, 132, 58, 0.6);
+  border-color: rgba(212, 132, 58, 0.55);
 }
 .combatant-momentum.shi-he {
-  background: rgba(107, 138, 92, 0.8);
+  background: rgba(107, 138, 92, 0.75);
   color: #d0e8c8;
-  border-color: rgba(107, 138, 92, 0.6);
+  border-color: rgba(107, 138, 92, 0.55);
 }
 .combatant-momentum.shi-harmony {
-  background: rgba(194, 168, 78, 0.8);
+  background: rgba(194, 168, 78, 0.75);
   color: #faf0d0;
-  border-color: rgba(194, 168, 78, 0.6);
-  box-shadow: 0 0 6px rgba(194, 168, 78, 0.3);
+  border-color: rgba(194, 168, 78, 0.55);
+  box-shadow: 0 0 4px rgba(194, 168, 78, 0.25);
 }
 .combatant-momentum.shi-collapse {
-  background: rgba(139, 58, 58, 0.8);
+  background: rgba(139, 58, 58, 0.75);
   color: #f8d0d0;
-  border-color: rgba(139, 58, 58, 0.6);
+  border-color: rgba(139, 58, 58, 0.55);
 }
 .combatant-momentum.shi-lost {
-  background: rgba(107, 107, 107, 0.7);
+  background: rgba(107, 107, 107, 0.65);
   color: #d0d0d0;
-  border-color: rgba(107, 107, 107, 0.5);
+  border-color: rgba(107, 107, 107, 0.45);
 }
 
-/* Status badges */
+/* Status badges — smaller */
 .combatant-statuses {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
-  justify-content: center;
+  gap: 2px;
+  justify-content: flex-start;
+  margin-left: 2px;
 }
 
 .combatant-status-badge {
-  padding: 1px 5px;
+  padding: 0px 4px;
   border-radius: 999px;
-  background: rgba(194, 58, 46, 0.5);
+  background: rgba(194, 58, 46, 0.45);
   color: #fdd;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -502,8 +507,8 @@
    ========================================================================== */
 .scene-objective-mini {
   display: flex;
-  gap: 12px;
-  padding: 6px 12px;
+  gap: 10px;
+  padding: 4px 10px;
   background: rgba(15, 12, 8, 0.9);
   border-top: 1px solid rgba(107, 75, 45, 0.12);
   flex-shrink: 0;
@@ -513,13 +518,13 @@
 .objective-track {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex: 1;
   min-width: 0;
 }
 
 .objective-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--ink-subtle);
   white-space: nowrap;
@@ -528,7 +533,7 @@
 
 .objective-bar-wrap {
   flex: 1;
-  height: 6px;
+  height: 5px;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(107, 75, 45, 0.2);
@@ -543,7 +548,7 @@
 }
 
 .objective-nums {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--ink-subtle);
   flex-shrink: 0;
@@ -570,7 +575,6 @@
   gap: 8px;
 }
 
-/* ---- Clock Row ---- */
 .clock-row {
   display: flex;
   flex-direction: column;
@@ -612,7 +616,6 @@
   white-space: nowrap;
 }
 
-/* ---- Progress Bar ---- */
 .clock-bar-track {
   width: 100%;
   height: 6px;
@@ -627,7 +630,6 @@
   transition: width 500ms ease;
 }
 
-/* ---- Expanded Info ---- */
 .clock-expanded-info {
   display: flex;
   flex-wrap: wrap;
@@ -674,7 +676,6 @@
   border-radius: 4px;
 }
 
-/* Collapsed row: smaller */
 .clock-row.collapsed .clock-name {
   font-size: 11px;
   font-weight: 600;
@@ -684,7 +685,6 @@
   height: 4px;
 }
 
-/* Hidden count chip */
 .clock-hidden-count {
   font-size: 10px;
   color: var(--ink-subtle);
