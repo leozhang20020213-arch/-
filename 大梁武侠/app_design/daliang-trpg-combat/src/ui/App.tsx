@@ -812,7 +812,7 @@ function PlayerSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} targetName="" minHeight={200} />}
+          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} minHeight={200} />}
         />
       }
       right={
@@ -882,13 +882,10 @@ function PlayerCombatDesk(props: DeskProps & {
             (() => {
               const move = actor.moves.find((m) => m.id === props.selectedMoveId);
               const req = parseMoveRequirement(move, move?.name);
-              const targetActor = enemies.find((e) => e.id === props.selectedTargetId);
-              const tName = targetActor?.name ?? "";
               return (
                 <QiAssignmentBoard
                   moveRequirement={req}
                   hasTarget={Boolean(props.selectedTargetId)}
-                  targetName={tName}
                   minHeight={220}
                 />
               );
@@ -980,7 +977,7 @@ function DmSceneDesk(props: DeskProps & {
               </div>
             </section>
           }
-          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} targetName="" minHeight={200} />}
+          qiZone={<QiAssignmentBoard moveRequirement={null} hasTarget={false} minHeight={200} />}
         />
       }
       right={
@@ -1060,13 +1057,10 @@ function DmCombatDesk(props: DeskProps & {
               const dmActor = props.state.actors.find((a) => a.id === dmActorId) ?? props.state.actors[0];
               const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
               const req = parseMoveRequirement(move, move?.name);
-              const tgt = props.state.actors.find((a) => a.id === props.selectedTargetId);
-              const tName = tgt?.name ?? "";
               return (
                 <QiAssignmentBoard
                   moveRequirement={req}
                   hasTarget={Boolean(props.selectedTargetId)}
-                  targetName={tName}
                   minHeight={220}
                 />
               );

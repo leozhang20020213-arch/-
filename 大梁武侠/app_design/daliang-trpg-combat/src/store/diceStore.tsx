@@ -4,10 +4,9 @@
 // ==========================================================================
 
 import { createContext, useContext, useReducer, useCallback, type Dispatch, type ReactNode } from "react";
-import type { QiDieData, QiDieLocation, QiSlotType, CurrentMoveQiRequirement, LockedQiDeclaration, QiDeclarationStatus } from "../types/dice";
+import type { QiDieData, QiDieLocation, QiSlotType, CurrentMoveQiRequirement } from "../types/dice";
 import { createStarterQiDice, rollQiDie } from "../lib/dice/diceRoll";
 import { canDropDieToSlot } from "../lib/dice/diceAssignment";
-import { lockQiDeclaration, moveLockedDiceToRestPool } from "../lib/dice/qiDeclaration";
 
 // ---- State ----
 
@@ -28,16 +27,6 @@ export interface DiceStoreState {
   selectedMoveId: string | null;
   /** Current move qi requirement */
   moveRequirement: CurrentMoveQiRequirement | null;
-
-  // Phase 3: declaration & rest pool
-  /** Current target ID */
-  targetId: string | null;
-  /** Current target name */
-  targetName: string;
-  /** Declaration lifecycle status */
-  declarationStatus: QiDeclarationStatus;
-  /** Active locked declaration (null if none) */
-  activeDeclaration: LockedQiDeclaration | null;
 }
 
 const initialState: DiceStoreState = {
@@ -48,10 +37,6 @@ const initialState: DiceStoreState = {
   assignedYangDiceIds: [],
   selectedMoveId: null,
   moveRequirement: null,
-  targetId: null,
-  targetName: "",
-  declarationStatus: "draft",
-  activeDeclaration: null,
 };
 
 // ---- Actions ----
@@ -67,12 +52,7 @@ export type DiceStoreAction =
   | { type: "ASSIGN_DIE_TO_SLOT"; dieId: string; slot: QiSlotType }
   | { type: "RETURN_DIE_TO_SEA"; dieId: string }
   | { type: "CLEAR_ASSIGNMENT" }
-  | { type: "SET_MOVE_REQUIREMENT"; requirement: CurrentMoveQiRequirement | null }
-  // Phase 3
-  | { type: "SET_TARGET"; targetId: string | null; targetName: string }
-  | { type: "LOCK_DECLARATION"; moveId: string; moveName: string; targetId: string; targetName: string; yinDice: QiDieData[]; yangDice: QiDieData[] }
-  | { type: "RESOLVE_DECLARATION" }
-  | { type: "RESET_DECLARATION" };
+  | { type: "SET_MOVE_REQUIREMENT"; requirement: CurrentMoveQiRequirement | null };
 
 // ---- Reducer ----
 
@@ -154,57 +134,6 @@ function diceReducer(state: DiceStoreState, action: DiceStoreAction): DiceStoreS
     case "SET_MOVE_REQUIREMENT": {
       return { ...state, moveRequirement: action.requirement };
     }
-    // ---- Phase 3 ----
-    case "SET_TARGET": {
-      return { ...state, targetId: action.targetId, targetName: action.targetName };
-    }
-    case "LOCK_DECLARATION": {
-      const declaration = lockQiDeclaration({
-        moveId: action.moveId,
-        moveName: action.moveName,
-        targetId: action.targetId,
-        targetName: action.targetName,
-        yinDice: action.yinDice,
-        yangDice: action.yangDice,
-      });
-      // Mark assigned dice as locked
-      const lockedIds = new Set([
-        ...declaration.yinDice.map((d) => d.id),
-        ...declaration.yangDice.map((d) => d.id),
-      ]);
-      const updatedDice = state.qiDice.map((d) =>
-        lockedIds.has(d.id) ? { ...d, locked: true } : d,
-      );
-      return {
-        ...state,
-        qiDice: updatedDice,
-        declarationStatus: "locked",
-        activeDeclaration: declaration,
-      };
-    }
-    case "RESOLVE_DECLARATION": {
-      if (!state.activeDeclaration) return state;
-      const rested = moveLockedDiceToRestPool(state.qiDice, state.activeDeclaration);
-      return {
-        ...state,
-        qiDice: rested,
-        declarationStatus: "resolved",
-        assignedYinDiceIds: [],
-        assignedYangDiceIds: [],
-        // Keep activeDeclaration for summary display
-      };
-    }
-    case "RESET_DECLARATION": {
-      const unlocked = state.qiDice.map((d) => ({ ...d, locked: false }));
-      return {
-        ...state,
-        qiDice: unlocked,
-        declarationStatus: "draft",
-        activeDeclaration: null,
-        assignedYinDiceIds: [],
-        assignedYangDiceIds: [],
-      };
-    }
     default:
       return state;
   }
@@ -231,12 +160,6 @@ interface DiceStoreContextValue {
   setMoveRequirement: (requirement: CurrentMoveQiRequirement | null) => void;
   getAssignedYinDice: () => QiDieData[];
   getAssignedYangDice: () => QiDieData[];
-  // Phase 3
-  setTarget: (targetId: string | null, targetName: string) => void;
-  lockDeclaration: (moveId: string, moveName: string, targetId: string, targetName: string, yinDice: QiDieData[], yangDice: QiDieData[]) => void;
-  resolveDeclaration: () => void;
-  resetDeclaration: () => void;
-  getLockedDice: () => QiDieData[];
 }
 
 const DiceStoreContext = createContext<DiceStoreContextValue | null>(null);
@@ -296,30 +219,6 @@ export function DiceStoreProvider({ children }: { children: ReactNode }) {
     [state.qiDice, state.assignedYangDiceIds],
   );
 
-  // Phase 3
-  const setTarget = useCallback(
-    (targetId: string | null, targetName: string) =>
-      dispatch({ type: "SET_TARGET", targetId, targetName }),
-    [],
-  );
-  const lockDeclaration = useCallback(
-    (moveId: string, moveName: string, targetId: string, targetName: string, yinDice: QiDieData[], yangDice: QiDieData[]) =>
-      dispatch({ type: "LOCK_DECLARATION", moveId, moveName, targetId, targetName, yinDice, yangDice }),
-    [],
-  );
-  const resolveDeclaration = useCallback(
-    () => dispatch({ type: "RESOLVE_DECLARATION" }),
-    [],
-  );
-  const resetDeclaration = useCallback(
-    () => dispatch({ type: "RESET_DECLARATION" }),
-    [],
-  );
-  const getLockedDice = useCallback(
-    () => state.qiDice.filter((d) => d.locked),
-    [state.qiDice],
-  );
-
   const value: DiceStoreContextValue = {
     state,
     dispatch,
@@ -337,12 +236,6 @@ export function DiceStoreProvider({ children }: { children: ReactNode }) {
     setMoveRequirement,
     getAssignedYinDice,
     getAssignedYangDice,
-    // Phase 3
-    setTarget,
-    lockDeclaration,
-    resolveDeclaration,
-    resetDeclaration,
-    getLockedDice,
   };
 
   return (
