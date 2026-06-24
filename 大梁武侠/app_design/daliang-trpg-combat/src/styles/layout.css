@@ -1,0 +1,552 @@
+/* ==========================================================================
+   Desktop Window Layout — Daliang TRPG Combat
+   Fixed desktop workbench. No page-level scrolling for core operations.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   App Shell — 5-row grid (TitleBar | Toolbar | RoundBar | Workspace | StatusBar)
+   -------------------------------------------------------------------------- */
+.app-shell {
+  display: grid;
+  grid-template-rows:
+    var(--title-bar-height)
+    var(--toolbar-height)
+    var(--round-bar-height)
+    1fr
+    var(--status-bar-height);
+  grid-template-columns: 1fr;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ---- Row 1: Title Bar (48px) ---- */
+.title-bar {
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--outer-margin);
+  background: linear-gradient(180deg, #2a2218 0%, #1f1912 100%);
+  border-bottom: 1px solid rgba(212, 132, 58, 0.18);
+  color: var(--ink-light);
+  user-select: none;
+}
+
+.title-bar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 35%;
+  min-width: 0;
+}
+
+.title-bar__left .app-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.85;
+}
+
+.title-bar__left .app-name {
+  font-size: var(--fs-app-name);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f5e6c8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.title-bar__left .room-code {
+  font-size: var(--fs-helper);
+  color: var(--ink-subtle);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.title-bar__center {
+  flex: 0 0 35%;
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--ink-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.title-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 30%;
+  justify-content: flex-end;
+}
+
+.title-bar__right .identity-badge {
+  font-size: var(--fs-helper);
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.title-bar__right .identity-badge.player {
+  color: #c2a84e;
+  border-color: rgba(194, 168, 78, 0.4);
+  background: rgba(194, 168, 78, 0.12);
+}
+
+.title-bar__right .identity-badge.dm {
+  color: #c23a2e;
+  border-color: rgba(194, 58, 46, 0.4);
+  background: rgba(194, 58, 46, 0.12);
+}
+
+.title-bar__right .window-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--ink-subtle);
+  font-size: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--ease-lift), color var(--ease-lift);
+}
+
+.title-bar__right .window-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink-light);
+}
+
+/* ---- Row 2: Main Toolbar (56px) ---- */
+.main-toolbar {
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--toolbar-btn-gap);
+  padding: 10px var(--outer-margin);
+  background: linear-gradient(180deg, #241e17 0%, #1f1912 100%);
+  border-bottom: 1px solid rgba(107, 75, 45, 0.15);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+.main-toolbar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.main-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--toolbar-btn-height);
+  min-width: var(--toolbar-btn-min-w);
+  padding: 0 12px;
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  border-radius: var(--radius-button);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink-light);
+  font-size: var(--fs-button);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--ease-lift), border-color var(--ease-lift), box-shadow var(--ease-lift);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.main-toolbar__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(212, 132, 58, 0.35);
+}
+
+.main-toolbar__btn:active,
+.main-toolbar__btn.active {
+  background: linear-gradient(180deg, rgba(212, 132, 58, 0.25), rgba(92, 58, 30, 0.55));
+  border-color: var(--yang-die);
+  color: #fff6e8;
+  box-shadow: 0 0 12px rgba(212, 132, 58, 0.2);
+}
+
+.main-toolbar__btn .btn-icon {
+  width: var(--toolbar-icon-size);
+  height: var(--toolbar-icon-size);
+  flex-shrink: 0;
+}
+
+/* ---- Row 3: Round / Status Bar (64px) ---- */
+.round-status-bar {
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--outer-margin);
+  gap: 0;
+  background: linear-gradient(180deg, #1f1912 0%, #1a1410 100%);
+  border-bottom: 1px solid rgba(107, 75, 45, 0.12);
+  color: var(--ink-light);
+  font-size: var(--fs-body);
+  min-height: 0;
+}
+
+.round-status-bar__round {
+  flex: 0 0 12%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.round-status-bar__round .round-num {
+  font-size: 20px;
+  color: #f5e6c8;
+  text-shadow: 0 0 8px rgba(212, 132, 58, 0.3);
+}
+
+.round-status-bar__actor {
+  flex: 0 0 18%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #f5e6c8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.round-status-bar__actor .arrow {
+  color: var(--yang-die);
+}
+
+.round-status-bar__phase {
+  flex: 0 0 22%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-subtle);
+  white-space: nowrap;
+}
+
+.round-status-bar__phase .phase-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.round-status-bar__phase .phase-dot.active {
+  background: var(--yang-die);
+  box-shadow: 0 0 6px var(--yang-die);
+}
+
+.round-status-bar__response {
+  flex: 0 0 18%;
+  color: var(--ink-subtle);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.round-status-bar__hint {
+  flex: 0 0 30%;
+  color: var(--ink-muted);
+  font-size: var(--fs-helper);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+/* ---- Row 4: Main Workspace — 3-column grid ---- */
+.main-workspace {
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: var(--left-col-pct) var(--center-col-pct) var(--right-col-pct);
+  gap: var(--panel-gap);
+  padding: 0 var(--outer-margin);
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ---- Row 5: Bottom Status Bar (28px, optional) ---- */
+.bottom-bar {
+  grid-row: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--outer-margin);
+  background: #14100d;
+  border-top: 1px solid rgba(107, 75, 45, 0.1);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Three Column Panels
+   -------------------------------------------------------------------------- */
+
+/* Left panel — 18% */
+.left-panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap);
+  padding: var(--panel-padding) 0;
+  min-height: 0;
+}
+
+/* Center panel — 58%, split vertically */
+.center-panel {
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 45% 55%;
+  gap: var(--panel-gap);
+  padding: var(--panel-padding) 0;
+  min-height: 0;
+}
+
+/* Right panel — 24% */
+.right-panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap);
+  padding: var(--panel-padding) 0;
+  min-height: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Center Sub-Panels
+   -------------------------------------------------------------------------- */
+
+/* Combat Stage — top 45% */
+.combat-stage {
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-panel);
+  background: rgba(20, 16, 10, 0.5);
+  min-height: 0;
+}
+
+/* Qi Dice Zone — bottom 55% */
+.qi-dice-zone {
+  overflow: hidden;
+  border: 1px solid rgba(212, 132, 58, 0.2);
+  border-radius: var(--radius-panel);
+  background: #050505;
+  min-height: 320px;  /* hard minimum for 1366×768 */
+  display: grid;
+  grid-template-rows:
+    var(--qi-temp-pct)
+    var(--qi-tray-row-pct)
+    var(--qi-pool-pct);
+  gap: 1px;
+}
+
+/* ---- Qi Zone Internal Rows ---- */
+
+.qi-temp-area {
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  gap: 8px;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(232, 198, 126, 0.12);
+  min-height: 0;
+}
+
+.qi-temp-area .temp-label {
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.5);
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+.qi-tray-row {
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: var(--qi-yin-pct) var(--qi-hai-pct) var(--qi-yang-pct);
+  gap: 2px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.qi-yin-slot {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 20, 40, 0.6);
+  border: 1px dashed rgba(58, 92, 122, 0.3);
+  border-radius: 6px;
+  margin: 4px;
+  min-height: 0;
+  position: relative;
+  transition: border-color var(--ease-lift), background var(--ease-lift);
+}
+
+.qi-yin-slot.drop-active {
+  border-color: rgba(58, 140, 200, 0.7);
+  background: rgba(20, 60, 120, 0.3);
+  box-shadow: inset 0 0 24px rgba(58, 140, 200, 0.15);
+}
+
+.qi-yin-slot .slot-label {
+  position: absolute;
+  top: 6px;
+  font-size: 11px;
+  color: rgba(100, 160, 200, 0.6);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.qi-hai-center {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #15120f 0%, #080808 58%, #000 100%);
+  border: 1px solid rgba(232, 198, 126, 0.3);
+  border-radius: 6px;
+  margin: 4px;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.qi-hai-center .hai-label {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: rgba(247, 231, 187, 0.4);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.qi-yang-slot {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 20, 10, 0.6);
+  border: 1px dashed rgba(212, 132, 58, 0.3);
+  border-radius: 6px;
+  margin: 4px;
+  min-height: 0;
+  position: relative;
+  transition: border-color var(--ease-lift), background var(--ease-lift);
+}
+
+.qi-yang-slot.drop-active {
+  border-color: rgba(230, 150, 60, 0.7);
+  background: rgba(80, 40, 10, 0.3);
+  box-shadow: inset 0 0 24px rgba(212, 132, 58, 0.15);
+}
+
+.qi-yang-slot .slot-label {
+  position: absolute;
+  top: 6px;
+  font-size: 11px;
+  color: rgba(212, 150, 80, 0.6);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.qi-pool-strip {
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  gap: 10px;
+  font-size: 11px;
+  color: rgba(247, 231, 187, 0.6);
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(232, 198, 126, 0.1);
+  min-height: 0;
+  overflow-x: auto;
+}
+
+.qi-pool-strip .pool-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.qi-pool-strip .pool-stat .stat-val {
+  color: #f7e7bb;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar Styling (Windows desktop style)
+   -------------------------------------------------------------------------- */
+.left-panel::-webkit-scrollbar,
+.right-panel::-webkit-scrollbar,
+.drawer-layer::-webkit-scrollbar,
+.qi-temp-area::-webkit-scrollbar,
+.qi-pool-strip::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-panel::-webkit-scrollbar-track,
+.right-panel::-webkit-scrollbar-track,
+.drawer-layer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-panel::-webkit-scrollbar-thumb,
+.right-panel::-webkit-scrollbar-thumb,
+.drawer-layer::-webkit-scrollbar-thumb {
+  background: rgba(107, 75, 45, 0.3);
+  border-radius: 3px;
+}
+
+.left-panel::-webkit-scrollbar-thumb:hover,
+.right-panel::-webkit-scrollbar-thumb:hover,
+.drawer-layer::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 75, 45, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   1366×768 Minimum Resolution Adaptation
+   -------------------------------------------------------------------------- */
+@media (max-width: 1400px) {
+  .main-workspace {
+    grid-template-columns: var(--left-panel-min) 1fr var(--right-panel-min);
+    gap: 10px;
+  }
+}
+
+@media (max-height: 820px) {
+  .qi-dice-zone {
+    min-height: 320px;
+  }
+
+  .qi-temp-area {
+    padding: 2px 8px;
+  }
+
+  .qi-pool-strip {
+    padding: 2px 8px;
+  }
+}

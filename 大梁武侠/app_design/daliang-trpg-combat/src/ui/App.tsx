@@ -34,6 +34,20 @@ import type { CombatBoardSnapshot } from "../game/combatScene";
 import { QiDiceTray } from "../dice3d/QiDiceTray";
 import { QiDiceRollOverlay } from "../dice3d/QiDiceRollOverlay";
 import type { DiceRollResult } from "../dice3d/diceTypes";
+import { TitleBar } from "./layouts/TitleBar";
+import { MainToolbar } from "./layouts/MainToolbar";
+import { RoundStatusBar } from "./layouts/RoundStatusBar";
+import { MainWorkspace } from "./layouts/MainWorkspace";
+import { LeftInfoPanel } from "./layouts/LeftInfoPanel";
+import { CenterCombatZone } from "./layouts/CenterCombatZone";
+import { RightActionPanel } from "./layouts/RightActionPanel";
+import { BottomStatusBar } from "./layouts/BottomStatusBar";
+import { CombatShell } from "./combat/CombatShell";
+import { TopCombatBar } from "./combat/TopCombatBar";
+import { LeftCombatPanel } from "./combat/LeftCombatPanel";
+import { CenterCombatPanel } from "./combat/CenterCombatPanel";
+import { RightCombatPanel } from "./combat/RightCombatPanel";
+import { PhaseActionBar } from "./combat/PhaseActionBar";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -184,25 +198,25 @@ export function App() {
     setSelectedDice((current) => (current.includes(dieId) ? current.filter((id) => id !== dieId) : [...current, dieId]));
   }
 
-  function assignDieToSlot(dieId: string, slot: "yin" | "yang") {
+  function assignDieToSlot(dieId: string, slot: "yin" | "yang"): boolean {
     const die = state.dice.find((item) => item.id === dieId);
     if (!die || (die.zone !== "QI_SEA" && die.zone !== "TEMP_QI")) {
       setSlotHint("此骰当前不可放入该槽位");
       setPrompt({ title: "不可投入槽位", message: "此骰当前不可放入该槽位。" });
       window.setTimeout(() => setSlotHint(""), 1600);
-      return;
+      return false;
     }
     if (state.activeActorId !== die.ownerId || (state.phase !== "scene" && state.phase !== "declare")) {
       setSlotHint("当前时点或行动者不可锁气");
       setPrompt({ title: "不可锁气", message: "只有当前行动者在合法时点可以移动气骰并投入阴阳槽。" });
       window.setTimeout(() => setSlotHint(""), 1600);
-      return;
+      return false;
     }
     if (session.identity === "player" && die.ownerId !== playerActorId) {
       setSlotHint("玩家只能操作自己的气骰");
       setPrompt({ title: "权限不足", message: "玩家只能操作自己的气骰。" });
       window.setTimeout(() => setSlotHint(""), 1600);
-      return;
+      return false;
     }
     setSlotDice((current) => {
       const without = {
@@ -212,6 +226,7 @@ export function App() {
       return { ...without, [slot]: [...without[slot], dieId] };
     });
     setSelectedDice((current) => (current.includes(dieId) ? current : [...current, dieId]));
+    return true;
   }
 
   function removeDieFromSlot(dieId: string) {
@@ -307,91 +322,110 @@ export function App() {
     declareFor,
     patch,
     go,
+    resetAll,
   };
 
+  const isDeskRoute =
+    session.route === "playerScene" || session.route === "playerCombat" || session.route === "player" ||
+    session.route === "dmScene" || session.route === "dmCombat" || session.route === "dm";
+
+  const isDM = session.identity === "dm";
+
+  // ---- Combat routes: each desk renders its own CombatShell ----
+  if (isDeskRoute) {
+    const displayState = debugView && session.developerMode ? state : playerState;
+    return (
+      <>
+        {session.route === "playerScene" ? (
+          <PlayerSceneDesk
+            {...common}
+            state={displayState}
+            rawState={state}
+            actorId={playerActorId}
+            onEnterCombat={() => go("playerCombat", { gameMode: "combat" })}
+            onStartScene={() => patch((current) => enterScene(current))}
+          />
+        ) : null}
+        {(session.route === "playerCombat" || session.route === "player") ? (
+          <PlayerCombatDesk
+            {...common}
+            state={displayState}
+            rawState={state}
+            actorId={playerActorId}
+            onStartScene={() => patch((current) => enterScene(current))}
+            onForm={() => patch((current) => formMove(current))}
+            onReact={reactPending}
+            onOutcome={() => patch((current) => applyOutcome(current))}
+            onRegulateBreath={() => regulateFirstRestDie(patch, state, playerActorId)}
+            onReflection={() => patch((current) => useReflection(current, playerActorId))}
+          />
+        ) : null}
+        {session.route === "dmScene" ? (
+          <DmSceneDesk
+            {...common}
+            dmNote={dmNote}
+            setDmNote={setDmNote}
+            onStartScene={() => patch((current) => enterScene(current))}
+            onEnterCombat={() => go("dmCombat", { gameMode: "combat" })}
+            onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
+          />
+        ) : null}
+        {(session.route === "dmCombat" || session.route === "dm") ? (
+          <DmCombatDesk
+            {...common}
+            dmNote={dmNote}
+            setDmNote={setDmNote}
+            onStartScene={() => patch((current) => enterScene(current))}
+            onIntercept={interceptPending}
+            onForm={() => patch((current) => formMove(current))}
+            onReact={reactPending}
+            onOutcome={() => patch((current) => applyOutcome(current))}
+            onEndRound={() => patch((current) => endRound(current))}
+            onMomentum={(actorId, momentum) => patch((current) => changeMomentum(current, actorId, momentum))}
+            onRegulateBreath={() => regulateFirstRestDie(patch, state, playerActorId)}
+            onReflection={() => patch((current) => useReflection(current, playerActorId))}
+            onExpireSource={() => patch((current) => expireSource(current, "短兵客·雨步"))}
+            onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
+          />
+        ) : null}
+        {rollDice ? (
+          <QiDiceRollOverlay
+            dice={rollDice}
+            onClose={() => setRollDice(null)}
+            onConfirm={(results: DiceRollResult[]) => {
+              patch((current) => commitDiceRollResults(current, results));
+              setRollDice(null);
+            }}
+          />
+        ) : null}
+        {prompt ? <PromptModal title={prompt.title} message={prompt.message} onClose={() => setPrompt(null)} /> : null}
+      </>
+    );
+  }
+
+  // ---- Non-combat routes: keep original app-shell ----
   return (
-    <main className="app-shell">
-      <Topbar session={session} debugView={debugView} setDebugView={setDebugView} onHome={() => go("home")} onReset={resetAll} />
-      {session.route === "home" ? <HomeScreen session={session} go={go} resetAll={resetAll} /> : null}
-      {session.route === "createRoom" || session.route === "room" ? (
-        <CreateRoomPage session={session} setSession={setSession} go={go} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} startLanRoom={startLanRoom} />
-      ) : null}
-      {session.route === "joinRoom" ? (
-        <JoinRoomPage state={state} session={session} setSession={setSession} go={go} enterAs={enterAs} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} joinLanRoom={joinLanRoom} />
-      ) : null}
-      {session.route === "roomWaiting" ? (
-        <RoomWaitingPage state={state} session={session} setSession={setSession} go={go} />
-      ) : null}
-      {session.route === "characterAssign" ? (
-        <CharacterAssignPage state={state} session={session} setSession={setSession} enterAs={enterAs} go={go} />
-      ) : null}
-      {session.route === "playerScene" ? (
-        <PlayerSceneDesk
-          {...common}
-          state={debugView && session.developerMode ? state : playerState}
-          rawState={state}
-          actorId={playerActorId}
-          onEnterCombat={() => go("playerCombat", { gameMode: "combat" })}
-          onStartScene={() => patch((current) => enterScene(current))}
-        />
-      ) : null}
-      {session.route === "playerCombat" || session.route === "player" ? (
-        <PlayerCombatDesk
-          {...common}
-          state={debugView && session.developerMode ? state : playerState}
-          rawState={state}
-          actorId={playerActorId}
-          onStartScene={() => patch((current) => enterScene(current))}
-          onForm={() => patch((current) => formMove(current))}
-          onReact={reactPending}
-          onOutcome={() => patch((current) => applyOutcome(current))}
-          onRegulateBreath={() => regulateFirstRestDie(patch, state, playerActorId)}
-          onReflection={() => patch((current) => useReflection(current, playerActorId))}
-        />
-      ) : null}
-      {session.route === "dmScene" ? (
-        <DmSceneDesk
-          {...common}
-          dmNote={dmNote}
-          setDmNote={setDmNote}
-          onStartScene={() => patch((current) => enterScene(current))}
-          onEnterCombat={() => go("dmCombat", { gameMode: "combat" })}
-          onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
-        />
-      ) : null}
-      {session.route === "dmCombat" || session.route === "dm" ? (
-        <DmCombatDesk
-          {...common}
-          dmNote={dmNote}
-          setDmNote={setDmNote}
-          onStartScene={() => patch((current) => enterScene(current))}
-          onIntercept={interceptPending}
-          onForm={() => patch((current) => formMove(current))}
-          onReact={reactPending}
-          onOutcome={() => patch((current) => applyOutcome(current))}
-          onEndRound={() => patch((current) => endRound(current))}
-          onMomentum={(actorId, momentum) => patch((current) => changeMomentum(current, actorId, momentum))}
-          onRegulateBreath={() => regulateFirstRestDie(patch, state, playerActorId)}
-          onReflection={() => patch((current) => useReflection(current, playerActorId))}
-          onExpireSource={() => patch((current) => expireSource(current, "短兵客·雨步"))}
-          onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
-        />
-      ) : null}
-      {session.route === "library" || session.route === "packs" || session.route === "settings" ? (
-        <PlaceholderPage session={session} go={go} />
-      ) : null}
-      {rollDice ? (
-        <QiDiceRollOverlay
-          dice={rollDice}
-          onClose={() => setRollDice(null)}
-          onConfirm={(results: DiceRollResult[]) => {
-            patch((current) => commitDiceRollResults(current, results));
-            setRollDice(null);
-          }}
-        />
-      ) : null}
-      {prompt ? <PromptModal title={prompt.title} message={prompt.message} onClose={() => setPrompt(null)} /> : null}
-    </main>
+    <div className="app-shell">
+      <TitleBar session={session} debugView={debugView} setDebugView={setDebugView} onHome={() => go("home")} onReset={resetAll} />
+      <div style={{ gridRow: "2 / -1", overflow: "auto" }}>
+        {session.route === "home" ? <HomeScreen session={session} go={go} resetAll={resetAll} /> : null}
+        {session.route === "createRoom" || session.route === "room" ? (
+          <CreateRoomPage session={session} setSession={setSession} go={go} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} startLanRoom={startLanRoom} />
+        ) : null}
+        {session.route === "joinRoom" ? (
+          <JoinRoomPage state={state} session={session} setSession={setSession} go={go} enterAs={enterAs} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} joinLanRoom={joinLanRoom} />
+        ) : null}
+        {session.route === "roomWaiting" ? (
+          <RoomWaitingPage state={state} session={session} setSession={setSession} go={go} />
+        ) : null}
+        {session.route === "characterAssign" ? (
+          <CharacterAssignPage state={state} session={session} setSession={setSession} enterAs={enterAs} go={go} />
+        ) : null}
+        {session.route === "library" || session.route === "packs" || session.route === "settings" ? (
+          <PlaceholderPage session={session} go={go} />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -732,49 +766,74 @@ function PlayerSceneDesk(props: DeskProps & {
   const publicObjects = props.state.actors.filter((item) => item.id !== actor.id);
 
   return (
-    <section className="game-desk player-scene-desk">
-      <GameModeHeader state={props.state} modeLabel="玩家情景桌面" />
-      <div className="scene-layout">
-        <section className="panel">
-          <h2>我的简卡</h2>
-          <CombatBriefCard actor={actor} />
-        </section>
-        <section className="panel scene-board">
-          <h2>{props.state.sceneName}</h2>
-          <p>{props.state.sceneGoal}</p>
-          <div className="track-row">
-            {props.state.tracks.map((track) => (
-              <div className="track" key={track.id}>
-                <span>{track.name}</span>
-                <meter min={0} max={track.max} value={track.value} />
-                <small>{track.value}/{track.max}</small>
+    <CombatShell
+      top={
+        <TopCombatBar
+          session={props.session}
+          state={props.state}
+          activeDrawer={props.activeDrawer}
+          setActiveDrawer={props.setActiveDrawer}
+          debugView={props.debugView}
+          setDebugView={props.setDebugView}
+          onHome={() => props.go("home")}
+          onReset={props.resetAll}
+        />
+      }
+      left={<LeftCombatPanel actor={actor} state={props.state} />}
+      center={
+        <CenterCombatPanel
+          stage={
+            <section className="panel scene-board" style={{ height: "100%" }}>
+              <h2>{props.state.sceneName}</h2>
+              <p>{props.state.sceneGoal}</p>
+              <div className="track-row">
+                {props.state.tracks.map((track) => (
+                  <div className="track" key={track.id}>
+                    <span>{track.name}</span>
+                    <meter min={0} max={track.max} value={track.value} />
+                    <small>{track.value}/{track.max}</small>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="action-card-grid">
-            {["观察", "交涉", "搜查", "移步", "取物", "使用物品"].map((action) => (
-              <button className="action-card" type="button" key={action}>
-                <strong>{action}</strong>
-                <span>情景动作</span>
-                <small>由 DM 裁定并写入事件</small>
-              </button>
-            ))}
-          </div>
-        </section>
-        <section className="panel">
-          <h2>公开对象</h2>
-          <div className="actor-list">
-            {publicObjects.map((item) => <UnitCard actor={item} mode={item.side === "player" ? "teammate" : "enemyPublic"} key={item.id} />)}
-          </div>
-        </section>
-      </div>
-      <div className="split-actions desk-primary-actions">
-        <button type="button" onClick={props.onStartScene}>开始/刷新当前场景</button>
-        <button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋</button>
-      </div>
-      <DrawerToolbar activeDrawer={props.activeDrawer} setActiveDrawer={props.setActiveDrawer} role="player" />
-      <DrawerLayer {...props} actor={actor} role="player" />
-    </section>
+            </section>
+          }
+          qiZone={
+            <section className="panel scene-board" style={{ height: "100%", padding: "12px" }}>
+              <h2>情景动作</h2>
+              <div className="action-card-grid">
+                {["观察", "交涉", "搜查", "移步", "取物", "使用物品"].map((action) => (
+                  <button className="action-card" type="button" key={action}>
+                    <strong>{action}</strong>
+                    <span>情景动作</span>
+                    <small>由 DM 裁定并写入事件</small>
+                  </button>
+                ))}
+              </div>
+            </section>
+          }
+        />
+      }
+      right={
+        <RightCombatPanel
+          actions={
+            <section className="panel">
+              <h2>公开对象</h2>
+              <div className="actor-list">
+                {publicObjects.map((item) => <UnitCard actor={item} mode={item.side === "player" ? "teammate" : "enemyPublic"} key={item.id} />)}
+              </div>
+            </section>
+          }
+          flowButtons={
+            <div className="split-actions desk-primary-actions">
+              <button type="button" onClick={props.onStartScene}>开始/刷新当前场景</button>
+              <button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋</button>
+            </div>
+          }
+        />
+      }
+      bottom={<PhaseActionBar state={props.state} />}
+      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
+    />
   );
 }
 
@@ -792,47 +851,58 @@ function PlayerCombatDesk(props: DeskProps & {
   const enemies = props.state.actors.filter((item) => item.side !== "player");
 
   return (
-    <section className="game-desk player-combat-desk">
-      <DrawerToolbar activeDrawer={props.activeDrawer} setActiveDrawer={props.setActiveDrawer} role="player" />
-      <section className="combat-main-grid">
-        <div className="stage-column">
-          <RoundTimeline state={props.state} />
-          <QiZoneBoard
-            dice={props.state.dice.filter((die) => die.ownerId === actor.id)}
-            activeActorId={actor.id}
-            selectedDice={props.selectedDice}
-            slotDice={props.slotDice}
-            slotHint={props.slotHint}
-            phase={props.state.phase}
-            onToggleDie={props.toggleDie}
-            onAssignDieToSlot={props.assignDieToSlot}
-            onRemoveFromSlot={props.removeDieFromSlot}
-            onCommitRollResults={props.commitRollResults}
-            onRollDice={props.setRollDice}
-          />
-          <CombatStage state={props.state} />
-          <section className="combat-under-stage">
-            <div className="panel">
-              <h2>我的战斗简卡</h2>
-              <CombatBriefCard actor={actor} />
-            </div>
-            <ActionStackPanel state={props.state} />
-          </section>
-        </div>
-        <aside className="right-rail">
-          <ActionPanel {...props} actor={actor} enemies={enemies} />
-          <EnemyRoster actors={enemies} mode="public" />
-          <PlayerFlowPanel
-            onStartScene={props.onStartScene}
-            onForm={props.onForm}
-            onReact={props.onReact}
-            onOutcome={props.onOutcome}
-            hasPending={Boolean(props.rawState.pendingAction)}
-          />
-        </aside>
-      </section>
-      <DrawerLayer {...props} actor={actor} role="player" />
-    </section>
+    <CombatShell
+      top={
+        <TopCombatBar
+          session={props.session}
+          state={props.state}
+          activeDrawer={props.activeDrawer}
+          setActiveDrawer={props.setActiveDrawer}
+          debugView={props.debugView}
+          setDebugView={props.setDebugView}
+          onHome={() => props.go("home")}
+          onReset={props.resetAll}
+        />
+      }
+      left={<LeftCombatPanel actor={actor} state={props.state} />}
+      center={
+        <CenterCombatPanel
+          stage={<CombatStage state={props.state} />}
+          qiZone={
+            <QiZoneBoard
+              dice={props.state.dice.filter((die) => die.ownerId === actor.id)}
+              activeActorId={actor.id}
+              selectedDice={props.selectedDice}
+              slotDice={props.slotDice}
+              slotHint={props.slotHint}
+              phase={props.state.phase}
+              onToggleDie={props.toggleDie}
+              onAssignDieToSlot={props.assignDieToSlot}
+              onRemoveFromSlot={props.removeDieFromSlot}
+              onCommitRollResults={props.commitRollResults}
+              onRollDice={props.setRollDice}
+            />
+          }
+        />
+      }
+      right={
+        <RightCombatPanel
+          actions={<ActionPanel {...props} actor={actor} enemies={enemies} />}
+          enemies={<EnemyRoster actors={enemies} mode="public" />}
+          flowButtons={
+            <PlayerFlowPanel
+              onStartScene={props.onStartScene}
+              onForm={props.onForm}
+              onReact={props.onReact}
+              onOutcome={props.onOutcome}
+              hasPending={Boolean(props.rawState.pendingAction)}
+            />
+          }
+        />
+      }
+      bottom={<PhaseActionBar state={props.state} />}
+      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
+    />
   );
 }
 
@@ -846,46 +916,71 @@ function DmSceneDesk(props: DeskProps & {
   const publicObjects = props.state.actors;
 
   return (
-    <section className="game-desk dm-scene-desk">
-      <GameModeHeader state={props.state} modeLabel="DM情景主持台" />
-      <div className="dm-scene-grid">
-        <section className="panel">
-          <h2>场景管理</h2>
-          <p>当前场景：{props.state.sceneName}</p>
-          <p>任务：{props.state.sceneGoal}</p>
-          <div className="track-row">
-            {props.state.tracks.map((track) => (
-              <div className="track" key={track.id}>
-                <span>{track.name}{track.hidden ? "（隐藏）" : ""}</span>
-                <meter min={0} max={track.max} value={track.value} />
-                <small>{track.value}/{track.max}</small>
+    <CombatShell
+      top={
+        <TopCombatBar
+          session={props.session}
+          state={props.state}
+          activeDrawer={props.activeDrawer}
+          setActiveDrawer={props.setActiveDrawer}
+          debugView={props.debugView}
+          setDebugView={props.setDebugView}
+          onHome={() => props.go("home")}
+          onReset={props.resetAll}
+        />
+      }
+      left={<LeftCombatPanel actor={props.state.actors[0]} state={props.state} isDM />}
+      center={
+        <CenterCombatPanel
+          stage={
+            <section className="panel" style={{ height: "100%" }}>
+              <h2>场景管理</h2>
+              <p>当前场景：{props.state.sceneName}</p>
+              <p>任务：{props.state.sceneGoal}</p>
+              <div className="track-row">
+                {props.state.tracks.map((track) => (
+                  <div className="track" key={track.id}>
+                    <span>{track.name}{track.hidden ? "（隐藏）" : ""}</span>
+                    <meter min={0} max={track.max} value={track.value} />
+                    <small>{track.value}/{track.max}</small>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
-        <section className="panel scene-board">
-          <h2>共享情景舞台</h2>
-          <p>夜雨石桥，失镖血箱仍在对岸暗处。公开对象与线索由 DM 决定何时广播。</p>
-          <div className="actor-list">
-            {publicObjects.map((actor) => <UnitCard actor={actor} mode={actor.side === "player" ? "teammate" : "enemyDm"} key={actor.id} />)}
-          </div>
-        </section>
-        <section className="panel">
-          <h2>DM操作</h2>
-          <div className="flow-buttons">
-            <button type="button" onClick={props.onStartScene}>推进场景</button>
-            <button type="button" onClick={props.onOverride}>公开线索</button>
-            <button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋</button>
-          </div>
-          <label>
-            DM 私有/广播备注
-            <textarea value={props.dmNote} onChange={(event) => props.setDmNote(event.target.value)} />
-          </label>
-        </section>
-      </div>
-      <DrawerToolbar activeDrawer={props.activeDrawer} setActiveDrawer={props.setActiveDrawer} role="dm" />
-      <DrawerLayer {...props} actor={props.state.actors[0]} role="dm" />
-    </section>
+            </section>
+          }
+          qiZone={
+            <section className="panel scene-board" style={{ height: "100%" }}>
+              <h2>共享情景舞台</h2>
+              <p>夜雨石桥，失镖血箱仍在对岸暗处。</p>
+              <div className="actor-list">
+                {publicObjects.map((actor) => <UnitCard actor={actor} mode={actor.side === "player" ? "teammate" : "enemyDm"} key={actor.id} />)}
+              </div>
+            </section>
+          }
+        />
+      }
+      right={
+        <RightCombatPanel
+          actions={<></>}
+          flowButtons={
+            <section className="panel">
+              <h2>DM操作</h2>
+              <div className="flow-buttons">
+                <button type="button" onClick={props.onStartScene}>推进场景</button>
+                <button type="button" onClick={props.onOverride}>公开线索</button>
+                <button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋</button>
+              </div>
+              <label>
+                DM 私有/广播备注
+                <textarea value={props.dmNote} onChange={(event) => props.setDmNote(event.target.value)} />
+              </label>
+            </section>
+          }
+        />
+      }
+      bottom={<PhaseActionBar state={props.state} />}
+      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={props.state.actors[0]} role="dm" /> : null}
+    />
   );
 }
 
@@ -908,38 +1003,58 @@ function DmCombatDesk(props: DeskProps & {
   const enemies = props.state.actors.filter((actor) => actor.side !== "player");
 
   return (
-    <section className="game-desk dm-combat-desk">
-      <GameModeHeader state={props.state} modeLabel="DM交锋主持台" />
-      <section className="dm-combat-grid">
-      <aside className="left-rail">
-        <ActorList title="玩家席位" actors={players} />
-        <ActorList title="敌人库" actors={enemies} />
-      </aside>
-      <section className="stage-column">
-        <RoundTimeline state={props.state} />
-        <CombatStage state={props.state} />
-        <QiZoneBoard
-          dice={props.state.dice}
-          activeActorId={props.session.selectedActorId ?? "pc-shen-qing"}
-          selectedDice={props.selectedDice}
-          slotDice={props.slotDice}
-          slotHint={props.slotHint}
-          phase={props.state.phase}
-          onToggleDie={props.toggleDie}
-          onAssignDieToSlot={props.assignDieToSlot}
-          onRemoveFromSlot={props.removeDieFromSlot}
-          onCommitRollResults={props.commitRollResults}
-          onRollDice={props.setRollDice}
+    <CombatShell
+      top={
+        <TopCombatBar
+          session={props.session}
+          state={props.state}
+          activeDrawer={props.activeDrawer}
+          setActiveDrawer={props.setActiveDrawer}
+          debugView={props.debugView}
+          setDebugView={props.setDebugView}
+          onHome={() => props.go("home")}
+          onReset={props.resetAll}
         />
-      </section>
-      <aside className="right-rail">
-        <DmControlPanel {...props} />
-        <BroadcastPreview state={props.state} />
-      </aside>
-      </section>
-      <DrawerToolbar activeDrawer={props.activeDrawer} setActiveDrawer={props.setActiveDrawer} role="dm" />
-      <DrawerLayer {...props} actor={players[0] ?? props.state.actors[0]} role="dm" />
-    </section>
+      }
+      left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
+      center={
+        <CenterCombatPanel
+          stage={<CombatStage state={props.state} />}
+          qiZone={
+            <QiZoneBoard
+              dice={props.state.dice}
+              activeActorId={props.session.selectedActorId ?? "pc-shen-qing"}
+              selectedDice={props.selectedDice}
+              slotDice={props.slotDice}
+              slotHint={props.slotHint}
+              phase={props.state.phase}
+              onToggleDie={props.toggleDie}
+              onAssignDieToSlot={props.assignDieToSlot}
+              onRemoveFromSlot={props.removeDieFromSlot}
+              onCommitRollResults={props.commitRollResults}
+              onRollDice={props.setRollDice}
+            />
+          }
+        />
+      }
+      right={
+        <RightCombatPanel
+          actions={<DmControlPanel {...props} />}
+          enemies={<BroadcastPreview state={props.state} />}
+          flowButtons={
+            <section className="panel">
+              <h2>敌人库</h2>
+              <div className="actor-list">
+                {enemies.map((enemy) => <UnitCard actor={enemy} mode="enemyDm" key={enemy.id} />)}
+              </div>
+            </section>
+          }
+          hint="DM 可查看全部隐藏信息"
+        />
+      }
+      bottom={<PhaseActionBar state={props.state} />}
+      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={players[0] ?? props.state.actors[0]} role="dm" /> : null}
+    />
   );
 }
 
@@ -961,11 +1076,12 @@ interface DeskProps {
   setRollDice: (dice: QiDie[]) => void;
   commitRollResults: (results: DiceRollResult[]) => void;
   toggleDie: (id: string) => void;
-  assignDieToSlot: (id: string, slot: "yin" | "yang") => void;
+  assignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
   removeDieFromSlot: (id: string) => void;
   declareFor: (actorId: string, targetId: string, moveId: string) => void;
   patch: (updater: (current: CombatState) => CombatState) => void;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
+  resetAll: () => void;
 }
 
 function GameModeHeader({ state, modeLabel }: { state: CombatState; modeLabel: string }) {
@@ -1393,7 +1509,7 @@ function QiZoneBoard({
   slotHint: string;
   phase: CombatState["phase"];
   onToggleDie: (id: string) => void;
-  onAssignDieToSlot: (id: string, slot: "yin" | "yang") => void;
+  onAssignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
   onRemoveFromSlot: (id: string) => void;
   onCommitRollResults: (results: DiceRollResult[]) => void;
   onRollDice: (dice: QiDie[]) => void;
@@ -1422,74 +1538,133 @@ function QiZoneBoard({
   }
 
   return (
-    <section className="zone-board qi-operation-panel qi-zone-horizontal qi-zone-3d-layout">
-      <div className="panel-title">
-        <img src={iconMap.qi} alt="" />
-        <h2>气骰操作台</h2>
+    <section className="qi-dice-zone">
+      {/* 临气区 — top 18% */}
+      <div className="qi-temp-area">
+        <span className="temp-label">临气区</span>
+        {tempDice.length > 0
+          ? tempDice.map((d) => (
+              <span key={d.id} style={{ color: "#f2c14e", fontSize: 12, fontWeight: 700 }}>
+                {d.label}({d.value}/{d.sides})
+              </span>
+            ))
+          : <span style={{ color: "rgba(247,231,187,0.3)", fontSize: 11 }}>暂无临时气骰</span>}
+        {slotHint ? (
+          <span style={{ color: "#f5d89a", fontSize: 11, marginLeft: "auto", fontStyle: "italic" }}>
+            {slotHint}
+          </span>
+        ) : null}
       </div>
-      {slotHint ? <p className="slot-hint">{slotHint}</p> : null}
-      <div className="qi-operation-board">
-        <div className="qi-board-status">
-          <span>左：阴槽</span>
-          <span>中：气海 / 临气槽</span>
-          <span>右：阳槽</span>
-          <span>当前行动者可拖动合法骰子</span>
+
+      {/* 阴槽 | 气海 | 阳槽 — middle 67% */}
+      <div className="qi-tray-row">
+        <div className={`qi-yin-slot${slottedIds.size > 0 ? " drop-active" : ""}`}>
+          <span className="slot-label">阴槽</span>
+          {slotDice.yin.length > 0 ? (
+            <span style={{ color: "rgba(100,160,200,0.8)", fontSize: 12, marginTop: 20 }}>
+              {slotDice.yin.length} 枚
+            </span>
+          ) : (
+            <span style={{ color: "rgba(100,160,200,0.3)", fontSize: 11, marginTop: 20 }}>
+              拖入阴骰
+            </span>
+          )}
         </div>
-        <div className="operation-dice-tray" aria-label="3D气骰底板：阴槽、气海、阳槽、临气槽">
-          <QiDiceTray
-            dice={operationDice}
-            rolling={inlineRolling}
-            onRollComplete={(results) => {
-              setInlineRolling(false);
-              onCommitRollResults(results);
-            }}
-            highlightedIds={selectedDice.filter((id) => operationDice.some((die) => die.id === id))}
-            selectedIds={selectedDice}
-            onSelectDie={onToggleDie}
-            canDragDie={canDrag}
-            slotDice={slotDice}
-            onAssignToSlot={onAssignDieToSlot}
-            onRemoveFromSlot={onRemoveFromSlot}
-            canInteract={!inlineRolling}
-          />
+
+        <div className="qi-hai-center">
+          <span className="hai-label">气海</span>
+          <div className="operation-dice-tray" aria-label="3D气骰底板：阴槽、气海、阳槽、临气槽" style={{ width: "100%", height: "100%" }}>
+            <QiDiceTray
+              dice={operationDice}
+              rolling={inlineRolling}
+              onRollComplete={(results) => {
+                setInlineRolling(false);
+                onCommitRollResults(results);
+              }}
+              highlightedIds={selectedDice.filter((id) => operationDice.some((die) => die.id === id))}
+              selectedIds={selectedDice}
+              onSelectDie={onToggleDie}
+              canDragDie={canDrag}
+              slotDice={slotDice}
+              onAssignToSlot={onAssignDieToSlot}
+              onRemoveFromSlot={onRemoveFromSlot}
+              canInteract={!inlineRolling}
+            />
+          </div>
         </div>
-        <div className="qi-board-counts">
-          <span>气海 {seaDice.length}</span>
-          <span>临气槽 {tempDice.length}</span>
-          <span>阴槽 {slotDice.yin.length}</span>
-          <span>阳槽 {slotDice.yang.length}</span>
-          <span>息库 {restDice.length}</span>
+
+        <div className={`qi-yang-slot${slottedIds.size > 0 ? " drop-active" : ""}`}>
+          <span className="slot-label">阳槽</span>
+          {slotDice.yang.length > 0 ? (
+            <span style={{ color: "rgba(212,150,80,0.8)", fontSize: 12, marginTop: 20 }}>
+              {slotDice.yang.length} 枚
+            </span>
+          ) : (
+            <span style={{ color: "rgba(212,150,80,0.3)", fontSize: 11, marginTop: 20 }}>
+              拖入阳骰
+            </span>
+          )}
         </div>
       </div>
-      <aside className="qi-side-rest">
-        <h3>息库</h3>
-        <QiDiceTray
-          dice={restDice}
-          rolling={false}
-          onRollComplete={() => undefined}
-          highlightedIds={[]}
-          selectedIds={[]}
-          compact
-          canInteract={false}
-        />
-      </aside>
-      {lockedDice.length > 0 ? (
-        <div className="locked-summary">
-          <span>已锁定：{lockedDice.map(dieLabel).join("、")}</span>
-        </div>
-      ) : null}
-      <details className="qi-pool-strip">
-        <summary>气池：{poolDice.length} 枚，点击展开查看</summary>
-        <div className="split-actions">
-          <button className="secondary-action" type="button" disabled={poolDice.length === 0 || inlineRolling} onClick={startInlineRoll}>
-            整体投掷入气海
+
+      {/* 气池/息库 — bottom 15% */}
+      <div className="qi-pool-strip">
+        <span className="pool-stat">
+          气海 <span className="stat-val">{seaDice.length}</span>
+        </span>
+        <span className="pool-stat">
+          阴槽 <span className="stat-val">{slotDice.yin.length}</span>
+        </span>
+        <span className="pool-stat">
+          阳槽 <span className="stat-val">{slotDice.yang.length}</span>
+        </span>
+        <span className="pool-stat">
+          息库 <span className="stat-val">{restDice.length}</span>
+        </span>
+        <span className="pool-stat">
+          气池 <span className="stat-val">{poolDice.length}</span>
+        </span>
+        {lockedDice.length > 0 ? (
+          <span className="pool-stat" style={{ color: "rgba(247,231,187,0.4)" }}>
+            锁气 <span className="stat-val">{lockedDice.length}</span>
+          </span>
+        ) : null}
+        <span style={{ marginLeft: "auto", display: "flex", gap: 6, flexShrink: 0 }}>
+          <button
+            className="btn btn-sm btn-secondary"
+            type="button"
+            disabled={poolDice.length === 0 || inlineRolling}
+            onClick={startInlineRoll}
+          >
+            投掷入海
           </button>
-          <button className="secondary-action" type="button" disabled={poolDice.length === 0} onClick={() => onRollDice(poolDice)}>
-            弹窗投掷备用
+          <button
+            className="btn btn-sm btn-secondary"
+            type="button"
+            disabled={poolDice.length === 0}
+            onClick={() => onRollDice(poolDice)}
+          >
+            弹窗投掷
           </button>
-        </div>
-        <div className="pool-dice-text">{poolDice.map(dieLabel).join("、") || "气池为空"}</div>
-      </details>
+          {(restDice.length > 0 || poolDice.length > 0 || lockedDice.length > 0) && (
+            <details style={{ display: "inline-flex", alignItems: "center" }}>
+              <summary style={{ fontSize: 11, color: "rgba(247,231,187,0.5)", cursor: "pointer", whiteSpace: "nowrap" }}>
+                详情
+              </summary>
+              <div style={{
+                position: "absolute", bottom: "100%", right: 0,
+                background: "rgba(9,9,8,0.96)", border: "1px solid rgba(232,198,126,0.28)",
+                borderRadius: 6, padding: "8px 10px", minWidth: 200, zIndex: 10,
+                fontSize: 11, color: "rgba(247,231,187,0.7)",
+              }}>
+                {poolDice.length > 0 && <div>气池：{poolDice.map(dieLabel).join("、")}</div>}
+                {restDice.length > 0 && <div>息库：{restDice.map(dieLabel).join("、")}</div>}
+                {lockedDice.length > 0 && <div style={{ color: "rgba(247,231,187,0.4)" }}>锁气：{lockedDice.map(dieLabel).join("、")}</div>}
+              </div>
+            </details>
+          )}
+        </span>
+      </div>
     </section>
   );
 }

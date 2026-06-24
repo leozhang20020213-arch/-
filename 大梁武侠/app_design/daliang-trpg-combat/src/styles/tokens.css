@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Design Tokens — Daliang TRPG Combat Desktop
+   Theme: Dark Wood Desk + Parchment Panels — Game-Table Feel
+   ========================================================================== */
+
+:root {
+  /* ---- Color System ---- */
+  --bg-deep:            #1a1410;
+  --bg-panel-dark:      #2a2218;
+  --bg-parchment:       #f5f0e8;
+  --bg-parchment-warm:  #faf5eb;
+  --ink-light:          #d4c8b8;
+  --ink-dark:           #2d1f14;
+  --ink-subtle:         #8a7a6a;
+  --ink-muted:          #5a5044;
+
+  /* ---- Momentum / Shi ---- */
+  --yang-die:           #d4843a;
+  --yin-die:            #3a5c7a;
+  --raw-die:            #6b6b6b;
+  --shi-yang:           #d4843a;
+  --shi-yin:            #3a5c7a;
+  --shi-he:             #6b8a5c;
+  --shi-harmony:        #c2a84e;
+  --shi-collapse:       #8b3a3a;
+  --shi-lost:           #6b6b6b;
+
+  /* ---- Vitality ---- */
+  --hp-red:             #c23a2e;
+  --shield-green:       #4a7a5c;
+  --burst-gold:         #d4843a;
+  --crisis-red:         #c23a2e;
+  --resolve-blue:       #4a7a9e;
+
+  /* ---- Interactive ---- */
+  --btn-primary:        #5c3a1e;
+  --btn-hover:          #7b4f2c;
+  --btn-danger:         #8b2a2a;
+  --disabled:           #5a5044;
+  --divider:            #3a3028;
+  --border-panel:       rgba(86, 61, 37, 0.28);
+  --border-card:        rgba(107, 75, 45, 0.32);
+  --border-accent:      #c5ad8a;
+  --card-glow:          rgba(212, 132, 58, 0.45);
+
+  /* ---- Shadows ---- */
+  --shadow-card:        0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover:  0 8px 28px rgba(0, 0, 0, 0.38);
+  --shadow-panel:       0 6px 24px rgba(0, 0, 0, 0.3);
+  --shadow-drawer:     -8px 0 40px rgba(0, 0, 0, 0.45);
+  --shadow-modal:       0 26px 90px rgba(0, 0, 0, 0.52);
+
+  /* ---- Transitions ---- */
+  --ease-lift:          200ms ease;
+  --ease-shi:           500ms ease;
+  --ease-drawer:        280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-toast:         240ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-dialog:        200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Typography ---- */
+  font-family:
+    "Cinzel", "EB Garamond", "Noto Serif SC",
+    "Microsoft YaHei", "PingFang SC", "Noto Sans SC",
+    Georgia, "Times New Roman", serif;
+  color: var(--ink-dark);
+  background: var(--bg-deep);
+
+  /* ======== DESKTOP WINDOW LAYOUT TOKENS ======== */
+
+  /* ---- Window Structure Heights ---- */
+  --title-bar-height:   48px;
+  --toolbar-height:     56px;
+  --round-bar-height:   64px;
+  --status-bar-height:  28px;
+  /* workspace fills remaining: 100vh - 48 - 56 - 64 - 28 */
+
+  /* ---- Column Proportions (of main workspace width) ---- */
+  --left-col-pct:       18%;
+  --center-col-pct:     58%;
+  --right-col-pct:      24%;
+
+  /* ---- Reference Widths @1600px (after margins) ---- */
+  --left-panel-ref:     280px;
+  --center-panel-ref:   920px;
+  --right-panel-ref:    360px;
+
+  /* ---- Minimum Widths @1366px ---- */
+  --left-panel-min:     240px;
+  --center-panel-min:   760px;
+  --right-panel-min:    320px;
+
+  /* ---- Workspace Spacing ---- */
+  --outer-margin:       16px;
+  --panel-gap:          12px;
+  --panel-padding:      12px;
+  --widget-gap:         8px;
+
+  /* ---- Font Sizes (Windows Desktop) ---- */
+  --fs-title:           18px;
+  --fs-panel-title:     16px;
+  --fs-body:            13px;
+  --fs-helper:          12px;
+  --fs-button:          13px;
+  --fs-app-name:        20px;
+
+  /* ---- Border Radius ---- */
+  --radius-card:        6px;
+  --radius-panel:       8px;
+  --radius-button:      6px;
+  --radius-drawer:      8px;
+  --radius-dialog:      8px;
+
+  /* ---- Z-Index Layers ---- */
+  --z-base:             1;
+  --z-panel:            2;
+  --z-sticky:           10;
+  --z-drawer:           50;
+  --z-dialog-backdrop:  55;
+  --z-dialog:           60;
+  --z-toast:            70;
+  --z-tooltip:          80;
+
+  /* ---- Drawer & Dialog Sizes ---- */
+  --drawer-width:       380px;
+  --drawer-dm-width:    520px;
+  --dialog-min:         360px;
+  --dialog-max:         420px;
+  --dialog-dm-width:    520px;
+
+  /* ---- Toolbar Button ---- */
+  --toolbar-btn-height: 36px;
+  --toolbar-btn-min-w:  72px;
+  --toolbar-icon-size:  20px;
+  --toolbar-btn-gap:    8px;
+
+  /* ---- Qi Zone Internal Proportions ---- */
+  --qi-temp-pct:        18%;
+  --qi-tray-row-pct:    67%;
+  --qi-pool-pct:        15%;
+  --qi-yin-pct:         22%;
+  --qi-hai-pct:         56%;
+  --qi-yang-pct:        22%;
+}

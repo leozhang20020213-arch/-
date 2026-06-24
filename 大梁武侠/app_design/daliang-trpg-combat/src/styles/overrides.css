@@ -1,0 +1,108 @@
+/* ==========================================================================
+   R8: Desktop Window Layout — Force overrides over legacy styles.css
+   These MUST load AFTER styles.css to win the cascade.
+   ========================================================================== */
+
+/* Force app-shell to use 5-row grid, not legacy flex column */
+.app-shell {
+  display: grid !important;
+  grid-template-rows:
+    var(--title-bar-height)
+    var(--toolbar-height)
+    var(--round-bar-height)
+    1fr
+    var(--status-bar-height) !important;
+  grid-template-columns: 1fr !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  flex-direction: unset !important;
+}
+
+/* Kill legacy game-desk centering and constraints */
+.game-desk {
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+/* Suppress legacy drawer-toolbar inside game-desk (now handled by MainToolbar) */
+.game-desk > .drawer-toolbar {
+  display: none !important;
+}
+
+/* Suppress legacy qi-zone layout (replaced by .qi-dice-zone) */
+.qi-zone-horizontal.qi-zone-3d-layout {
+  display: block !important;
+  height: auto !important;
+  min-height: unset !important;
+  max-height: none !important;
+  grid-template-rows: none !important;
+  grid-template-columns: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* The new qi-dice-zone takes over */
+.qi-dice-zone {
+  display: grid !important;
+}
+
+/* Legacy operation-dice-tray sizing → let new layout control it */
+.operation-dice-tray {
+  min-height: unset !important;
+  height: 100% !important;
+}
+
+.operation-dice-tray .qi-dice-tray-container {
+  min-height: unset !important;
+  height: 100% !important;
+}
+
+/* Legacy qi-side-rest → hidden (息库 now in pool strip) */
+.qi-side-rest {
+  display: none !important;
+}
+
+/* Legacy combat/screen grids → let new MainWorkspace control columns */
+.combat-main-grid,
+.dm-combat-grid,
+.scene-layout,
+.dm-scene-grid {
+  display: block !important;
+  grid-template-columns: none !important;
+  overflow: visible !important;
+}
+
+/* Hide legacy round-timeline (replaced by RoundStatusBar) */
+.round-timeline,
+.timepoint-strip {
+  display: none !important;
+}
+
+/* Legacy game-mode header → hidden (replaced by RoundStatusBar + TitleBar) */
+.mode-header {
+  display: none !important;
+}
+
+/* Ensure main-workspace enforces its 3-column grid */
+.main-workspace {
+  display: grid !important;
+  overflow: hidden !important;
+  min-height: 0 !important;
+}
+
+/* Ensure body never scrolls */
+body {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
+/* Remove legacy panel padding on app-shell (panels handle their own) */
+.app-shell > .panel,
+.app-shell > section {
+  padding: 0;
+}
