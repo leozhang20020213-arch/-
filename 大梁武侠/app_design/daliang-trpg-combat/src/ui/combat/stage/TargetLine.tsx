@@ -31,7 +31,6 @@ const BAND_COLORS: Record<TargetDistanceKey, string> = {
   extreme: "rgba(130,130,130,0.6)",
 };
 
-/** Band → CSS-friendly gradient colors for the line */
 const BAND_GLOW: Record<TargetDistanceKey, string> = {
   touch:   "rgba(220,80,60,0.35)",
   close:   "rgba(230,150,70,0.3)",
@@ -43,17 +42,14 @@ const BAND_GLOW: Record<TargetDistanceKey, string> = {
 /**
  * SVG target line — draws from the acting actor to the selected target.
  *
+ * SIZED FOR viewBox="0 0 100 100" — all values are in viewBox units.
+ * Font sizes ~3.2, pill ~18×8, lines ~0.6–2 stroke.
+ *
  * Visual variants:
  *   - Valid distance: colored solid line with arrowhead, band-colored label pill
  *   - Invalid distance: red dashed line with ⚠ warning pill and reason
  *   - Hover: SVG `<title>` tooltip
  *   - `pointer-events: none` so it never blocks clicks on combatant nodes
- *
- * The line has clear directionality:
- *   - Glow under-line for depth
- *   - Solid main line
- *   - Arrowhead at the target end
- *   - Large distance label pill at midpoint
  */
 export const TargetLine: FC<TargetLineProps> = ({
   x1,
@@ -90,7 +86,6 @@ export const TargetLine: FC<TargetLineProps> = ({
     ? "rgba(250,240,200,0.95)"
     : "rgba(255,160,160,0.95)";
 
-  // Build hover tooltip text
   const hoverText = [
     tooltip,
     fromName && toName ? `${fromName} → ${toName}` : "",
@@ -98,8 +93,14 @@ export const TargetLine: FC<TargetLineProps> = ({
     !isValid ? `⚠ ${invalidReason ?? "距离不合法"}` : "",
   ].filter(Boolean).join("｜");
 
-  // Arrowhead size scales with validity
-  const arrowSize = isValid ? 3.5 : 3;
+  // Arrowhead size scaled for viewBox 0–100
+  const arrowSize = isValid ? 1.6 : 1.3;
+
+  // Pill dimensions (compact — viewBox-scale)
+  const pillW = 17;
+  const pillH = 8;
+  const pillRx = 3;
+  const pillTextY = my + 2.8;
 
   return (
     <g
@@ -114,16 +115,16 @@ export const TargetLine: FC<TargetLineProps> = ({
       <line
         x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={glowColor}
-        strokeWidth="5"
+        strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.6"
+        opacity="0.5"
       />
 
       {/* Mid glow */}
       <line
         x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={glowColor}
-        strokeWidth="2.5"
+        strokeWidth="1"
         strokeLinecap="round"
       />
 
@@ -131,12 +132,12 @@ export const TargetLine: FC<TargetLineProps> = ({
       <line
         x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={strokeColor}
-        strokeWidth={isValid ? "2" : "2.2"}
-        strokeDasharray={isValid ? "none" : "8 4"}
+        strokeWidth={isValid ? "0.7" : "0.8"}
+        strokeDasharray={isValid ? "none" : "3 1.5"}
         strokeLinecap="round"
       />
 
-      {/* Directional dots along the line (every ~20% of length) */}
+      {/* Directional dots along the line (every ~25% of length) */}
       {isValid && (
         <>
           {[0.25, 0.5, 0.75].map((t) => {
@@ -147,7 +148,7 @@ export const TargetLine: FC<TargetLineProps> = ({
                 key={t}
                 cx={dx}
                 cy={dy}
-                r="0.8"
+                r="0.3"
                 fill={strokeColor}
                 opacity="0.5"
               />
@@ -168,34 +169,34 @@ export const TargetLine: FC<TargetLineProps> = ({
         <>
           {/* Pill background */}
           <rect
-            x={mx - 26}
-            y={my - 12}
-            width="52"
-            height="24"
-            rx="7"
+            x={mx - pillW / 2}
+            y={my - pillH / 2}
+            width={pillW}
+            height={pillH}
+            rx={pillRx}
             fill={labelBg}
             stroke={labelBorder}
-            strokeWidth="1.2"
+            strokeWidth="0.5"
           />
           {/* Pill glow */}
           <rect
-            x={mx - 26}
-            y={my - 12}
-            width="52"
-            height="24"
-            rx="7"
+            x={mx - pillW / 2}
+            y={my - pillH / 2}
+            width={pillW}
+            height={pillH}
+            rx={pillRx}
             fill="none"
             stroke={glowColor}
-            strokeWidth="3"
+            strokeWidth="1.2"
             opacity="0.5"
           />
           {/* Label text */}
           <text
             x={mx}
-            y={my + 6}
+            y={pillTextY}
             textAnchor="middle"
             fill={labelTextColor}
-            fontSize="10"
+            fontSize="3.2"
             fontWeight="900"
             fontFamily="'Cinzel', 'EB Garamond', 'Noto Serif SC', 'Microsoft YaHei', serif"
           >
@@ -207,23 +208,22 @@ export const TargetLine: FC<TargetLineProps> = ({
       {/* Warning indicator for invalid distance */}
       {!isValid && (
         <>
-          {/* Warning pill above the line */}
           <rect
-            x={mx - 32}
-            y={my - 30}
-            width="64"
-            height="18"
-            rx="5"
+            x={mx - 12}
+            y={my - pillH / 2 - 10}
+            width="24"
+            height="7"
+            rx="2.5"
             fill="rgba(40,10,10,0.92)"
             stroke="rgba(220,60,50,0.7)"
-            strokeWidth="1"
+            strokeWidth="0.4"
           />
           <text
             x={mx}
-            y={my - 17}
+            y={my - pillH / 2 - 4.2}
             textAnchor="middle"
             fill="rgba(255,140,140,0.95)"
-            fontSize="9"
+            fontSize="2.8"
             fontWeight="800"
           >
             ⚠ 距离不符
@@ -255,7 +255,6 @@ function computeArrowhead(
   const baseX = x2 - ux * size * 2;
   const baseY = y2 - uy * size * 2;
 
-  // Wider arrowhead for more visibility
   const wing1X = baseX + px * 1.3;
   const wing1Y = baseY + py * 1.3;
   const wing2X = baseX - px * 1.3;

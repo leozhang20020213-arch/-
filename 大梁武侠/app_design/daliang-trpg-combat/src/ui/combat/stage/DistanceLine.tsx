@@ -9,13 +9,14 @@ export interface DistanceLineProps {
 /**
  * SVG distance line between two combatant nodes.
  * Draws a colored line with the distance-band label in the middle.
+ *
+ * SIZED FOR viewBox="0 0 100 100" — all values in viewBox units.
  */
 export const DistanceLine: FC<DistanceLineProps> = ({ edge, combatants }) => {
   const fromNode = combatants.find((c) => c.id === edge.from);
   const toNode = combatants.find((c) => c.id === edge.to);
   if (!fromNode || !toNode) return null;
 
-  // Coordinates are in percentage — we use SVG viewBox 0 0 100 100
   const x1 = fromNode.x;
   const y1 = fromNode.y;
   const x2 = toNode.x;
@@ -33,46 +34,45 @@ export const DistanceLine: FC<DistanceLineProps> = ({ edge, combatants }) => {
   };
   const stroke = bandColors[edge.band] ?? "rgba(212,200,184,0.4)";
 
+  // Pill dimensions scaled for viewBox 0–100
+  const pillW = 12;
+  const pillH = 6;
+  const pillRx = 2;
+
   return (
     <g className="distance-line-group">
       {/* Glow under-line */}
       <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
+        x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={stroke}
-        strokeWidth="0.6"
-        strokeDasharray={edge.band === "远距" || edge.band === "离场" ? "3 3" : "none"}
+        strokeWidth="0.25"
+        strokeDasharray={edge.band === "远距" || edge.band === "离场" ? "1.2 1.2" : "none"}
         opacity="0.5"
       />
       {/* Main line */}
       <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
+        x1={x1} y1={y1} x2={x2} y2={y2}
         stroke={stroke}
-        strokeWidth="1.2"
-        strokeDasharray={edge.band === "远距" || edge.band === "离场" ? "3 3" : "none"}
+        strokeWidth="0.5"
+        strokeDasharray={edge.band === "远距" || edge.band === "离场" ? "1.2 1.2" : "none"}
       />
-      {/* Midpoint label */}
+      {/* Midpoint label pill */}
       <rect
-        x={mx - 14}
-        y={my - 8}
-        width="28"
-        height="16"
-        rx="4"
+        x={mx - pillW / 2}
+        y={my - pillH / 2}
+        width={pillW}
+        height={pillH}
+        rx={pillRx}
         fill="rgba(20,16,10,0.85)"
         stroke={stroke}
-        strokeWidth="0.8"
+        strokeWidth="0.3"
       />
       <text
         x={mx}
-        y={my + 4}
+        y={my + 2}
         textAnchor="middle"
         fill="rgba(247,231,187,0.9)"
-        fontSize="6"
+        fontSize="2.4"
         fontWeight="700"
       >
         {edge.band}
