@@ -1,0 +1,353 @@
+/* ==========================================================================
+   Tactical Combat Stage — HTML/SVG battlefield
+   Replaces old cropped Phaser board with positioned nodes + SVG distance lines
+   ========================================================================== */
+
+/* ---- Tactical Stage Container ---- */
+.tactical-stage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: 6px;
+  background: #0d0a06;
+}
+
+/* ---- Stage Header ---- */
+.tactical-stage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(20, 16, 10, 0.95), rgba(15, 12, 8, 0.9));
+  border-bottom: 1px solid rgba(107, 75, 45, 0.15);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.stage-scene-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f5e6c8;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.stage-scene-tags {
+  display: flex;
+  gap: 6px;
+}
+
+.stage-tag {
+  padding: 2px 8px;
+  border: 1px solid rgba(107, 75, 45, 0.3);
+  border-radius: 999px;
+  background: rgba(42, 34, 24, 0.6);
+  color: var(--ink-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- Battlefield ---- */
+.tactical-battlefield {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Atmospheric background */
+.battlefield-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ground-texture {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(58, 92, 122, 0.08), transparent 55%),
+    radial-gradient(ellipse at 70% 50%, rgba(212, 132, 58, 0.06), transparent 55%),
+    linear-gradient(180deg, #0a0806 0%, #100d09 40%, #0d0b08 100%);
+}
+
+.rain-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      92deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.015) 2px,
+      rgba(255, 255, 255, 0.015) 4px
+    );
+  opacity: 0.5;
+}
+
+/* ---- SVG Distance Lines ---- */
+.distance-svg-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---- Combatant Layer ---- */
+.combatant-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Combatant Node
+   ========================================================================== */
+.combatant-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 110px;
+  padding: 8px;
+  border: 1px solid rgba(107, 75, 45, 0.25);
+  border-radius: 6px;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 25, 18, 0.94) 0%,
+    rgba(22, 18, 13, 0.92) 100%
+  );
+  cursor: pointer;
+  pointer-events: auto;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 150ms ease;
+  z-index: 3;
+}
+
+.combatant-node:hover {
+  border-color: rgba(212, 132, 58, 0.5);
+  box-shadow: 0 0 14px rgba(212, 132, 58, 0.2);
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.combatant-node.selected {
+  border-color: var(--yang-die);
+  box-shadow:
+    0 0 0 2px rgba(212, 132, 58, 0.45),
+    0 0 18px rgba(212, 132, 58, 0.25);
+}
+
+.combatant-node.dying {
+  border-color: rgba(194, 58, 46, 0.5);
+  opacity: 0.75;
+}
+
+/* Avatar */
+.combatant-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(107, 75, 45, 0.35);
+  overflow: hidden;
+  background: rgba(42, 34, 24, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.combatant-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.combatant-avatar-placeholder {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink-light);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Info */
+.combatant-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.combatant-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5e6c8;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* HP bar */
+.combatant-hp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.combatant-hp-bar {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  overflow: hidden;
+}
+
+.combatant-hp-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 400ms ease;
+}
+
+.combatant-hp-text {
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Momentum pill */
+.combatant-momentum {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.combatant-momentum.shi-yin {
+  background: rgba(58, 92, 122, 0.8);
+  color: #c8d8e8;
+  border-color: rgba(58, 92, 122, 0.6);
+}
+.combatant-momentum.shi-yang {
+  background: rgba(212, 132, 58, 0.8);
+  color: #fce0c0;
+  border-color: rgba(212, 132, 58, 0.6);
+}
+.combatant-momentum.shi-he {
+  background: rgba(107, 138, 92, 0.8);
+  color: #d0e8c8;
+  border-color: rgba(107, 138, 92, 0.6);
+}
+.combatant-momentum.shi-harmony {
+  background: rgba(194, 168, 78, 0.8);
+  color: #faf0d0;
+  border-color: rgba(194, 168, 78, 0.6);
+  box-shadow: 0 0 6px rgba(194, 168, 78, 0.3);
+}
+.combatant-momentum.shi-collapse {
+  background: rgba(139, 58, 58, 0.8);
+  color: #f8d0d0;
+  border-color: rgba(139, 58, 58, 0.6);
+}
+.combatant-momentum.shi-lost {
+  background: rgba(107, 107, 107, 0.7);
+  color: #d0d0d0;
+  border-color: rgba(107, 107, 107, 0.5);
+}
+
+/* Status badges */
+.combatant-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+}
+
+.combatant-status-badge {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(194, 58, 46, 0.5);
+  color: #fdd;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Dying overlay */
+.combatant-dying-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(139, 26, 26, 0.35);
+  border-radius: 6px;
+  color: #faa;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Scene Objective Mini
+   ========================================================================== */
+.scene-objective-mini {
+  display: flex;
+  gap: 12px;
+  padding: 6px 12px;
+  background: rgba(15, 12, 8, 0.9);
+  border-top: 1px solid rgba(107, 75, 45, 0.12);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.objective-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.objective-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-subtle);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.objective-bar-wrap {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(107, 75, 45, 0.2);
+  overflow: hidden;
+}
+
+.objective-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #c8943e, #e0b050);
+  transition: width 500ms ease;
+}
+
+.objective-nums {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-subtle);
+  flex-shrink: 0;
+}

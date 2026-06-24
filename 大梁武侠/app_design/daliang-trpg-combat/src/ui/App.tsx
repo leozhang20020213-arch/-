@@ -29,8 +29,7 @@ import {
 } from "../combat/storage";
 import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, QiDie, QiZone } from "../combat/types";
 import { createLanClient, type LanClient, type LanConnectionStatus } from "../net/lanClient";
-import { PhaserCombatBoard } from "../game/PhaserCombatBoard";
-import type { CombatBoardSnapshot } from "../game/combatScene";
+// PhaserCombatBoard replaced by TacticalCombatStage in PHASE2
 import { QiDiceTray } from "../dice3d/QiDiceTray";
 import { QiDiceRollOverlay } from "../dice3d/QiDiceRollOverlay";
 import type { DiceRollResult } from "../dice3d/diceTypes";
@@ -48,6 +47,8 @@ import { LeftCombatPanel } from "./combat/LeftCombatPanel";
 import { CenterCombatPanel } from "./combat/CenterCombatPanel";
 import { RightCombatPanel } from "./combat/RightCombatPanel";
 import { PhaseActionBar } from "./combat/PhaseActionBar";
+import { CombatStage as TacticalCombatStage } from "./combat/stage/CombatStage";
+import { buildStageData } from "../data/mockCombatData";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -116,6 +117,7 @@ export function App() {
   const [lanDetail, setLanDetail] = useState("");
   const [rollDice, setRollDice] = useState<QiDie[] | null>(null);
   const [prompt, setPrompt] = useState<{ title: string; message: string } | null>(null);
+  const [selectedCombatantId, setSelectedCombatantId] = useState<string | undefined>();
   const lanClientRef = useRef<LanClient | null>(null);
 
   const playerActorId = session.selectedActorId ?? "pc-shen-qing";
@@ -323,6 +325,8 @@ export function App() {
     patch,
     go,
     resetAll,
+    selectedCombatantId,
+    setSelectedCombatantId,
   };
 
   const isDeskRoute =
@@ -867,7 +871,7 @@ function PlayerCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={actor} state={props.state} />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
             <QiZoneBoard
               dice={props.state.dice.filter((die) => die.ownerId === actor.id)}
@@ -1019,7 +1023,7 @@ function DmCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} onSelect={props.setSelectedCombatantId} />}
           qiZone={
             <QiZoneBoard
               dice={props.state.dice}
@@ -1082,6 +1086,8 @@ interface DeskProps {
   patch: (updater: (current: CombatState) => CombatState) => void;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
   resetAll: () => void;
+  selectedCombatantId: string | undefined;
+  setSelectedCombatantId: (id: string | undefined) => void;
 }
 
 function GameModeHeader({ state, modeLabel }: { state: CombatState; modeLabel: string }) {
@@ -1360,66 +1366,19 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
   );
 }
 
-function CombatStage({ state }: { state: CombatState }) {
-  const players = state.actors.filter((actor) => actor.side === "player");
-  const enemies = state.actors.filter((actor) => actor.side !== "player");
-  const snapshot = createCombatBoardSnapshot(state);
-
+function CombatStage({ state, selectedId, onSelect }: {
+  state: CombatState;
+  selectedId?: string;
+  onSelect: (id: string) => void;
+}) {
+  const stageData = buildStageData(state);
   return (
-    <section className="stage">
-      <div className="ink-sun" />
-      <div className="stage-header">
-        <div>
-          <p className="eyebrow">共享交锋舞台</p>
-          <h2>{state.sceneName}</h2>
-        </div>
-      </div>
-      <PhaserCombatBoard snapshot={snapshot} onSelectUnit={() => undefined} />
-      <div className="fighters">
-        <FighterGroup title="玩家方" actors={players} />
-        <div className="versus">交锋</div>
-        <FighterGroup title="敌方 / 压力" actors={enemies} />
-      </div>
-      <DistanceLines state={state} />
-      <div className="track-row">
-        {state.tracks.map((track) => (
-          <div className="track" key={track.id}>
-            <span>{track.name}</span>
-            <meter min={0} max={track.max} value={track.value} />
-            <small>{track.value}/{track.max}</small>
-          </div>
-        ))}
-      </div>
-      {state.pendingAction ? <PendingPreview state={state} /> : <p className="empty-state">当前没有待结算宣言。</p>}
-    </section>
+    <TacticalCombatStage
+      data={stageData}
+      selectedId={selectedId}
+      onSelectCombatant={onSelect}
+    />
   );
-}
-
-function createCombatBoardSnapshot(state: CombatState): CombatBoardSnapshot {
-  const action = state.pendingAction;
-  const actor = action ? state.actors.find((item) => item.id === action.actorId) : undefined;
-  const target = action ? state.actors.find((item) => item.id === action.targetId) : undefined;
-  const move = actor && action ? actor.moves.find((item) => item.id === action.moveId) : undefined;
-  return {
-    sceneName: state.sceneName,
-    units: state.actors.map((actorItem) => ({
-      id: actorItem.id,
-      name: actorItem.name,
-      side: actorItem.side,
-      hp: actorItem.hp,
-      maxHp: actorItem.maxHp,
-      momentum: actorItem.momentum,
-      statuses: publicStatuses(actorItem).map((status) => status.name),
-    })),
-    distances: state.distances.map((distance) => ({
-      id: distance.id,
-      fromActorId: distance.fromActorId,
-      toActorId: distance.toActorId,
-      band: distance.band,
-      entangled: distance.entangled,
-    })),
-    pendingLabel: action ? `${actor?.name ?? "?"} → ${target?.name ?? "?"}：${move?.name ?? "待定"}` : "等待宣言",
-  };
 }
 
 function DistanceLines({ state }: { state: CombatState }) {
