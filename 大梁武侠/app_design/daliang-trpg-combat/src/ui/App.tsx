@@ -868,6 +868,32 @@ function PlayerCombatDesk(props: DeskProps & {
     ? enemies.find((e) => e.id === props.selectedCombatantId)
     : undefined;
 
+  // Phase 9: coordinate dice store with combat phase transitions
+  const {
+    initStarterDice,
+    getQiSeaDice,
+    state: diceState,
+    resolveDeclaration: diceResolveDeclaration,
+    resetDeclaration: diceResetDeclaration,
+  } = useDiceStore();
+
+  /** Start scene: init dice if empty, roll all qi sea dice, change phase */
+  function handleStartScene() {
+    if (getQiSeaDice().length === 0) {
+      initStarterDice();
+    }
+    // Phase change via combat engine
+    props.patch((current) => enterScene(current));
+  }
+
+  /** Resolve outcome: move locked dice to rest pool */
+  function handleResolve() {
+    if (diceState.declarationStatus === "locked") {
+      diceResolveDeclaration();
+    }
+    props.patch((current) => applyOutcome(current));
+  }
+
   return (
     <CombatShell
       top={
@@ -923,9 +949,9 @@ function PlayerCombatDesk(props: DeskProps & {
         <PhasePromptBar
           state={props.state}
           isDM={false}
-          onStartScene={props.onStartScene}
-          onEnterDeclaration={props.onStartScene}
-          onResolveResult={props.onOutcome}
+          onStartScene={handleStartScene}
+          onEnterDeclaration={handleStartScene}
+          onResolveResult={handleResolve}
         />
       }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
@@ -1030,6 +1056,32 @@ function DmCombatDesk(props: DeskProps & {
     ? enemies.find((e) => e.id === props.selectedCombatantId)
     : undefined;
 
+  // Phase 9: coordinate dice store with combat phase transitions
+  const {
+    initStarterDice,
+    getQiSeaDice,
+    state: diceState,
+    resolveDeclaration: diceResolveDeclaration,
+  } = useDiceStore();
+
+  function handleStartScene() {
+    if (getQiSeaDice().length === 0) {
+      initStarterDice();
+    }
+    props.patch((current) => enterScene(current));
+  }
+
+  function handleResolve() {
+    if (diceState.declarationStatus === "locked") {
+      diceResolveDeclaration();
+    }
+    props.patch((current) => applyOutcome(current));
+  }
+
+  function handleNextRound() {
+    props.patch((current) => endRound(current));
+  }
+
   return (
     <CombatShell
       top={
@@ -1117,13 +1169,13 @@ function DmCombatDesk(props: DeskProps & {
         <PhasePromptBar
           state={props.state}
           isDM
-          onStartScene={props.onStartScene}
-          onEnterDeclaration={props.onStartScene}
+          onStartScene={handleStartScene}
+          onEnterDeclaration={handleStartScene}
           onIntercept={props.onIntercept}
           onReact={props.onReact}
           onSkipResponse={props.onForm}
-          onResolveResult={props.onOutcome}
-          onNextRound={props.onEndRound}
+          onResolveResult={handleResolve}
+          onNextRound={handleNextRound}
         />
       }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={players[0] ?? props.state.actors[0]} role="dm" /> : null}
