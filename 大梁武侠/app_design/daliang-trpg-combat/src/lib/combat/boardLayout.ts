@@ -28,8 +28,8 @@ const SIDE_X: Record<CombatSide, number> = {
 
 /**
  * Card height in viewBox units (0–100).
- * Cards are ~40px tall (compact 2-row layout); battlefield is ~460px at 1080p.
- * 40 / 460 × 100 ≈ 8.7. We use 12 to guarantee no overlap with safety margin.
+ * Cards are ~40px tall (compact 2-row); battlefield is ~425px at 1080p (44%).
+ * 40 / 425 × 100 ≈ 9.4. We use 12 for safety margin (no overlap).
  */
 const CARD_V_UNITS = 12;
 

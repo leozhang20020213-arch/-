@@ -101,37 +101,37 @@ export const MOCK_STAGE_DATA: StageData = {
   sceneName: "旧堤仓",
   sceneTags: ["雨夜", "仓门", "堤岸", "货堆"],
   combatants: [
-    // Player side — 2 actors → y=[30, 70]
+    // Player side — 2 actors → y=[44, 56] (CARD_V_UNITS=12)
     {
       id: "pc-shen-qing", name: "沈青", side: "player",
       hp: 32, maxHp: 40, momentum: "阴盛", statuses: [],
-      x: 15, y: 30, slotId: "player-slot-0",
+      x: 15, y: 44, slotId: "player-slot-0",
     },
     {
       id: "pc-wei", name: "魏长兴", side: "player",
       hp: 38, maxHp: 45, momentum: "阳盛", statuses: [],
-      x: 15, y: 70, slotId: "player-slot-1",
+      x: 15, y: 56, slotId: "player-slot-1",
     },
-    // Enemy side — 4 actors → y=[10, 37, 63, 90]
+    // Enemy side — 4 actors → y=[32, 44, 56, 68]
     {
       id: "enemy-short-blade", name: "短兵客", side: "enemy",
       hp: 28, maxHp: 45, momentum: "阳盛", statuses: ["破口"],
-      x: 85, y: 10, slotId: "enemy-slot-0",
+      x: 85, y: 32, slotId: "enemy-slot-0",
     },
     {
       id: "enemy-porter", name: "黑衣脚夫", side: "enemy",
       hp: 20, maxHp: 30, momentum: "失势", statuses: ["流血"],
-      x: 85, y: 37, slotId: "enemy-slot-1",
+      x: 85, y: 44, slotId: "enemy-slot-1",
     },
     {
       id: "enemy-lookout", name: "望风探子", side: "enemy",
       hp: 24, maxHp: 35, momentum: "阴盛", statuses: ["迟滞"],
-      x: 85, y: 63, slotId: "enemy-slot-2",
+      x: 85, y: 56, slotId: "enemy-slot-2",
     },
     {
       id: "enemy-archer", name: "暗处弓手", side: "enemy",
       hp: 18, maxHp: 25, momentum: "合势", statuses: [],
-      x: 85, y: 90, slotId: "enemy-slot-3",
+      x: 85, y: 68, slotId: "enemy-slot-3",
     },
   ],
   distances: [
