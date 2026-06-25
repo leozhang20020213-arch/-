@@ -1,0 +1,136 @@
+{
+  "project": "大梁江湖TRPG",
+  "date": "2026年6月24日",
+  "database_package": "大梁江湖TRPG_数据库扩充包_第二批合并版_2026年6月24日.xlsx / zip",
+  "total_entries": 1731,
+  "principles": [
+    "规则书是解释层，数据库是条目与平衡底本，App是记录与校验层。",
+    "所有数据库表都必须进入统一Registry，不允许只接入招式、武器等少数表。",
+    "所有规则对象必须可检索、可详情展示、可被角色/DM/交锋引擎引用。",
+    "旧链式前置、命中槽、夺势、独立响应池等旧口径不得重新引入。"
+  ],
+  "tables": [
+    {
+      "sheet": "00_README",
+      "range": "A1:C6",
+      "role": "说明页",
+      "integration": "只读展示/版本说明"
+    },
+    {
+      "sheet": "01_扩充总览",
+      "total": 1731,
+      "role": "总览统计",
+      "integration": "数据健康面板、版本统计"
+    },
+    {
+      "sheet": "02_招式主表",
+      "total": 324,
+      "id": "招式ID",
+      "type": "MoveEntry",
+      "integration": "玩家/敌人正式出手、法门、招式详情、成招校验"
+    },
+    {
+      "sheet": "03_响应挂载",
+      "total": 295,
+      "id": "挂载ID",
+      "type": "ReactionMount",
+      "integration": "截击/应招窗口、招式详情反查、敌人响应"
+    },
+    {
+      "sheet": "04_武器库",
+      "total": 168,
+      "id": "武器ID",
+      "type": "WeaponEntry",
+      "integration": "装备栏、装备许可、持握方式、装备骰来源"
+    },
+    {
+      "sheet": "05_护具器具",
+      "total": 96,
+      "id": "器具ID/装备ID",
+      "type": "GearToolEntry",
+      "integration": "护具、佩饰、器具、文书物、奇物入口"
+    },
+    {
+      "sheet": "06_状态库",
+      "total": 120,
+      "id": "状态ID",
+      "type": "StatusEntry",
+      "integration": "状态栏、落果写入、衰减/解除入口"
+    },
+    {
+      "sheet": "07_药物资源",
+      "total": 120,
+      "id": "药物ID",
+      "type": "MedicineEntry",
+      "integration": "药物栏、取物/使用、临时骰、治疗/毒药"
+    },
+    {
+      "sheet": "08_动景库",
+      "total": 116,
+      "id": "动景ID",
+      "type": "SceneElementEntry",
+      "integration": "DM场景轨、危机/解密、动景变化"
+    },
+    {
+      "sheet": "09_敌人模板",
+      "total": 116,
+      "id": "敌人ID",
+      "type": "EnemyTemplate",
+      "integration": "DM敌人生成、简化敌人卡、战斗投放"
+    },
+    {
+      "sheet": "10_内功库",
+      "total": 120,
+      "id": "内功ID",
+      "type": "InnerArtEntry",
+      "integration": "角色创建、内功盘、占窍、读取六根、取气运算"
+    },
+    {
+      "sheet": "11_文书谱本",
+      "total": 80,
+      "id": "文书ID",
+      "type": "DocumentManualEntry",
+      "integration": "文书物、谱本、关系事实、成长入口"
+    },
+    {
+      "sheet": "12_坐骑载具",
+      "total": 60,
+      "id": "载具ID",
+      "type": "MountVehicleEntry",
+      "integration": "载具/船车、距离/目标线、地区投放"
+    },
+    {
+      "sheet": "13_材料奇物",
+      "total": 80,
+      "id": "材料ID",
+      "type": "MaterialRelicEntry",
+      "integration": "材料、奇物、锻造/制药/投放层"
+    },
+    {
+      "sheet": "14_校验清单",
+      "total": 22,
+      "id": "校验ID",
+      "type": "ValidationRule",
+      "integration": "自动校验、CI检查、数据审查页"
+    },
+    {
+      "sheet": "15_术语映射",
+      "total": 14,
+      "id": "术语",
+      "type": "TermMapping",
+      "integration": "规则词典、UI提示、字段帮助"
+    }
+  ],
+  "required_modules": [
+    "database registry",
+    "schema/types",
+    "loader/importer",
+    "validation",
+    "search/filter",
+    "detail renderer",
+    "combat adapter",
+    "character adapter",
+    "dm adapter",
+    "logs"
+  ]
+}

@@ -106,42 +106,59 @@
   top: 0;
   bottom: 0;
   border-radius: 6px;
-  border: 1px dashed transparent;
-  transition: border-color 300ms ease, background 300ms ease;
+  transition: background 300ms ease;
 }
 
-/* Player zone — left side (~0–32% of battlefield) */
+/* Player zone — left side (~0–30% of battlefield) */
 .player-zone-bg {
   left: 0;
-  width: 25%;
+  width: 28%;
   background: linear-gradient(
     90deg,
-    rgba(58, 92, 122, 0.06) 0%,
-    rgba(58, 92, 122, 0.02) 60%,
+    rgba(58, 92, 122, 0.05) 0%,
+    rgba(58, 92, 122, 0.01) 60%,
     transparent 100%
   );
-  border-right: 1px solid rgba(58, 92, 122, 0.12);
+  border-right: 1px solid rgba(58, 92, 122, 0.1);
 }
 
 .player-zone-bg.has-actors {
-  border-right-color: rgba(58, 92, 122, 0.2);
+  border-right-color: rgba(58, 92, 122, 0.18);
 }
 
-/* Enemy zone — right side (~75–100% of battlefield) */
+/* Enemy zone — right side (~72–100% of battlefield) */
 .enemy-zone-bg {
   right: 0;
-  width: 25%;
+  width: 28%;
   background: linear-gradient(
     270deg,
-    rgba(194, 58, 46, 0.06) 0%,
-    rgba(194, 58, 46, 0.02) 60%,
+    rgba(194, 58, 46, 0.05) 0%,
+    rgba(194, 58, 46, 0.01) 60%,
     transparent 100%
   );
-  border-left: 1px solid rgba(194, 58, 46, 0.12);
+  border-left: 1px solid rgba(194, 58, 46, 0.1);
 }
 
 .enemy-zone-bg.has-actors {
-  border-left-color: rgba(194, 58, 46, 0.2);
+  border-left-color: rgba(194, 58, 46, 0.18);
+}
+
+/* Center-field subtle divider — separates the two sides visually */
+.side-zones-layer::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(247, 231, 187, 0.06) 30%,
+    rgba(247, 231, 187, 0.06) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
 }
 
 /* Ally zone — lower-left (~28–42% from left, 72–92% from top) */

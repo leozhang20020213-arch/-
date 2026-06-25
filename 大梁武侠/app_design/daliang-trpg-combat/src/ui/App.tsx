@@ -1451,7 +1451,6 @@ function SixRootsSummary({ actor }: { actor: Actor }) {
 }
 
 function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
-  const actorDice = props.state.dice.filter((die) => die.ownerId === props.actor.id && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"));
   const selectedMove = props.selectedBasicAction
     ? undefined
     : props.actor.moves.find((move) => move.id === props.selectedMoveId) ?? props.actor.moves[0];
@@ -1552,7 +1551,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
         )}
       </div>
 
-      {/* Action cards grid */}
+      {/* Action cards — compact, gameplay-relevant fields only */}
       <div className="action-card-grid">
         {/* Normal moves */}
         {props.actor.moves.map((move) => {
@@ -1561,7 +1560,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
             yinSlotDiceIds: props.slotDice.yin,
             yangSlotDiceIds: props.slotDice.yang,
           });
-          const tag = moveAvail.allowed ? "可用" : moveAvail.reasons.join("、");
+          const gradeClass = move.designGrade ? `grade-${move.designGrade}` : "";
           return (
             <button
               className={`action-card ${selected ? "selected" : ""} ${!moveAvail.allowed ? "warn" : ""}`}
@@ -1569,9 +1568,21 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
               key={move.id}
               onClick={() => { props.setSelectedMoveId(move.id); props.setSelectedBasicAction(null); }}
             >
-              <strong>{move.name}</strong>
-              <span>{move.timing === "正式出手" ? "招式卡 · 至少一阴一阳" : `${move.category} · ${move.timing}`}</span>
-              <small>{tag}</small>
+              <span className="card-name">{move.name}</span>
+              <span className="card-badges">
+                {move.formPosition !== "无" && <span className="card-badge form">{move.formPosition}</span>}
+                {move.designGrade && <span className={`card-badge ${gradeClass}`}>{move.designGrade}</span>}
+              </span>
+              <span className="card-reqs">
+                <span>{move.targetRange}</span>
+                <span>·</span>
+                <span>最低{move.minDice}枚</span>
+                <span>·</span>
+                <span>{move.qiNatureThreshold}</span>
+              </span>
+              <span className={`card-status ${moveAvail.allowed ? "ok" : "no"}`}>
+                {moveAvail.allowed ? "✓ 可用" : moveAvail.reasons.join("、")}
+              </span>
             </button>
           );
         })}
@@ -1582,9 +1593,12 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
           type="button"
           onClick={() => { props.setSelectedBasicAction("regulateBreath"); }}
         >
-          <strong>调息</strong>
-          <span>基础动作 · 目标：自身</span>
-          <small>{regulateBreathAvail.reasonTags.join("、")}</small>
+          <span className="card-name">调息</span>
+          <span className="card-badges"><span className="card-badge form">基础</span></span>
+          <span className="card-reqs">目标：自身 · 从息库回气海</span>
+          <span className={`card-status ${regulateBreathAvail.usable ? "ok" : "no"}`}>
+            {regulateBreathAvail.usable ? "✓ 可用" : regulateBreathAvail.reasonTags.join("、")}
+          </span>
         </button>
 
         {/* 返照 card */}
@@ -1593,25 +1607,14 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
           type="button"
           onClick={() => { props.setSelectedBasicAction("fanzhao"); }}
         >
-          <strong>返照</strong>
-          <span>特殊动作 · 目标：自身</span>
-          <small>{fanzhaoAvail.reasonTags.join("、")}</small>
+          <span className="card-name">返照</span>
+          <span className="card-badges"><span className="card-badge form">特殊</span></span>
+          <span className="card-reqs">目标：自身 · 气海空时取回最低起投骰</span>
+          <span className={`card-status ${fanzhaoAvail.usable ? "ok" : "no"}`}>
+            {fanzhaoAvail.usable ? "✓ 可用" : fanzhaoAvail.reasonTags.join("、")}
+          </span>
         </button>
       </div>
-
-      {/* Dice selection — only for normal moves */}
-      {!props.selectedBasicAction && (
-        <>
-          <div className="mini-dice-list">
-            {actorDice.map((die) => (
-              <button className={props.selectedDice.includes(die.id) ? "die selected" : "die"} type="button" key={die.id} onClick={() => props.toggleDie(die.id)}>
-                {dieLabel(die)}
-              </button>
-            ))}
-          </div>
-          {actorDice.length === 0 ? <p className="empty-state">气海/临气区没有可用气骰。先开始场景或调息。</p> : null}
-        </>
-      )}
 
       {/* Confirm button */}
       <button className="primary-action" type="button" disabled={confirmDisabled} onClick={handleConfirm}>

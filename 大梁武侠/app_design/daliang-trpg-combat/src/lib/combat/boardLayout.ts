@@ -1,124 +1,156 @@
 // ==========================================================================
-// Board Layout — Slot-based combatant positioning for the tactical stage.
+// Board Layout — Dynamic slot-based combatant positioning.
 //
-// Each side (player / enemy / ally / neutral) has a predefined grid of
-// BoardSlots. Actors are assigned to the first available slot for their side.
-// New actors automatically fill the next empty slot — no hardcoded positions.
+// Each side gets one column. Y positions are calculated dynamically based
+// on actor count to guarantee zero overlap between cards.
+//
+// Card size at 1920×1080 / 48% stage ≈ 170×75px ≈ 17×16 viewBox units.
+// Minimum vertical gap between card centers: 18 viewBox units (83px @ 460px).
 // ==========================================================================
 
 import type { BoardSlot, CombatSide, ActorPlacement } from "../../types/combat";
 
 // ==========================================================================
-// Slot Definitions
+// Side column X positions (% of battlefield width)
+// Player cards go on left, enemy on right, ally/neutral in center-bottom.
+// ==========================================================================
+
+const SIDE_X: Record<CombatSide, number> = {
+  player:  15,   // left side, centered in player zone
+  enemy:   85,   // right side, centered in enemy zone
+  ally:    32,   // lower-left area
+  neutral: 50,   // center-bottom
+};
+
+// ==========================================================================
+// Dynamic Y-position calculation
 // ==========================================================================
 
 /**
- * Player side slots (left side of battlefield).
- *
- * Layout:
- *   主位 (Main) — front row, 3 columns
- *   后位 (Rear)  — back row, 2 columns
+ * Card height in viewBox units (0–100).
+ * Cards are ~75px tall; battlefield is ~460px at 1080p (48% of 956px).
+ * 75 / 460 × 100 ≈ 16.3. We use 18 to guarantee no overlap with a
+ * safety margin.
  */
-const PLAYER_SLOTS: BoardSlot[] = [
-  // Front row — 主位 (x=15 keeps cards fully inside the 0–28% player zone)
-  { id: "player-main-0", side: "player", row: 0, col: 0, x: 15, y: 25, label: "主位1" },
-  { id: "player-main-1", side: "player", row: 0, col: 1, x: 15, y: 50, label: "主位2" },
-  { id: "player-main-2", side: "player", row: 0, col: 2, x: 15, y: 75, label: "主位3" },
-  // Back row — 后位 (x=10 gives ~2% left margin for 170px cards)
-  { id: "player-rear-0", side: "player", row: 1, col: 0, x: 10, y: 37, label: "后位1" },
-  { id: "player-rear-1", side: "player", row: 1, col: 1, x: 10, y: 63, label: "后位2" },
-];
+const CARD_V_UNITS = 18;
 
 /**
- * Enemy side slots (right side of battlefield).
- *
- * Layout:
- *   前排 (Front) — up to 4 columns
- *   后排 (Rear)  — up to 3 columns
+ * Calculate evenly-spaced Y positions for N cards in a column.
+ * Returns positions that fill the vertical space from yMin to yMax
+ * with guaranteed non-overlapping spacing.
  */
-const ENEMY_SLOTS: BoardSlot[] = [
-  // Front row — 前排 (x=85 keeps cards inside the 72–100% enemy zone)
-  { id: "enemy-front-0", side: "enemy", row: 0, col: 0, x: 85, y: 20, label: "前排1" },
-  { id: "enemy-front-1", side: "enemy", row: 0, col: 1, x: 85, y: 38, label: "前排2" },
-  { id: "enemy-front-2", side: "enemy", row: 0, col: 2, x: 85, y: 56, label: "前排3" },
-  { id: "enemy-front-3", side: "enemy", row: 0, col: 3, x: 85, y: 74, label: "前排4" },
-  // Back row — 后排 (x=90 gives ~2% right margin for 170px cards)
-  { id: "enemy-rear-0", side: "enemy", row: 1, col: 0, x: 90, y: 29, label: "后排1" },
-  { id: "enemy-rear-1", side: "enemy", row: 1, col: 1, x: 90, y: 50, label: "后排2" },
-  { id: "enemy-rear-2", side: "enemy", row: 1, col: 2, x: 90, y: 71, label: "后排3" },
-];
+function calculateYPositions(count: number, yMin = 10, yMax = 90): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [(yMin + yMax) / 2];
+
+  // For many cards, use the minimum required spacing
+  const neededSpan = (count - 1) * CARD_V_UNITS;
+
+  if (neededSpan <= yMax - yMin) {
+    // Plenty of room — center the column
+    const startY = (yMax + yMin - neededSpan) / 2;
+    return Array.from({ length: count }, (_, i) => startY + i * CARD_V_UNITS);
+  }
+
+  // Tight fit — distribute evenly within the available range
+  const step = (yMax - yMin) / (count - 1);
+  return Array.from({ length: count }, (_, i) => yMin + i * step);
+}
+
+// ==========================================================================
+// Slot generation
+// ==========================================================================
 
 /**
- * Ally / support side slots (lower-left area, behind player).
+ * Generate BoardSlots for a side based on actor count.
+ * Each actor gets one slot in a single vertical column.
  */
-const ALLY_SLOTS: BoardSlot[] = [
-  { id: "ally-0", side: "ally", row: 2, col: 0, x: 32, y: 78, label: "援位1" },
-  { id: "ally-1", side: "ally", row: 2, col: 1, x: 32, y: 88, label: "援位2" },
-];
+function generateSlots(side: CombatSide, count: number): BoardSlot[] {
+  const x = SIDE_X[side];
+  const yPositions = calculateYPositions(count);
 
-/**
- * Neutral / special object slots (center-bottom area).
- */
-const NEUTRAL_SLOTS: BoardSlot[] = [
-  { id: "neutral-0", side: "neutral", row: 2, col: 0, x: 50, y: 82, label: "中立1" },
-  { id: "neutral-1", side: "neutral", row: 2, col: 1, x: 62, y: 82, label: "中立2" },
-];
+  const sideLabel: Record<CombatSide, string> = {
+    player: "主位",
+    enemy: "前排",
+    ally: "援位",
+    neutral: "中立",
+  };
 
-/** All slots indexed by side */
-const SLOTS_BY_SIDE: Record<CombatSide, BoardSlot[]> = {
-  player: PLAYER_SLOTS,
-  enemy: ENEMY_SLOTS,
-  ally: ALLY_SLOTS,
-  neutral: NEUTRAL_SLOTS,
-};
+  return yPositions.map((y, i) => ({
+    id: `${side}-slot-${i}`,
+    side,
+    row: 0,
+    col: i,
+    x,
+    y,
+    label: `${sideLabel[side]}${i + 1}`,
+  }));
+}
 
 // ==========================================================================
 // Public API
 // ==========================================================================
 
 /**
- * Get all predefined BoardSlots for a given side.
- * Slots are returned in priority order (front row first, then rear).
+ * Get dynamically-generated BoardSlots for a given side.
+ * Slots are generated fresh based on the actor count to guarantee
+ * non-overlapping vertical spacing.
  */
-export function getBoardSlotsBySide(side: CombatSide): BoardSlot[] {
-  return SLOTS_BY_SIDE[side] ?? [];
+export function getBoardSlots(side: CombatSide, count: number): BoardSlot[] {
+  return generateSlots(side, count);
 }
 
 /**
- * Get all slots across all sides.
+ * Get all slots across all sides for a given actor distribution.
  */
-export function getAllSlots(): BoardSlot[] {
-  return [
-    ...PLAYER_SLOTS,
-    ...ENEMY_SLOTS,
-    ...ALLY_SLOTS,
-    ...NEUTRAL_SLOTS,
-  ];
+export function getAllSlots(
+  counts: Record<CombatSide, number>,
+): BoardSlot[] {
+  return (Object.entries(counts) as [CombatSide, number][])
+    .filter(([, n]) => n > 0)
+    .flatMap(([side, n]) => generateSlots(side, n));
 }
 
 /**
- * Auto-assign actors to slots by side.
+ * Auto-assign actors to dynamically-generated slots by side.
  *
- * For each actor, finds the first unoccupied slot on their side.
- * Actors are assigned in the order they appear in the input array.
+ * Actors are grouped by side; each side gets exactly `count` slots
+ * with evenly-spaced Y positions that guarantee no overlap.
  *
- * @returns Array of ActorPlacement (actorId → slotId) for successfully placed actors.
- *          Actors that can't be placed (no free slot) are omitted.
+ * @returns ActorPlacement[] — one entry per actor.
  */
 export function assignActorsToSlots(
-  actorIds: Array<{ id: string; side: CombatSide }>,
-  occupiedSlotIds?: Set<string>,
+  actors: Array<{ id: string; side: CombatSide }>,
 ): ActorPlacement[] {
-  const occupied = new Set(occupiedSlotIds ?? []);
+  // Count actors per side
+  const counts: Partial<Record<CombatSide, number>> = {};
+  const sideOrder: CombatSide[] = [];
+
+  for (const a of actors) {
+    if (!(a.side in counts)) {
+      counts[a.side] = 0;
+      sideOrder.push(a.side);
+    }
+    counts[a.side] = (counts[a.side] ?? 0) + 1;
+  }
+
+  // Generate slots per side
+  const allSlots: BoardSlot[] = [];
+  for (const side of sideOrder) {
+    allSlots.push(...generateSlots(side, counts[side] ?? 0));
+  }
+
+  // Assign actors to slots in order
+  const sideIndex: Partial<Record<CombatSide, number>> = {};
   const placements: ActorPlacement[] = [];
 
-  for (const actor of actorIds) {
-    const slots = getBoardSlotsBySide(actor.side);
-    const freeSlot = slots.find((s) => !occupied.has(s.id));
-    if (freeSlot) {
-      occupied.add(freeSlot.id);
-      placements.push({ actorId: actor.id, slotId: freeSlot.id });
+  for (const actor of actors) {
+    const idx = sideIndex[actor.side] ?? 0;
+    const sideSlots = allSlots.filter((s) => s.side === actor.side);
+    if (idx < sideSlots.length) {
+      placements.push({ actorId: actor.id, slotId: sideSlots[idx].id });
     }
+    sideIndex[actor.side] = idx + 1;
   }
 
   return placements;
@@ -126,11 +158,13 @@ export function assignActorsToSlots(
 
 /**
  * Get the BoardSlot for a given ActorPlacement.
+ * Requires the full slot list (from getAllSlots or assignActorsToSlots internals).
  */
 export function getSlotForPlacement(
   placement: ActorPlacement,
+  allSlots: BoardSlot[],
 ): BoardSlot | undefined {
-  return getAllSlots().find((s) => s.id === placement.slotId);
+  return allSlots.find((s) => s.id === placement.slotId);
 }
 
 /**
@@ -139,10 +173,11 @@ export function getSlotForPlacement(
 export function getActorPosition(
   actorId: string,
   placements: ActorPlacement[],
+  allSlots: BoardSlot[],
 ): { x: number; y: number } | undefined {
   const placement = placements.find((p) => p.actorId === actorId);
   if (!placement) return undefined;
-  const slot = getSlotForPlacement(placement);
+  const slot = getSlotForPlacement(placement, allSlots);
   return slot ? { x: slot.x, y: slot.y } : undefined;
 }
 
@@ -153,21 +188,23 @@ export function getTargetLineAnchors(
   sourceActorId: string,
   targetActorId: string,
   placements: ActorPlacement[],
+  allSlots: BoardSlot[],
 ): { x1: number; y1: number; x2: number; y2: number } | undefined {
-  const sourcePos = getActorPosition(sourceActorId, placements);
-  const targetPos = getActorPosition(targetActorId, placements);
+  const sourcePos = getActorPosition(sourceActorId, placements, allSlots);
+  const targetPos = getActorPosition(targetActorId, placements, allSlots);
   if (!sourcePos || !targetPos) return undefined;
   return { x1: sourcePos.x, y1: sourcePos.y, x2: targetPos.x, y2: targetPos.y };
 }
 
 /**
- * Summary stats for a side — how many slots are occupied vs available.
+ * Summary stats for a side.
  */
 export function getSlotOccupancy(
   side: CombatSide,
   occupiedSlotIds: Set<string>,
+  allSlots: BoardSlot[],
 ): { total: number; occupied: number; free: number } {
-  const slots = getBoardSlotsBySide(side);
-  const occupied = slots.filter((s) => occupiedSlotIds.has(s.id)).length;
-  return { total: slots.length, occupied, free: slots.length - occupied };
+  const sideSlots = allSlots.filter((s) => s.side === side);
+  const occupied = sideSlots.filter((s) => occupiedSlotIds.has(s.id)).length;
+  return { total: sideSlots.length, occupied, free: sideSlots.length - occupied };
 }

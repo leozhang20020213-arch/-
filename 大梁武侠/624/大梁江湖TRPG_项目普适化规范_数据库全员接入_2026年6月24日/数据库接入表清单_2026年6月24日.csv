@@ -1,0 +1,17 @@
+﻿sheet,total,id,type,role,integration
+00_README,,,,说明页,只读展示/版本说明
+01_扩充总览,1731,,,总览统计,数据健康面板、版本统计
+02_招式主表,324,招式ID,MoveEntry,,玩家/敌人正式出手、法门、招式详情、成招校验
+03_响应挂载,295,挂载ID,ReactionMount,,截击/应招窗口、招式详情反查、敌人响应
+04_武器库,168,武器ID,WeaponEntry,,装备栏、装备许可、持握方式、装备骰来源
+05_护具器具,96,器具ID/装备ID,GearToolEntry,,护具、佩饰、器具、文书物、奇物入口
+06_状态库,120,状态ID,StatusEntry,,状态栏、落果写入、衰减/解除入口
+07_药物资源,120,药物ID,MedicineEntry,,药物栏、取物/使用、临时骰、治疗/毒药
+08_动景库,116,动景ID,SceneElementEntry,,DM场景轨、危机/解密、动景变化
+09_敌人模板,116,敌人ID,EnemyTemplate,,DM敌人生成、简化敌人卡、战斗投放
+10_内功库,120,内功ID,InnerArtEntry,,角色创建、内功盘、占窍、读取六根、取气运算
+11_文书谱本,80,文书ID,DocumentManualEntry,,文书物、谱本、关系事实、成长入口
+12_坐骑载具,60,载具ID,MountVehicleEntry,,载具/船车、距离/目标线、地区投放
+13_材料奇物,80,材料ID,MaterialRelicEntry,,材料、奇物、锻造/制药/投放层
+14_校验清单,22,校验ID,ValidationRule,,自动校验、CI检查、数据审查页
+15_术语映射,14,术语,TermMapping,,规则词典、UI提示、字段帮助
