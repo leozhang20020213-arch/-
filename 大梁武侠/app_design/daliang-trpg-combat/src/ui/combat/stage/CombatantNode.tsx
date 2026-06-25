@@ -3,15 +3,10 @@ import type { Combatant } from "../../../types/combat";
 
 export interface CombatantNodeProps {
   combatant: Combatant;
-  /** Whether this combatant node is currently selected (clicked / hover-highlighted) */
   isSelected: boolean;
-  /** Whether this combatant is the CURRENT ACTOR (taking their turn) */
   isCurrentActor: boolean;
-  /** Whether this combatant is the selected TARGET of the current action */
   isTargeted: boolean;
-  /** Whether this combatant has been defeated (HP <= 0) */
   isDefeated: boolean;
-  /** Whether this combatant can be targeted (false = greyed out, not clickable) */
   canBeTargeted: boolean;
   onSelect: (id: string) => void;
 }
@@ -26,19 +21,14 @@ const MOMENTUM_CLASS: Record<string, string> = {
 };
 
 /**
- * A single combatant node on the tactical stage.
+ * Compact combatant card — two rows, all gameplay info inline.
  *
- * Visual states (in priority order — first matching wins for the border):
- *   current-actor + targeted  → dual ring (inner gold glow + outer target ring)
- *   current-actor             → strong gold glow + pulsing border
- *   targeted                  → red target ring + crosshair corners
- *   defeated                  → dimmed, red overlay, "濒死" label
- *   untargetable              → greyed out, not clickable
- *   normal                    → default dark card
+ * Row 1: [avatar 22px] name | 行动中/目标 tag | 阴盛 pill | 32/40 HP
+ * Row 2: HP bar (full width)
+ * Status badges: inline after momentum if present
  *
- * Side-based positioning hint:
- *   player side → slight warm tint
- *   enemy side  → slight cool tint
+ * Total card height ~40px (vs ~64px previously).
+ * Width ~148px (vs 170px).
  */
 export const CombatantNode: FC<CombatantNodeProps> = ({
   combatant,
@@ -58,7 +48,6 @@ export const CombatantNode: FC<CombatantNodeProps> = ({
     "var(--shield-green)";
   const isDying = combatant.hp <= 0;
 
-  // Build class list
   const classes = ["combatant-node"];
   if (isCurrentActor) classes.push("current-actor");
   if (isTargeted) classes.push("targeted");
@@ -76,80 +65,64 @@ export const CombatantNode: FC<CombatantNodeProps> = ({
     <button
       className={classes.join(" ")}
       type="button"
-      onClick={() => {
-        if (isClickable) {
-          onSelect(combatant.id);
-        }
-      }}
-      style={{
-        left: `${combatant.x}%`,
-        top: `${combatant.y}%`,
-      }}
+      onClick={() => { if (isClickable) onSelect(combatant.id); }}
+      style={{ left: `${combatant.x}%`, top: `${combatant.y}%` }}
       disabled={!isClickable}
       aria-label={`${combatant.name}，气血${combatant.hp}/${combatant.maxHp}，势${combatant.momentum}${isCurrentActor ? "，当前行动" : ""}${isTargeted ? "，当前目标" : ""}${isDying ? "，濒死" : ""}`}
       title={
-        isCurrentActor && isTargeted
-          ? `${combatant.name} — 当前行动者 & 目标`
-          : isCurrentActor
-            ? `${combatant.name} — 当前行动者`
-            : isTargeted
-              ? `${combatant.name} — 当前目标`
-              : combatant.name
+        isCurrentActor && isTargeted ? `${combatant.name} — 当前行动者 & 目标`
+        : isCurrentActor ? `${combatant.name} — 当前行动者`
+        : isTargeted ? `${combatant.name} — 当前目标`
+        : combatant.name
       }
     >
-      {/* Avatar */}
-      <div className="combatant-avatar">
-        {combatant.avatar ? (
-          <img src={combatant.avatar} alt="" />
-        ) : (
-          <span className="combatant-avatar-placeholder">
-            {combatant.name.charAt(0)}
-          </span>
-        )}
-        {/* Current actor indicator dot */}
-        {isCurrentActor && <span className="current-actor-dot" />}
-      </div>
+      {/* Current actor indicator dot */}
+      {isCurrentActor && <span className="current-actor-dot" />}
 
-      {/* Info column */}
-      <div className="combatant-info">
+      {/* Row 1: avatar + name + tags + momentum + HP */}
+      <div className="combatant-row1">
+        <div className="combatant-avatar">
+          {combatant.avatar
+            ? <img src={combatant.avatar} alt="" />
+            : <span className="combatant-avatar-placeholder">{combatant.name.charAt(0)}</span>
+          }
+        </div>
+
         <span className="combatant-name">
           {combatant.name}
-          {isCurrentActor && <span className="current-tag">行动中</span>}
+          {isCurrentActor && <span className="current-tag">行</span>}
           {isTargeted && !isCurrentActor && <span className="target-tag">目标</span>}
         </span>
 
-        {/* HP bar */}
-        <div className="combatant-hp-row">
-          <div className="combatant-hp-bar">
-            <div
-              className="combatant-hp-fill"
-              style={{ width: `${hpPct}%`, background: hpColor }}
-            />
-          </div>
-          <span className="combatant-hp-text" style={{ color: hpColor }}>
-            {combatant.hp}/{combatant.maxHp}
-          </span>
-        </div>
-
-        {/* Momentum pill */}
         <span className={`combatant-momentum ${MOMENTUM_CLASS[combatant.momentum] ?? ""}`}>
           {combatant.momentum}
         </span>
+
+        {combatant.statuses.length > 0 && (
+          <span className="combatant-status-inline">
+            {combatant.statuses.map((s) => (
+              <span key={s} className="combatant-status-badge">{s}</span>
+            ))}
+          </span>
+        )}
+
+        <span className="combatant-hp-text" style={{ color: hpColor }}>
+          {combatant.hp}/{combatant.maxHp}
+        </span>
       </div>
 
-      {/* Status badges */}
-      {combatant.statuses.length > 0 && (
-        <div className="combatant-statuses">
-          {combatant.statuses.map((s) => (
-            <span key={s} className="combatant-status-badge">{s}</span>
-          ))}
-        </div>
-      )}
+      {/* Row 2: HP bar */}
+      <div className="combatant-hp-bar">
+        <div
+          className="combatant-hp-fill"
+          style={{ width: `${hpPct}%`, background: hpColor }}
+        />
+      </div>
 
       {/* Defeated overlay */}
       {isDefeated && <div className="combatant-defeated-overlay">退场</div>}
 
-      {/* Target ring corners (visible only when targeted) */}
+      {/* Target ring corners */}
       {isTargeted && (
         <div className="target-corners" aria-hidden="true">
           <span className="target-corner tl" />

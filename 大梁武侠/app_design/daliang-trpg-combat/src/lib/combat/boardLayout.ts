@@ -28,11 +28,10 @@ const SIDE_X: Record<CombatSide, number> = {
 
 /**
  * Card height in viewBox units (0–100).
- * Cards are ~75px tall; battlefield is ~460px at 1080p (48% of 956px).
- * 75 / 460 × 100 ≈ 16.3. We use 18 to guarantee no overlap with a
- * safety margin.
+ * Cards are ~40px tall (compact 2-row layout); battlefield is ~460px at 1080p.
+ * 40 / 460 × 100 ≈ 8.7. We use 12 to guarantee no overlap with safety margin.
  */
-const CARD_V_UNITS = 18;
+const CARD_V_UNITS = 12;
 
 /**
  * Calculate evenly-spaced Y positions for N cards in a column.
