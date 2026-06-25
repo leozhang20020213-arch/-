@@ -20,13 +20,13 @@ import type { BoardSlot, CombatSide, ActorPlacement } from "../../types/combat";
  *   后位 (Rear)  — back row, 2 columns
  */
 const PLAYER_SLOTS: BoardSlot[] = [
-  // Front row — 主位
-  { id: "player-main-0", side: "player", row: 0, col: 0, x: 14, y: 28, label: "主位1" },
-  { id: "player-main-1", side: "player", row: 0, col: 1, x: 14, y: 50, label: "主位2" },
-  { id: "player-main-2", side: "player", row: 0, col: 2, x: 14, y: 72, label: "主位3" },
-  // Back row — 后位
-  { id: "player-rear-0", side: "player", row: 1, col: 0, x: 6,  y: 39, label: "后位1" },
-  { id: "player-rear-1", side: "player", row: 1, col: 1, x: 6,  y: 61, label: "后位2" },
+  // Front row — 主位 (x=15 keeps cards fully inside the 0–28% player zone)
+  { id: "player-main-0", side: "player", row: 0, col: 0, x: 15, y: 25, label: "主位1" },
+  { id: "player-main-1", side: "player", row: 0, col: 1, x: 15, y: 50, label: "主位2" },
+  { id: "player-main-2", side: "player", row: 0, col: 2, x: 15, y: 75, label: "主位3" },
+  // Back row — 后位 (x=10 gives ~2% left margin for 170px cards)
+  { id: "player-rear-0", side: "player", row: 1, col: 0, x: 10, y: 37, label: "后位1" },
+  { id: "player-rear-1", side: "player", row: 1, col: 1, x: 10, y: 63, label: "后位2" },
 ];
 
 /**
@@ -37,15 +37,15 @@ const PLAYER_SLOTS: BoardSlot[] = [
  *   后排 (Rear)  — up to 3 columns
  */
 const ENEMY_SLOTS: BoardSlot[] = [
-  // Front row — 前排
-  { id: "enemy-front-0", side: "enemy", row: 0, col: 0, x: 86, y: 20, label: "前排1" },
-  { id: "enemy-front-1", side: "enemy", row: 0, col: 1, x: 86, y: 38, label: "前排2" },
-  { id: "enemy-front-2", side: "enemy", row: 0, col: 2, x: 86, y: 56, label: "前排3" },
-  { id: "enemy-front-3", side: "enemy", row: 0, col: 3, x: 86, y: 74, label: "前排4" },
-  // Back row — 后排
-  { id: "enemy-rear-0", side: "enemy", row: 1, col: 0, x: 94, y: 29, label: "后排1" },
-  { id: "enemy-rear-1", side: "enemy", row: 1, col: 1, x: 94, y: 50, label: "后排2" },
-  { id: "enemy-rear-2", side: "enemy", row: 1, col: 2, x: 94, y: 71, label: "后排3" },
+  // Front row — 前排 (x=85 keeps cards inside the 72–100% enemy zone)
+  { id: "enemy-front-0", side: "enemy", row: 0, col: 0, x: 85, y: 20, label: "前排1" },
+  { id: "enemy-front-1", side: "enemy", row: 0, col: 1, x: 85, y: 38, label: "前排2" },
+  { id: "enemy-front-2", side: "enemy", row: 0, col: 2, x: 85, y: 56, label: "前排3" },
+  { id: "enemy-front-3", side: "enemy", row: 0, col: 3, x: 85, y: 74, label: "前排4" },
+  // Back row — 后排 (x=90 gives ~2% right margin for 170px cards)
+  { id: "enemy-rear-0", side: "enemy", row: 1, col: 0, x: 90, y: 29, label: "后排1" },
+  { id: "enemy-rear-1", side: "enemy", row: 1, col: 1, x: 90, y: 50, label: "后排2" },
+  { id: "enemy-rear-2", side: "enemy", row: 1, col: 2, x: 90, y: 71, label: "后排3" },
 ];
 
 /**
@@ -60,8 +60,8 @@ const ALLY_SLOTS: BoardSlot[] = [
  * Neutral / special object slots (center-bottom area).
  */
 const NEUTRAL_SLOTS: BoardSlot[] = [
-  { id: "neutral-0", side: "neutral", row: 2, col: 0, x: 50, y: 84, label: "中立1" },
-  { id: "neutral-1", side: "neutral", row: 2, col: 1, x: 62, y: 84, label: "中立2" },
+  { id: "neutral-0", side: "neutral", row: 2, col: 0, x: 50, y: 82, label: "中立1" },
+  { id: "neutral-1", side: "neutral", row: 2, col: 1, x: 62, y: 82, label: "中立2" },
 ];
 
 /** All slots indexed by side */

@@ -162,8 +162,8 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 40,
       momentum: "阴盛",
       statuses: [],
-      x: 14,  // player-main-0
-      y: 28,
+      x: 15,  // player-main-0 (matches boardLayout.ts)
+      y: 25,
       slotId: "player-main-0",
     },
     {
@@ -174,7 +174,7 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 45,
       momentum: "阳盛",
       statuses: [],
-      x: 14,  // player-main-1
+      x: 15,  // player-main-1 (matches boardLayout.ts)
       y: 50,
       slotId: "player-main-1",
     },
@@ -187,7 +187,7 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 45,
       momentum: "阳盛",
       statuses: ["破口"],
-      x: 86,  // enemy-front-0
+      x: 85,  // enemy-front-0 (matches boardLayout.ts)
       y: 20,
       slotId: "enemy-front-0",
     },
@@ -199,7 +199,7 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 30,
       momentum: "失势",
       statuses: ["流血"],
-      x: 86,  // enemy-front-1
+      x: 85,  // enemy-front-1
       y: 38,
       slotId: "enemy-front-1",
     },
@@ -211,7 +211,7 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 35,
       momentum: "阴盛",
       statuses: ["迟滞"],
-      x: 86,  // enemy-front-2
+      x: 85,  // enemy-front-2
       y: 56,
       slotId: "enemy-front-2",
     },
@@ -223,7 +223,7 @@ export const MOCK_STAGE_DATA: StageData = {
       maxHp: 25,
       momentum: "合势",
       statuses: [],
-      x: 86,  // enemy-front-3
+      x: 85,  // enemy-front-3
       y: 74,
       slotId: "enemy-front-3",
     },
