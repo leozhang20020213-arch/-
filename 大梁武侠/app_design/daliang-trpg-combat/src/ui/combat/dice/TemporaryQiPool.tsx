@@ -47,7 +47,7 @@ export const TemporaryQiPool: FC<TemporaryQiPoolProps> = ({
       {/* Header row */}
       <div className="temp-qi-header">
         <div className="temp-qi-header-left">
-          <span className="temp-qi-title">临气</span>
+          <span className="temp-qi-title">临气区</span>
           <span className="temp-qi-count">
             {dice.length} 枚
           </span>

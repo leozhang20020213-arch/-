@@ -5,36 +5,19 @@ export interface DmControlPanelProps {
   state: CombatState;
   dmNote: string;
   setDmNote: (value: string) => void;
-  onStartScene: () => void;
-  onIntercept: () => void;
-  onForm: () => void;
-  onReact: () => void;
-  onOutcome: () => void;
-  onEndRound: () => void;
-  onRegulateBreath: () => void;
-  onReflection: () => void;
   onExpireSource: () => void;
   onMomentum: (actorId: string, momentum: Actor["momentum"]) => void;
   onOverride: () => void;
 }
 
 /**
- * DM control panel — extracted from App.tsx inline.
- * Shows DM-only action buttons: adjudication, response window, momentum, etc.
- * Only rendered in DM mode (dmCombat route).
+ * DM utility panel. Combat phase progression is owned by the bottom command
+ * bar; this panel keeps only host-only resource and adjudication tools.
  */
 export const DmControlPanel: FC<DmControlPanelProps> = ({
   state,
   dmNote,
   setDmNote,
-  onStartScene,
-  onIntercept,
-  onForm,
-  onReact,
-  onOutcome,
-  onEndRound,
-  onRegulateBreath,
-  onReflection,
   onExpireSource,
   onMomentum,
   onOverride,
@@ -43,56 +26,23 @@ export const DmControlPanel: FC<DmControlPanelProps> = ({
     state.actors.find((a) => a.id === state.activeActorId) ?? state.actors[0];
 
   return (
-    <section className="panel dm-console">
-      <div className="panel-title">
-        <h2>裁定面板</h2>
+    <section className="panel dm-console dm-toolbox">
+      <div className="panel-title dm-toolbox__title">
+        <div>
+          <span className="dm-toolbox__eyebrow">当前行动者</span>
+          <h2>主持工具</h2>
+        </div>
+        <strong className="dm-toolbox__actor">{activeActor?.name ?? "未选单位"}</strong>
       </div>
-      <div className="flow-buttons">
-        <button type="button" onClick={onStartScene}>
-          开始场景
-        </button>
-        <button
-          type="button"
-          onClick={onIntercept}
-          disabled={!state.pendingAction}
-        >
-          截击取消
-        </button>
-        <button
-          type="button"
-          onClick={onForm}
-          disabled={!state.pendingAction}
-        >
-          判定成招
-        </button>
-        <button
-          type="button"
-          onClick={onReact}
-          disabled={!state.pendingAction}
-        >
-          目标应招
-        </button>
-        <button
-          type="button"
-          onClick={onOutcome}
-          disabled={!state.pendingAction}
-        >
-          应用落果
-        </button>
-        <button type="button" onClick={onEndRound}>
-          轮次结束
-        </button>
-        <button type="button" onClick={onRegulateBreath}>
-          调息
-        </button>
-        <button type="button" onClick={onReflection}>
-          返照
-        </button>
+      <p className="dm-toolbox__phase-note">
+        当前时点由底部命令条统一推进；此处保留资源与手动裁定。
+      </p>
+      <div className="dm-toolbox__quick-actions" aria-label="DM 来源维护">
         <button type="button" onClick={onExpireSource}>
           来源失效
         </button>
       </div>
-      <label>
+      <label className="dm-toolbox__field">
         势变化（{activeActor?.name ?? "未选单位"}）
         <select
           value={activeActor?.momentum ?? "阴盛"}
@@ -108,7 +58,7 @@ export const DmControlPanel: FC<DmControlPanelProps> = ({
           ))}
         </select>
       </label>
-      <label>
+      <label className="dm-toolbox__field dm-toolbox__note">
         手动裁定 / 广播文本
         <textarea
           value={dmNote}
@@ -116,7 +66,7 @@ export const DmControlPanel: FC<DmControlPanelProps> = ({
         />
       </label>
       <button className="secondary-action" type="button" onClick={onOverride}>
-        写入裁定日志
+        记录并广播裁定
       </button>
     </section>
   );

@@ -1230,7 +1230,7 @@ meter::-webkit-meter-optimum-value {
 .action-card {
   display: grid;
   grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto auto;
   gap: 2px 8px;
   padding: 6px 8px;
   border: 1px solid var(--border-card);
@@ -1246,6 +1246,19 @@ meter::-webkit-meter-optimum-value {
   cursor: pointer;
   color: var(--ink-dark);
   transition: transform var(--ease-lift), box-shadow var(--ease-lift), border-color var(--ease-lift);
+}
+
+.action-card .card-effect {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-height: 28px;
+  overflow: hidden;
+  color: var(--ink-dark);
+  font-size: 10px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .action-card:hover {
@@ -1305,7 +1318,7 @@ meter::-webkit-meter-optimum-value {
   font-size: 10px;
   color: var(--ink-subtle);
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 3;
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
@@ -1316,7 +1329,7 @@ meter::-webkit-meter-optimum-value {
   font-size: 10px;
   font-weight: 600;
   grid-column: 1 / -1;
-  grid-row: 3;
+  grid-row: 4;
 }
 
 .card-status.ok { color: var(--shield-green); }
@@ -1845,7 +1858,9 @@ meter::-webkit-meter-optimum-value {
 }
 
 .dice-roll-overlay {
-  width: min(840px, 100%);
+  width: min(920px, 100%);
+  background:
+    linear-gradient(180deg, rgba(241, 232, 214, 0.99), rgba(218, 200, 174, 0.98));
 }
 
 .prompt-modal > *,
@@ -1874,6 +1889,33 @@ meter::-webkit-meter-optimum-value {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.dice-roll-phase {
+  margin: -6px 0 0;
+  color: var(--ink-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.dice-roll-phase.phase-arranging { color: var(--yang-die); }
+.dice-roll-phase.phase-done { color: var(--shield-green); }
+
+.dice-roll-overlay .mini-dice-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 4px 2px 8px;
+  overflow-x: auto;
+}
+
+.dice-roll-overlay .identity-pill {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 11px;
 }
 
 /* --------------------------------------------------------------------------

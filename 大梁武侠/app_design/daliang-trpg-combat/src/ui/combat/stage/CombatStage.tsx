@@ -208,7 +208,7 @@ export const CombatStage: FC<CombatStageProps> = ({
         <svg
           className="distance-svg-layer"
           viewBox="0 0 100 100"
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="none"
         >
           {showTargetLine && (
             <TargetLine

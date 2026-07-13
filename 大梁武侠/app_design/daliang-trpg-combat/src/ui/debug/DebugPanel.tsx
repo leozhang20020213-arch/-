@@ -9,11 +9,9 @@ export interface DebugPanelProps {
 }
 
 /**
- * Development debug panel — only shown when:
- *   - `import.meta.env.DEV` is true, OR
- *   - `debugView` is manually enabled
- *
- * Hidden entirely in production builds unless manually toggled.
+ * Development debug panel. Development mode exposes the trigger in the top
+ * bar, but the panel itself is only visible after an explicit user action.
+ * This keeps the inspector from covering the combat board on every local run.
  */
 export const DebugPanel: FC<DebugPanelProps> = ({
   state,
@@ -23,9 +21,8 @@ export const DebugPanel: FC<DebugPanelProps> = ({
 }) => {
   const [tab, setTab] = useState<"state" | "logs" | "perf">("state");
   const isDev = import.meta.env.DEV;
-  const visible = isDev || debugView;
 
-  if (!visible) return null;
+  if (!debugView || !session.developerMode) return null;
 
   return (
     <div className="debug-panel">

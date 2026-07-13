@@ -15,8 +15,13 @@ export interface QiDiceDockProps {
   selectedMove: Move | undefined;
   /** Whether a target is selected */
   hasSelectedTarget: boolean;
-  /** Called when the player wants to confirm & lock, passes slot dice IDs */
-  onConfirm: (yinIds: string[], yangIds: string[]) => void;
+  /** Authoritative declaration draft slot state, owned by App. */
+  yinSlotIds: string[];
+  yangSlotIds: string[];
+  onAssignDie: (dieId: string, slot: "yin" | "yang") => boolean;
+  onRemoveDie: (dieId: string) => void;
+  /** Called when the player wants to confirm the authoritative draft. */
+  onConfirm: () => void;
   /** Called when the player wants to roll dice from pool into sea */
   onRollToSea?: () => void;
   /** Distance validation warning (shown near confirm button) */
@@ -47,13 +52,14 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   actorDice,
   selectedMove,
   hasSelectedTarget,
+  yinSlotIds,
+  yangSlotIds,
+  onAssignDie,
+  onRemoveDie,
   onConfirm,
   onRollToSea,
   distanceWarning,
 }) => {
-  // Local slot assignment state
-  const [yinSlotIds, setYinSlotIds] = useState<string[]>([]);
-  const [yangSlotIds, setYangSlotIds] = useState<string[]>([]);
   const [dragError, setDragError] = useState<string | null>(null);
 
   const activeActorId = state.activeActorId;
@@ -107,8 +113,10 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       return;
     }
 
-    setYangSlotIds((prev) => prev.filter((id) => id !== dieId));
-    setYinSlotIds((prev) => (prev.includes(dieId) ? prev : [...prev, dieId]));
+    if (!onAssignDie(dieId, "yin")) {
+      setDragError("此骰当前不能投入阴槽");
+      setTimeout(() => setDragError(null), 1800);
+    }
   }
 
   function handleDropToYang(dieId: string) {
@@ -122,19 +130,28 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       return;
     }
 
-    setYinSlotIds((prev) => prev.filter((id) => id !== dieId));
-    setYangSlotIds((prev) => (prev.includes(dieId) ? prev : [...prev, dieId]));
+    if (!onAssignDie(dieId, "yang")) {
+      setDragError("此骰当前不能投入阳槽");
+      setTimeout(() => setDragError(null), 1800);
+    }
   }
 
   function handleRemoveFromSlot(dieId: string) {
-    setYinSlotIds((prev) => prev.filter((id) => id !== dieId));
-    setYangSlotIds((prev) => prev.filter((id) => id !== dieId));
+    onRemoveDie(dieId);
   }
 
   function handleClickDie(dieId: string) {
     if (assignedIds.has(dieId)) {
       handleRemoveFromSlot(dieId);
+      return;
     }
+    if (!canDrag) return;
+    const die = actorDice.find((item) => item.id === dieId);
+    if (!die) return;
+    if (die.nature === "yin") handleDropToYin(dieId);
+    else if (die.nature === "yang") handleDropToYang(dieId);
+    else if (yinSlotIds.length <= yangSlotIds.length) handleDropToYin(dieId);
+    else handleDropToYang(dieId);
   }
 
   const yinTotal = yinDice.reduce((sum, d) => sum + (d.value ?? 0), 0);
@@ -200,7 +217,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
         className={`qi-confirm-btn${confirmCheck.allowed ? "" : " disabled"}`}
         type="button"
         disabled={!confirmCheck.allowed}
-        onClick={() => onConfirm(yinSlotIds, yangSlotIds)}
+        onClick={onConfirm}
       >
         确认宣言并锁气
       </button>

@@ -104,7 +104,7 @@ export interface ParsedEffect {
  *   "目标XXN层" → { statuses: [{ name: "XX", layers: N, target: "target" }] }
  *   "自身XXN层" → { statuses: [{ name: "XX", layers: N, target: "self" }] }
  */
-export function parseBaseEffect(effect: string): ParsedEffect {
+export function parseBaseEffect(effect = ""): ParsedEffect {
   const result: ParsedEffect = {};
 
   const trimmed = effect.trim();
@@ -180,7 +180,7 @@ export function parseBaseEffect(effect: string): ParsedEffect {
  * Extract numeric damage from a base effect string.
  * Parses "造成气血N点" → N. Returns 0 if no damage found.
  */
-function extractDamage(effect: string): number {
+function extractDamage(effect = ""): number {
   const match = effect.match(/造成气血(\d+)点/);
   if (match) {
     return parseInt(match[1], 10);
@@ -198,7 +198,7 @@ function extractDamage(effect: string): number {
 export function validateMomentum(
   actor: Actor,
   shiCondition: ShiCondition,
-  allowedShi: ShiState[],
+  allowedShi: ShiState[] | undefined,
 ): { valid: boolean; reason?: string } {
   // 无势: any momentum is allowed
   if (shiCondition === "无势") {
@@ -210,11 +210,18 @@ export function validateMomentum(
     return { valid: false, reason: `角色处于崩势状态，不能声明正式出手或强响应` };
   }
 
+  // Older saved sessions predate the explicit allowedShi field. Treat a
+  // missing range as an unexpressed restriction instead of crashing the UI.
+  const allowed = Array.isArray(allowedShi) ? allowedShi : [];
+  if (allowed.length === 0) {
+    return { valid: true };
+  }
+
   // Check if current momentum is in the allowed range
-  if (!allowedShi.includes(actor.momentum)) {
+  if (!allowed.includes(actor.momentum)) {
     return {
       valid: false,
-      reason: `势条件不满足：当前为「${actor.momentum}」，需要「${allowedShi.join("、")}」`,
+      reason: `势条件不满足：当前为「${actor.momentum}」，需要「${allowed.join("、")}」`,
     };
   }
 
@@ -233,7 +240,7 @@ export function validateMomentum(
  */
 export function validateQiNature(
   dice: QiDie[],
-  threshold: string,
+  threshold = "",
 ): { valid: boolean; reason?: string } {
   const trimmed = threshold.trim();
 

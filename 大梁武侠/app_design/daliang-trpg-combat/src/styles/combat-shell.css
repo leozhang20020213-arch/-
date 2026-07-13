@@ -9,7 +9,7 @@
    -------------------------------------------------------------------------- */
 .combat-shell {
   display: grid;
-  grid-template-rows: var(--cs-topbar-h) 1fr var(--cs-phasebar-h);
+  grid-template-rows: var(--cs-topbar-h) minmax(0, 1fr) auto;
   grid-template-columns: 1fr;
   height: 100vh;
   width: 100vw;
@@ -33,10 +33,10 @@
 
 /* ---- Tokens for combat shell ---- */
 :root {
-  --cs-topbar-h:      56px;
-  --cs-phasebar-h:    48px;
-  --cs-left-w:        320px;
-  --cs-right-w:       380px;
+  --cs-topbar-h:      58px;
+  --cs-phasebar-h:    52px;
+  --cs-left-w:        280px;
+  --cs-right-w:       320px;
   --cs-gap:           10px;
   --cs-pad:           10px;
 }
@@ -62,6 +62,13 @@
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
+}
+
+.combat-bottom {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  z-index: var(--z-sticky);
 }
 
 .combat-left::-webkit-scrollbar,
@@ -432,15 +439,15 @@
    Center Panel (flex 1) — combat stage + qi dice zone
    -------------------------------------------------------------------------- */
 .combat-center-panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: minmax(210px, 0.9fr) minmax(330px, 1.1fr);
   gap: var(--cs-gap);
   overflow: hidden;
+  min-height: 0;
 }
 
 .combat-stage-area {
-  flex: 0 0 44%;
-  min-height: 240px;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border-panel);
   border-radius: 8px;
@@ -448,9 +455,25 @@
   position: relative;
 }
 
+.combat-workbench {
+  display: grid;
+  grid-template-rows: 120px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.combat-workbench.no-action-deck {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.combat-action-deck {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .combat-qi-area {
-  flex: 1 1 0;
-  min-height: 340px;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid rgba(212, 132, 58, 0.2);
   border-radius: 8px;
@@ -464,6 +487,200 @@
   display: flex;
   flex-direction: column;
   gap: var(--cs-gap);
+}
+
+.combat-right-panel__hint {
+  padding: 4px 8px 8px;
+  color: rgba(212, 200, 184, 0.56);
+  font-size: var(--fs-helper);
+  font-style: italic;
+}
+
+.combat-context-empty {
+  text-align: left;
+  min-height: 132px;
+}
+
+.context-kicker,
+.dm-toolbox__eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: #9d6b3e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+/* --------------------------------------------------------------------------
+   Declaration workbench — horizontal card hand + compact draft controls
+   -------------------------------------------------------------------------- */
+.combat-action-deck-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 2.3fr);
+  grid-template-rows: 20px minmax(0, 1fr) 24px;
+  gap: 4px 10px;
+  height: 100%;
+  margin: 0;
+  padding: 8px 10px !important;
+  overflow: hidden !important;
+  background:
+    linear-gradient(180deg, rgba(245, 238, 224, 0.98), rgba(226, 213, 194, 0.96)) !important;
+}
+
+.combat-action-deck-panel > .panel-title {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+
+.combat-action-deck-panel > .panel-title img {
+  width: 20px;
+  height: 20px;
+}
+
+.combat-action-deck-panel > .panel-title h2 {
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.combat-action-deck-panel > .form-grid {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-content: stretch;
+  margin: 0;
+  gap: 3px;
+  min-height: 0;
+}
+
+.combat-action-deck-panel > .form-grid label {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-height: 0;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.combat-action-deck-panel > .form-grid select {
+  width: 100%;
+  height: 24px;
+  min-height: 0;
+  padding: 1px 24px 1px 6px;
+  font-size: 10px;
+}
+
+.combat-action-deck-panel .action-panel__selection {
+  display: none;
+}
+
+.combat-action-deck-panel .action-card-grid {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 7px;
+  margin: 0;
+  padding: 3px 5px 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+}
+
+.combat-action-deck-panel .action-card {
+  flex: 0 0 168px;
+  min-height: 82px;
+  scroll-snap-align: start;
+}
+
+.combat-action-deck-panel .action-card:hover {
+  transform: translateY(-3px);
+}
+
+.action-panel__handoff {
+  grid-column: 1;
+  grid-row: 3;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 2px 6px;
+  border-left: 3px solid var(--yang-die);
+  border-radius: 4px;
+  background: rgba(212, 132, 58, 0.08);
+}
+
+.action-panel__handoff span {
+  display: none;
+}
+
+.action-panel__handoff strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-dark);
+  font-size: 9px;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.combat-action-deck-panel > .primary-action {
+  grid-column: 1;
+  grid-row: 3;
+  min-height: 0;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+/* DM-only utilities; phase progression deliberately lives in command bar. */
+.dm-toolbox__title {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.dm-toolbox__actor {
+  padding: 4px 9px;
+  border: 1px solid rgba(139, 58, 58, 0.25);
+  border-radius: 999px;
+  color: #8b3a3a;
+  font-size: 11px;
+}
+
+.dm-toolbox__phase-note {
+  margin: 0 0 8px;
+  color: var(--ink-subtle);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.dm-toolbox__quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.dm-toolbox__quick-actions button {
+  min-height: 34px;
+}
+
+.dm-toolbox__field {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dm-toolbox__note textarea {
+  min-height: 66px;
+  resize: vertical;
 }
 
 .combat-right-panel .panel-card {
@@ -493,19 +710,34 @@
 .combat-phasebar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   height: var(--cs-phasebar-h);
   min-height: var(--cs-phasebar-h);
-  padding: 0 12px;
+  padding: 0 14px;
   background: linear-gradient(180deg, #1f1912 0%, #14100d 100%);
   border-top: 1px solid rgba(107, 75, 45, 0.15);
   user-select: none;
 }
 
+.combat-phasebar__state {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 112px;
+}
+
+.combat-phasebar__eyebrow {
+  color: rgba(212, 200, 184, 0.38);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
 .combat-phasebar__label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 800;
+  color: #f5d89a;
   letter-spacing: 0.04em;
   white-space: nowrap;
   flex-shrink: 0;
@@ -515,8 +747,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: 1;
-  justify-content: center;
+  flex: 0 0 auto;
+  justify-content: flex-start;
 }
 
 .combat-phasebar__btn {
@@ -534,6 +766,13 @@
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
+.combat-phasebar__btn.primary {
+  min-width: 150px;
+  border-color: rgba(230, 180, 80, 0.72);
+  background: linear-gradient(180deg, #9a6532, #5c3a1e);
+  box-shadow: 0 0 18px rgba(212, 132, 58, 0.18);
+}
+
 .combat-phasebar__btn:hover:not(:disabled) {
   box-shadow: 0 3px 14px rgba(212, 132, 58, 0.3);
 }
@@ -549,8 +788,8 @@
   color: var(--ink-muted);
   font-style: italic;
   white-space: nowrap;
-  flex-shrink: 0;
-  max-width: 280px;
+  flex: 1;
+  max-width: none;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: right;
@@ -636,18 +875,16 @@
    -------------------------------------------------------------------------- */
 @media (max-width: 1400px) {
   .combat-main {
-    grid-template-columns: 280px 1fr 340px;
+    grid-template-columns: 240px minmax(0, 1fr) 292px;
     gap: 8px;
     padding: 8px 8px 0;
   }
 }
 
 @media (max-height: 820px) {
-  .combat-stage-area {
-    flex: 0 0 40%;
-    min-height: 180px;
+  .combat-center-panel {
+    grid-template-rows: 170px minmax(0, 1fr);
   }
-  .combat-qi-area {
-    min-height: 300px;
-  }
+
+  .combat-action-deck-panel .action-card { min-height: 74px; }
 }

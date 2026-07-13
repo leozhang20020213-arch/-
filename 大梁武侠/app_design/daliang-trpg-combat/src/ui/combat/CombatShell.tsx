@@ -46,7 +46,7 @@ export const CombatShell: FC<CombatShellProps> = ({
         <div className="combat-right">{right}</div>
       </div>
 
-      {bottom}
+      <div className="combat-bottom">{bottom}</div>
       {drawer}
       {modal}
     </div>

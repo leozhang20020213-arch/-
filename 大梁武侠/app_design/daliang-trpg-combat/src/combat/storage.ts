@@ -1,9 +1,17 @@
 import { createInitialCombatState, createSeedState } from "../data/seed";
-import type { AppSession, CombatState, InnerArt, InventoryItem, SixRoots, StatusEffect } from "./types";
+import type { AppSession, CombatState, InnerArt, InventoryItem, MoveTiming, SixRoots, StatusEffect } from "./types";
 
 const STORAGE_KEY = "daliang-trpg-combat:v1";
 const SESSION_KEY = "daliang-trpg-session:v1";
 const INVALID_PLACEHOLDER_STATUSES = new Set(["雨夜视线受限", "阴偏", "雨幕遮身", "搬箱奔逃", "等待撤离", "买主接应"]);
+const VALID_MOVE_TIMINGS = new Set<MoveTiming>([
+  "正式出手",
+  "出手便行",
+  "随手便行",
+  "截击",
+  "应招",
+  "整备/情景",
+]);
 
 export function createDefaultSession(): AppSession {
   return {
@@ -151,6 +159,7 @@ function normalizeCombatState(value: Partial<CombatState>): CombatState {
       innerArts: normalizedInnerArts,
       statuses: allStatuses,
       inventory: (rawActor.inventory as InventoryItem[]) ?? seedActor?.inventory ?? [],
+      moves: normalizeMoves(rawActor.moves, seedActor?.moves ?? []),
     };
   });
 
@@ -160,7 +169,10 @@ function normalizeCombatState(value: Partial<CombatState>): CombatState {
     ...seed,
     ...value,
     actors,
-    dice: (Array.isArray(valueRec.dice) ? valueRec.dice : seed.dice) as CombatState["dice"],
+    dice: normalizeDice(
+      (Array.isArray(valueRec.dice) ? valueRec.dice : seed.dice) as CombatState["dice"],
+      seed.dice,
+    ),
     tracks: normalizeTracks((Array.isArray(valueRec.tracks) ? valueRec.tracks : seed.tracks) as CombatState["tracks"]),
     distances: (Array.isArray(valueRec.distances) ? valueRec.distances : seed.distances) as CombatState["distances"],
     logs: (Array.isArray(valueRec.logs) ? valueRec.logs : seed.logs) as CombatState["logs"],
@@ -201,6 +213,68 @@ function normalizeAppSession(value: Partial<AppSession>): AppSession {
 
 function normalizeTracks(tracks: CombatState["tracks"]): CombatState["tracks"] {
   return tracks.map((track) => (track.id === "track-escape" || track.name === "逃离危机" ? { ...track, name: "危机值" } : track));
+}
+
+function normalizeDice(
+  dice: CombatState["dice"],
+  seedDice: CombatState["dice"],
+): CombatState["dice"] {
+  const seeds = new Map(seedDice.map((die) => [die.id, die]));
+  return dice.map((die) => {
+    const rawNature = String((die as unknown as Record<string, unknown>).nature ?? "raw");
+    const nature = rawNature === "yin" || rawNature === "yang"
+      ? rawNature
+      : "raw";
+    return { ...seeds.get(die.id), ...die, nature };
+  });
+}
+
+function normalizeMoves(raw: unknown, seedMoves: CombatState["actors"][number]["moves"]): CombatState["actors"][number]["moves"] {
+  if (!Array.isArray(raw)) return seedMoves;
+  const seeds = new Map(seedMoves.map((move) => [move.id, move]));
+  return raw.map((move) => {
+    if (!isRecord(move)) return move;
+    const id = String(move.id ?? "");
+    const seedMove = seeds.get(id);
+    const rawTiming = String(move.timing ?? seedMove?.timing ?? "正式出手");
+    const legacyDamage = typeof move.baseDamage === "number" ? move.baseDamage : 0;
+    return {
+      ...seedMove,
+      ...move,
+      // Legacy prototypes used free-form timing labels. Unknown labels are
+      // migrated to the strict formal-action path so yin/yang slot rules are
+      // never silently bypassed by an old save.
+      timing: VALID_MOVE_TIMINGS.has(rawTiming as MoveTiming)
+        ? rawTiming as MoveTiming
+        : "正式出手",
+      category: typeof move.category === "string" ? move.category : seedMove?.category ?? "外功",
+      subCategory: typeof move.subCategory === "string" ? move.subCategory : seedMove?.subCategory ?? "主攻",
+      tier: typeof move.tier === "string" ? move.tier : seedMove?.tier ?? "俗家",
+      designGrade: typeof move.designGrade === "string" ? move.designGrade : seedMove?.designGrade ?? "C",
+      yinYangLabel: typeof move.yinYangLabel === "string" ? move.yinYangLabel : seedMove?.yinYangLabel ?? "中平",
+      formPosition: typeof move.formPosition === "string" ? move.formPosition : seedMove?.formPosition ?? "无",
+      minDice: typeof move.minDice === "number" ? move.minDice : seedMove?.minDice ?? 1,
+      qiNatureThreshold: typeof move.qiNatureThreshold === "string"
+        ? move.qiNatureThreshold
+        : seedMove?.qiNatureThreshold ?? "任意气性",
+      shiCondition: typeof move.shiCondition === "string" ? move.shiCondition : seedMove?.shiCondition ?? "无势",
+      targetRange: typeof move.targetRange === "string" ? move.targetRange : seedMove?.targetRange ?? "当前目标",
+      equipPermission: typeof move.equipPermission === "string" ? move.equipPermission : seedMove?.equipPermission ?? "无",
+      baseEffect: typeof move.baseEffect === "string"
+        ? move.baseEffect
+        : seedMove?.baseEffect ?? (legacyDamage > 0 ? `造成气血${legacyDamage}点` : "按旧版招式文本裁定"),
+      triggers: Array.isArray(move.triggers) ? move.triggers : seedMove?.triggers ?? [],
+      postShi: typeof move.postShi === "string" ? move.postShi : seedMove?.postShi ?? "不改势",
+      resourceDestination: typeof move.resourceDestination === "string"
+        ? move.resourceDestination
+        : seedMove?.resourceDestination ?? "已用常规气骰入息库",
+      hasIntercept: typeof move.hasIntercept === "boolean" ? move.hasIntercept : seedMove?.hasIntercept ?? true,
+      hasReact: typeof move.hasReact === "boolean" ? move.hasReact : seedMove?.hasReact ?? true,
+      allowedShi: Array.isArray(move.allowedShi)
+        ? move.allowedShi
+        : seedMove?.allowedShi ?? [],
+    };
+  }) as CombatState["actors"][number]["moves"];
 }
 
 // === Normalization helpers ===

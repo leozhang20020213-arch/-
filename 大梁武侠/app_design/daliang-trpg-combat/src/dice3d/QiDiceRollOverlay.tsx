@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import type { QiDie } from "../combat/types";
@@ -37,9 +37,22 @@ export function QiDiceRollOverlay({
   onClose: () => void;
 }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
+  const skipAnimationRef = useRef(false);
   const [results, setResults] = useState<DiceRollResult[]>([]);
   const [skipAnimation, setSkipAnimation] = useState(false);
-  const [rollPhase, setRollPhase] = useState<"idle" | "rolling" | "done">("idle");
+  const [rollPhase, setRollPhase] = useState<"idle" | "rolling" | "arranging" | "done">("idle");
+
+  const sortedResults = useMemo(() => {
+    const natureRank = { yin: 0, yang: 1, raw: 2 } as const;
+    return [...results].sort((a, b) => {
+      const aDie = dice.find((die) => die.id === a.id);
+      const bDie = dice.find((die) => die.id === b.id);
+      if (!aDie || !bDie) return 0;
+      return aDie.sides - bDie.sides
+        || natureRank[aDie.nature] - natureRank[bDie.nature]
+        || b.value - a.value;
+    });
+  }, [dice, results]);
 
   useEffect(() => {
     if (rollPhase !== "idle") return;
@@ -122,50 +135,74 @@ export function QiDiceRollOverlay({
       value: Math.floor(Math.random() * die.sides) + 1,
     }));
 
-    // Create roll plans
+    // Create roll plans and stable post-roll positions. Results always settle
+    // D4→D20, then 阴→阳→原, then high→low.
     const rollPlans = meshHandles.map((mh, i) => {
       const startQuat = mh.mesh.quaternion.clone();
       return createRollAnimationPlan(definitions[i], startQuat, targetResults[i].value);
+    });
+    const startPositions = meshHandles.map((handle) => handle.mesh.position.clone());
+    const natureRank = { yin: 0, yang: 1, raw: 2 } as const;
+    const sortedDice = dice
+      .map((die, index) => ({ die, index, result: targetResults[index] }))
+      .sort((a, b) => a.die.sides - b.die.sides
+        || natureRank[a.die.nature] - natureRank[b.die.nature]
+        || b.result.value - a.result.value);
+    const targetById = new Map<string, THREE.Vector3>();
+    const columns = Math.min(6, Math.max(1, dice.length));
+    const rows = Math.ceil(dice.length / columns);
+    sortedDice.forEach(({ die }, sortedIndex) => {
+      const row = Math.floor(sortedIndex / columns);
+      const column = sortedIndex % columns;
+      const itemsInRow = Math.min(columns, dice.length - row * columns);
+      const x = (column - (itemsInRow - 1) / 2) * 0.92;
+      const z = (row - (rows - 1) / 2) * 1.02;
+      targetById.set(die.id, new THREE.Vector3(x, 0, z));
     });
 
     // Animation loop
     const startedAt = performance.now();
     let frameId = 0;
     let stopped = false;
+    let arrangingNotified = false;
 
     function render(now: number) {
       if (stopped) return;
       const elapsed = now - startedAt;
-      const progress = skipAnimation ? 1 : Math.min(1, elapsed / 980);
+      const rollDuration = 980;
+      const arrangeDuration = 520;
+      const effectiveElapsed = skipAnimationRef.current
+        ? rollDuration + arrangeDuration
+        : elapsed;
+      const rolling = effectiveElapsed < rollDuration;
+      const arrangeProgress = Math.min(1, Math.max(0, (effectiveElapsed - rollDuration) / arrangeDuration));
+
+      if (!rolling && !arrangingNotified) {
+        arrangingNotified = true;
+        setRollPhase("arranging");
+      }
 
       meshHandles.forEach((mh, i) => {
-        if (skipAnimation) {
-          // Instant: set final quaternion
-          const result = targetResults[i].value;
-          const face = definitions[i].faces.find((f) => f.value === result) ?? definitions[i].faces[0];
-          const q = new THREE.Quaternion().setFromUnitVectors(
-            face.normal.clone().normalize(),
-            new THREE.Vector3(0, 1, 0),
-          );
-          mh.mesh.quaternion.copy(q);
-        } else {
-          const sample = sampleRollAnimation(rollPlans[i], elapsed);
+        if (rolling) {
+          const sample = sampleRollAnimation(rollPlans[i], effectiveElapsed);
           mh.mesh.quaternion.copy(sample.quaternion);
           mh.mesh.position.y = sample.lift;
+        } else {
+          const finalSample = sampleRollAnimation(rollPlans[i], rollDuration);
+          mh.mesh.quaternion.copy(finalSample.quaternion);
+          const target = targetById.get(dice[i].id) ?? startPositions[i];
+          const eased = 1 - Math.pow(1 - arrangeProgress, 3);
+          mh.mesh.position.lerpVectors(startPositions[i], target, eased);
+          mh.mesh.position.y = Math.sin(arrangeProgress * Math.PI) * 0.12;
         }
       });
 
       renderer.render(scene, camera);
 
-      if (progress < 1) {
+      if (rolling || arrangeProgress < 1) {
         frameId = requestAnimationFrame(render);
       } else {
-        // Read final results
-        const finalResults = meshHandles.map((mh, i) => ({
-          id: dice[i].id,
-          value: resolveResultFromPose(definitions[i], mh.mesh.quaternion as unknown as THREE.Quaternion),
-        }));
-        setResults(finalResults);
+        setResults(targetResults);
         setRollPhase("done");
       }
     }
@@ -181,21 +218,31 @@ export function QiDiceRollOverlay({
       renderer.dispose();
       container.replaceChildren();
     };
-  }, [dice, skipAnimation]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="modal-backdrop">
       <section className="panel prompt-modal dice-roll-overlay">
         <div className="panel-title">
-          <h2>气骰投掷</h2>
+          <div>
+            <p className="eyebrow">新场景 · 气池 → 气海</p>
+            <h2>气骰整体投掷</h2>
+          </div>
           <button className="icon-button close-button" type="button" onClick={onClose} aria-label="关闭投骰">
             ×
           </button>
         </div>
         <div className="dice-canvas" ref={mountRef} data-testid="three-dice-canvas" />
+        <p className={`dice-roll-phase phase-${rollPhase}`} aria-live="polite">
+          {rollPhase === "rolling" ? "气骰翻转中……"
+            : rollPhase === "arranging" ? "按骰阶、气性与点数归位……"
+            : rollPhase === "done" ? "骰面已定，确认后写入气海"
+            : "准备投掷"}
+        </p>
         <div className="mini-dice-list">
-          {dice.map((die) => {
-            const result = results.find((item) => item.id === die.id);
+          {(sortedResults.length > 0 ? sortedResults : dice.map((die) => ({ id: die.id, value: 0 }))).map((item) => {
+            const die = dice.find((candidate) => candidate.id === item.id)!;
+            const result = results.find((candidate) => candidate.id === die.id);
             return (
               <span className="identity-pill" key={die.id}>
                 {affinityLabel(affinityFromNature(die.nature))} {dieTypeFromSides(die.sides)}：
@@ -208,7 +255,10 @@ export function QiDiceRollOverlay({
           <input
             type="checkbox"
             checked={skipAnimation}
-            onChange={(event) => setSkipAnimation(event.target.checked)}
+            onChange={(event) => {
+              skipAnimationRef.current = event.target.checked;
+              setSkipAnimation(event.target.checked);
+            }}
           />
           跳过动画
         </label>
@@ -222,7 +272,7 @@ export function QiDiceRollOverlay({
             disabled={results.length !== dice.length}
             onClick={() => onConfirm(results)}
           >
-            确认结果并写入事件
+            确认骰面并整体入海
           </button>
         </div>
       </section>

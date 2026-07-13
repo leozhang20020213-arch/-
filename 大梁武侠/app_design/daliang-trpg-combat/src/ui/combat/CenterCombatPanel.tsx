@@ -3,7 +3,9 @@ import type { FC, ReactNode } from "react";
 export interface CenterCombatPanelProps {
   /** Combat stage content (Phaser board + unit cards + distance lines) */
   stage: ReactNode;
-  /** 3D Qi dice tray content */
+  /** Card/action deck for the authoritative declaration draft */
+  actionDeck?: ReactNode;
+  /** Qi dice workbench */
   qiZone: ReactNode;
 }
 
@@ -14,12 +16,16 @@ export interface CenterCombatPanelProps {
  */
 export const CenterCombatPanel: FC<CenterCombatPanelProps> = ({
   stage,
+  actionDeck,
   qiZone,
 }) => {
   return (
     <div className="combat-center-panel">
       <div className="combat-stage-area">{stage}</div>
-      <div className="combat-qi-area">{qiZone}</div>
+      <div className={`combat-workbench${actionDeck ? "" : " no-action-deck"}`}>
+        {actionDeck && <div className="combat-action-deck">{actionDeck}</div>}
+        <div className="combat-qi-area">{qiZone}</div>
+      </div>
     </div>
   );
 };

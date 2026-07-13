@@ -103,12 +103,6 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
     [state, actedActorIds],
   );
 
-  // Current actor name for the prominent badge
-  const currentActorName = useMemo(() => {
-    const actor = state.actors.find((a) => a.id === state.activeActorId);
-    return actor?.name ?? null;
-  }, [state.actors, state.activeActorId]);
-
   // Separator dots between turn chips (not after the last one)
   const turnEntries = turnState.order;
 
@@ -119,15 +113,10 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
         <span className="app-name" title="大梁江湖 TRPG">大梁江湖</span>
       </div>
 
-      {/* Center-left: Round + Phase + Current Actor */}
+      {/* Center-left: Round + phase. Current actor is the highlighted queue chip. */}
       <div className="combat-topbar__round-phase">
         <span className="round-badge">第{turnState.round}轮</span>
         <span className="phase-badge">{turnState.shortPhase}</span>
-        {currentActorName && (
-          <span className="current-actor-badge" title={`当前行动者：${currentActorName}`}>
-            当前：{currentActorName}
-          </span>
-        )}
       </div>
 
       {/* Center: Turn order queue */}

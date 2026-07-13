@@ -68,6 +68,12 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
   const visibleActions = actions.filter(
     (a) => a.visibleTo === "both" || a.visibleTo === (isDM ? "dm" : "player"),
   );
+  // Declaration confirmation lives in the qi workbench. Keeping it out of the
+  // command bar guarantees one authoritative submit path.
+  const commandActions = visibleActions.filter(
+    (action) => action.type !== "CONFIRM_DECLARATION",
+  );
+  const enabledActions = commandActions.filter((action) => action.enabled);
 
   const hint = getPhaseHint(state.phase, isDM, hasPending);
 
@@ -94,21 +100,23 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
   }
 
   // Collect disabled reasons for display
-  const disabledHints = visibleActions
+  const disabledHints = commandActions
     .filter((a) => !a.enabled && a.disabledReason)
     .map((a) => a.disabledReason);
 
   return (
     <div className="combat-phasebar">
-      <span className="combat-phasebar__label">{displayPhase}</span>
+      <div className="combat-phasebar__state">
+        <span className="combat-phasebar__eyebrow">当前时点</span>
+        <strong className="combat-phasebar__label">{displayPhase}</strong>
+      </div>
 
       <div className="combat-phasebar__actions">
-        {visibleActions.map((a) => (
+        {enabledActions.map((a, index) => (
           <button
             key={a.type}
-            className={`combat-phasebar__btn${a.enabled ? "" : " disabled"}`}
+            className={`combat-phasebar__btn${index === 0 ? " primary" : ""}`}
             type="button"
-            disabled={!a.enabled}
             onClick={() => handleClick(a.type)}
           >
             {actionLabel(a)}
@@ -116,7 +124,7 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
         ))}
       </div>
 
-      <span className="combat-phasebar__hint">
+      <span className="combat-phasebar__hint" aria-live="polite">
         {disabledHints.length > 0 ? disabledHints.join(" · ") : hint}
       </span>
     </div>

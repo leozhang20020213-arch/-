@@ -108,13 +108,30 @@ type DrawerId =
   | "dmScene"
   | "dmLog";
 
+interface DiceRollRequest {
+  dice: QiDie[];
+  mode: "enterScene" | "reroll";
+}
+
+interface DeclarationDraft {
+  actorId: string;
+  moveId: string;
+  targetId: string;
+  yinSlotIds: string[];
+  yangSlotIds: string[];
+}
+
 export function App() {
   const [state, setState] = useState<CombatState>(() => loadCombatState());
   const [session, setSession] = useState<AppSession>(() => loadAppSession());
-  const [selectedTargetId, setSelectedTargetId] = useState("enemy-short-blade");
-  const [selectedMoveId, setSelectedMoveId] = useState("move-rain-step-cut");
+  const [declarationDraft, setDeclarationDraft] = useState<DeclarationDraft>({
+    actorId: "pc-shen-qing",
+    targetId: "enemy-short-blade",
+    moveId: "move-rain-step-cut",
+    yinSlotIds: [],
+    yangSlotIds: [],
+  });
   const [selectedDice, setSelectedDice] = useState<string[]>([]);
-  const [slotDice, setSlotDice] = useState<{ yin: string[]; yang: string[] }>({ yin: [], yang: [] });
   const [slotHint, setSlotHint] = useState("");
   const [dmNote, setDmNote] = useState("雨势加重，巡检火把已经到桥头。");
   const [debugView, setDebugView] = useState(false);
@@ -122,7 +139,7 @@ export function App() {
   const [lanUrl, setLanUrl] = useState("ws://localhost:8787");
   const [lanStatus, setLanStatus] = useState<LanConnectionStatus>("idle");
   const [lanDetail, setLanDetail] = useState("");
-  const [rollDice, setRollDice] = useState<QiDie[] | null>(null);
+  const [rollRequest, setRollRequest] = useState<DiceRollRequest | null>(null);
   const [prompt, setPrompt] = useState<{ title: string; message: string } | null>(null);
   const [selectedCombatantId, setSelectedCombatantId] = useState<string | undefined>();
   const [actedActorIds, setActedActorIds] = useState<Set<string>>(new Set());
@@ -130,6 +147,9 @@ export function App() {
   const lanClientRef = useRef<LanClient | null>(null);
 
   const playerActorId = session.selectedActorId ?? "pc-shen-qing";
+  const selectedTargetId = declarationDraft.targetId;
+  const selectedMoveId = declarationDraft.moveId;
+  const slotDice = { yin: declarationDraft.yinSlotIds, yang: declarationDraft.yangSlotIds };
   const playerState = useMemo(() => visibleForPlayer(state, playerActorId), [state, playerActorId]);
   const currentActor = state.actors.find((actor) => actor.id === playerActorId) ?? state.actors[0];
 
@@ -139,8 +159,35 @@ export function App() {
   useEffect(() => {
     if (!currentActor.moves.some((move) => move.id === selectedMoveId)) {
       setSelectedMoveId(currentActor.moves[0]?.id ?? "");
+      setSelectedDice([]);
+      setSlotDice({ yin: [], yang: [] });
     }
   }, [currentActor, selectedMoveId]);
+
+  useEffect(() => {
+    setDeclarationDraft((current) => current.actorId === state.activeActorId
+      ? current
+      : { ...current, actorId: state.activeActorId, yinSlotIds: [], yangSlotIds: [] });
+    setSelectedDice([]);
+  }, [state.activeActorId]);
+
+  function setSelectedTargetId(targetId: string) {
+    setDeclarationDraft((current) => ({ ...current, targetId }));
+  }
+
+  function setSelectedMoveId(moveId: string) {
+    setDeclarationDraft((current) => ({ ...current, moveId }));
+  }
+
+  function setSlotDice(
+    next: { yin: string[]; yang: string[] } | ((current: { yin: string[]; yang: string[] }) => { yin: string[]; yang: string[] }),
+  ) {
+    setDeclarationDraft((current) => {
+      const previous = { yin: current.yinSlotIds, yang: current.yangSlotIds };
+      const resolved = typeof next === "function" ? next(previous) : next;
+      return { ...current, yinSlotIds: resolved.yin, yangSlotIds: resolved.yang };
+    });
+  }
 
   function patch(updater: (current: CombatState) => CombatState) {
     setState((current) => updater(current));
@@ -248,8 +295,39 @@ export function App() {
     }));
   }
 
-  function commitRollResults(results: DiceRollResult[]) {
-    patch((current) => commitDiceRollResults(current, results));
+  function selectMove(moveId: string) {
+    setSelectedMoveId(moveId);
+    setSelectedBasicAction(null);
+    setSelectedDice([]);
+    setSlotDice({ yin: [], yang: [] });
+  }
+
+  function selectBasicAction(action: BasicActionType | null) {
+    setSelectedBasicAction(action);
+    setSelectedDice([]);
+    setSlotDice({ yin: [], yang: [] });
+  }
+
+  function requestSceneRoll() {
+    const poolDice = state.dice.filter(
+      (die) => die.zone === "QI_POOL" && !die.temporary,
+    );
+    if (poolDice.length === 0) {
+      setPrompt({ title: "气池无骰", message: "当前没有可投入气海的常规气骰。" });
+      return;
+    }
+    setRollRequest({ dice: poolDice, mode: "enterScene" });
+  }
+
+  function commitRollRequest(results: DiceRollResult[]) {
+    if (!rollRequest) return;
+    patch((current) => {
+      const prepared = rollRequest.mode === "enterScene"
+        ? enterScene(current, () => 1)
+        : current;
+      return commitDiceRollResults(prepared, results);
+    });
+    setRollRequest(null);
   }
 
   function pickFirstSeaDie(ownerId: string) {
@@ -342,14 +420,13 @@ export function App() {
     debugView,
     setDebugView,
     setSelectedTargetId,
-    setSelectedMoveId,
+    setSelectedMoveId: selectMove,
     activeDrawer,
     setActiveDrawer,
     toggleDie,
     assignDieToSlot,
     removeDieFromSlot,
-    commitRollResults,
-    setRollDice,
+    requestSceneRoll,
     declareFor,
     executeBasicAction,
     patch,
@@ -358,7 +435,7 @@ export function App() {
     selectedCombatantId,
     setSelectedCombatantId,
     selectedBasicAction,
-    setSelectedBasicAction,
+    setSelectedBasicAction: selectBasicAction,
     setPrompt,
     actedActorIds,
   };
@@ -381,7 +458,7 @@ export function App() {
             rawState={state}
             actorId={playerActorId}
             onEnterCombat={() => go("playerCombat", { gameMode: "combat" })}
-            onStartScene={() => patch((current) => enterScene(current))}
+            onStartScene={requestSceneRoll}
           />
         ) : null}
         {(session.route === "playerCombat" || session.route === "player") ? (
@@ -390,12 +467,10 @@ export function App() {
             state={displayState}
             rawState={state}
             actorId={playerActorId}
-            onStartScene={() => patch((current) => enterScene(current))}
+            onStartScene={requestSceneRoll}
             onForm={() => patch((current) => formMove(current))}
             onReact={reactPending}
             onOutcome={() => patch((current) => applyOutcome(current))}
-            onRegulateBreath={() => regulateFirstRestDie(patch, state, playerActorId)}
-            onReflection={() => patch((current) => useReflection(current, playerActorId))}
           />
         ) : null}
         {session.route === "dmScene" ? (
@@ -403,7 +478,7 @@ export function App() {
             {...common}
             dmNote={dmNote}
             setDmNote={setDmNote}
-            onStartScene={() => patch((current) => enterScene(current))}
+            onStartScene={requestSceneRoll}
             onEnterCombat={() => go("dmCombat", { gameMode: "combat" })}
             onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
           />
@@ -413,26 +488,23 @@ export function App() {
             {...common}
             dmNote={dmNote}
             setDmNote={setDmNote}
-            onStartScene={() => patch((current) => enterScene(current))}
+            onStartScene={requestSceneRoll}
             onIntercept={interceptPending}
             onForm={() => patch((current) => formMove(current))}
             onReact={reactPending}
             onOutcome={() => patch((current) => applyOutcome(current))}
             onEndRound={() => patch((current) => endRound(current))}
             onMomentum={(actorId, momentum) => patch((current) => changeMomentum(current, actorId, momentum))}
-            onRegulateBreath={() => regulateFirstRestDie(patch, state, playerActorId)}
-            onReflection={() => patch((current) => useReflection(current, playerActorId))}
             onExpireSource={() => patch((current) => expireSource(current, "短兵客·雨步"))}
             onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
           />
         ) : null}
-        {rollDice ? (
+        {rollRequest ? (
           <QiDiceRollOverlay
-            dice={rollDice}
-            onClose={() => setRollDice(null)}
+            dice={rollRequest.dice}
+            onClose={() => setRollRequest(null)}
             onConfirm={(results: DiceRollResult[]) => {
-              patch((current) => commitDiceRollResults(current, results));
-              setRollDice(null);
+              commitRollRequest(results);
             }}
           />
         ) : null}
@@ -889,8 +961,6 @@ function PlayerCombatDesk(props: DeskProps & {
   onForm: () => void;
   onReact: () => void;
   onOutcome: () => void;
-  onRegulateBreath: () => void;
-  onReflection: () => void;
 }) {
   const actor = props.state.actors.find((item) => item.id === props.actorId) ?? props.state.actors[0];
   const enemies = props.state.actors.filter((item) => item.side !== "player");
@@ -917,40 +987,40 @@ function PlayerCombatDesk(props: DeskProps & {
       center={
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
+          actionDeck={<ActionPanel {...props} actor={actor} enemies={enemies} />}
           qiZone={
             <QiDiceDock
               state={props.state}
               actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
               selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
               hasSelectedTarget={Boolean(props.selectedTargetId)}
-              onRollToSea={() => props.patch((current) => enterScene(current))}
+              yinSlotIds={props.slotDice.yin}
+              yangSlotIds={props.slotDice.yang}
+              onAssignDie={props.assignDieToSlot}
+              onRemoveDie={props.removeDieFromSlot}
+              onRollToSea={props.requestSceneRoll}
               distanceWarning={(() => {
                 const m = actor.moves.find((mv) => mv.id === props.selectedMoveId);
                 const ts = deriveTargetState(props.state, props.selectedTargetId, m);
                 return ts.isRangeValid ? undefined : ts.invalidReason;
               })()}
-              onConfirm={(yinIds, yangIds) => {
+              onConfirm={() => {
                 const move = actor.moves.find((m) => m.id === props.selectedMoveId);
                 if (!move || !props.selectedTargetId) return;
-                const diceToUse = [...yinIds, ...yangIds];
+                const diceToUse = [...props.slotDice.yin, ...props.slotDice.yang];
                 if (diceToUse.length === 0) {
                   props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
                   return;
                 }
                 const availability = canDeclareAction(props.state, actor.id, move.id, {
-                  yinSlotDiceIds: yinIds,
-                  yangSlotDiceIds: yangIds,
+                  yinSlotDiceIds: props.slotDice.yin,
+                  yangSlotDiceIds: props.slotDice.yang,
                 });
                 if (!availability.allowed) {
                   props.setPrompt({ title: "宣言不可用", message: availability.reasons.join("、") });
                   return;
                 }
-                props.patch((current) =>
-                  declareAction(current, actor.id, props.selectedTargetId, move.id, diceToUse, {
-                    yinSlotDiceIds: yinIds,
-                    yangSlotDiceIds: yangIds,
-                  }),
-                );
+                props.declareFor(actor.id, props.selectedTargetId, move.id);
               }}
             />
           }
@@ -958,8 +1028,7 @@ function PlayerCombatDesk(props: DeskProps & {
       }
       right={
         <RightCombatPanel
-          actions={<ActionPanel {...props} actor={actor} enemies={enemies} />}
-          enemies={
+          actions={
             selectedEnemy ? (
               <EnemyPublicDrawer
                 actor={selectedEnemy}
@@ -971,15 +1040,6 @@ function PlayerCombatDesk(props: DeskProps & {
                 <p className="hint" style={{ padding: "12px 0" }}>点击战场敌人卡片查看情报</p>
               </section>
             )
-          }
-          flowButtons={
-            <PlayerFlowPanel
-              onStartScene={props.onStartScene}
-              onForm={props.onForm}
-              onReact={props.onReact}
-              onOutcome={props.onOutcome}
-              hasPending={Boolean(props.rawState.pendingAction)}
-            />
           }
         />
       }
@@ -1096,8 +1156,6 @@ function DmCombatDesk(props: DeskProps & {
   onOutcome: () => void;
   onEndRound: () => void;
   onMomentum: (actorId: string, momentum: Actor["momentum"]) => void;
-  onRegulateBreath: () => void;
-  onReflection: () => void;
   onExpireSource: () => void;
   onOverride: () => void;
 }) {
@@ -1126,6 +1184,13 @@ function DmCombatDesk(props: DeskProps & {
       center={
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
+          actionDeck={
+            <ActionPanel
+              {...props}
+              actor={props.state.actors.find((a) => a.id === props.state.activeActorId) ?? players[0] ?? props.state.actors[0]}
+              enemies={enemies}
+            />
+          }
           qiZone={
             (() => {
               const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
@@ -1136,21 +1201,20 @@ function DmCombatDesk(props: DeskProps & {
                   actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
                   selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
                   hasSelectedTarget={Boolean(props.selectedTargetId)}
-                  onRollToSea={() => props.patch((current) => enterScene(current))}
-                  onConfirm={(yinIds, yangIds) => {
+                  yinSlotIds={props.slotDice.yin}
+                  yangSlotIds={props.slotDice.yang}
+                  onAssignDie={props.assignDieToSlot}
+                  onRemoveDie={props.removeDieFromSlot}
+                  onRollToSea={props.requestSceneRoll}
+                  onConfirm={() => {
                     const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
                     if (!move || !props.selectedTargetId) return;
-                    const diceToUse = [...yinIds, ...yangIds];
+                    const diceToUse = [...props.slotDice.yin, ...props.slotDice.yang];
                     if (diceToUse.length === 0) {
                       props.setPrompt({ title: "需要气骰", message: "至少需要投入一枚气骰。" });
                       return;
                     }
-                    props.patch((current) =>
-                      declareAction(current, dmActorId, props.selectedTargetId, move.id, diceToUse, {
-                        yinSlotDiceIds: yinIds,
-                        yangSlotDiceIds: yangIds,
-                      }),
-                    );
+                    props.declareFor(dmActorId, props.selectedTargetId, move.id);
                   }}
                 />
               );
@@ -1161,24 +1225,6 @@ function DmCombatDesk(props: DeskProps & {
       right={
         <RightCombatPanel
           actions={
-            <DmControlPanel
-              state={props.state}
-              dmNote={props.dmNote}
-              setDmNote={props.setDmNote}
-              onStartScene={props.onStartScene}
-              onIntercept={props.onIntercept}
-              onForm={props.onForm}
-              onReact={props.onReact}
-              onOutcome={props.onOutcome}
-              onEndRound={props.onEndRound}
-              onRegulateBreath={props.onRegulateBreath}
-              onReflection={props.onReflection}
-              onExpireSource={props.onExpireSource}
-              onMomentum={props.onMomentum}
-              onOverride={props.onOverride}
-            />
-          }
-          enemies={
             selectedEnemy ? (
               <EnemyPublicDrawer
                 actor={selectedEnemy}
@@ -1186,18 +1232,22 @@ function DmCombatDesk(props: DeskProps & {
                 onClose={() => props.setSelectedCombatantId(undefined)}
               />
             ) : (
-              <section className="panel" style={{ textAlign: "center" }}>
-                <p className="hint" style={{ padding: "12px 0" }}>点击战场敌人卡片查看情报</p>
+              <section className="panel combat-context-empty">
+                <span className="context-kicker">目标情报</span>
+                <h2>未选中敌人</h2>
+                <p className="hint">点击交锋台上的单位，查看完整情报、响应挂载与退场条件。</p>
               </section>
             )
           }
-          flowButtons={
-            <section className="panel">
-              <h2>敌人库</h2>
-              <div className="actor-list">
-                {enemies.map((enemy) => <UnitCard actor={enemy} mode="enemyDm" key={enemy.id} />)}
-              </div>
-            </section>
+          enemies={
+            <DmControlPanel
+              state={props.state}
+              dmNote={props.dmNote}
+              setDmNote={props.setDmNote}
+              onExpireSource={props.onExpireSource}
+              onMomentum={props.onMomentum}
+              onOverride={props.onOverride}
+            />
           }
           hint="DM 可查看全部隐藏信息"
         />
@@ -1239,8 +1289,7 @@ interface DeskProps {
   setActiveDrawer: (value: DrawerId | null) => void;
   setSelectedTargetId: (id: string) => void;
   setSelectedMoveId: (id: string) => void;
-  setRollDice: (dice: QiDie[]) => void;
-  commitRollResults: (results: DiceRollResult[]) => void;
+  requestSceneRoll: () => void;
   toggleDie: (id: string) => void;
   assignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
   removeDieFromSlot: (id: string) => void;
@@ -1496,7 +1545,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
   }
 
   return (
-    <section className="panel">
+    <section className="panel combat-action-deck-panel">
       <div className="panel-title">
         <img src={iconMap.response} alt="" />
         <h2>招式与宣言</h2>
@@ -1525,7 +1574,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
       )}
 
       {/* Current selection summary */}
-      <div style={{ marginBottom: 8 }}>
+      <div className="action-panel__selection">
         {isBreathSelected && (
           <div className="action-summary">
             <p><strong>当前选择：调息</strong></p>
@@ -1560,28 +1609,49 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
             yinSlotDiceIds: props.slotDice.yin,
             yangSlotDiceIds: props.slotDice.yang,
           });
+          const selectionReasons = moveAvail.reasons.filter(
+            (reason) => !reason.includes("阴槽") && !reason.includes("阳槽"),
+          );
+          const canPrepare = selectionReasons.length === 0;
           const gradeClass = move.designGrade ? `grade-${move.designGrade}` : "";
           return (
             <button
-              className={`action-card ${selected ? "selected" : ""} ${!moveAvail.allowed ? "warn" : ""}`}
+              className={`action-card ${selected ? "selected" : ""} ${!canPrepare ? "warn" : ""}`}
               type="button"
               key={move.id}
-              onClick={() => { props.setSelectedMoveId(move.id); props.setSelectedBasicAction(null); }}
+              aria-disabled={!canPrepare}
+              title={[
+                `${move.name} · ${move.timing} · ${move.formPosition}`,
+                `对象/距离：${move.targetRange}`,
+                `装备许可：${move.equipPermission}`,
+                `势条件：${move.allowedShi?.join("、") || "无明示门槛"}`,
+                `气性/投入：${move.qiNatureThreshold} · 最低${move.minDice}枚`,
+                `基础效果：${move.baseEffect}`,
+                ...(move.triggers ?? []).map((trigger) => `${trigger.condition}：${trigger.effect}`),
+                `资源去向：${move.resourceDestination}`,
+              ].join("\n")}
+              onClick={() => {
+                if (!canPrepare) {
+                  props.setPrompt({ title: "招式当前不可用", message: selectionReasons.join("、") });
+                  return;
+                }
+                props.setSelectedMoveId(move.id);
+                props.setSelectedBasicAction(null);
+              }}
             >
               <span className="card-name">{move.name}</span>
               <span className="card-badges">
                 {move.formPosition !== "无" && <span className="card-badge form">{move.formPosition}</span>}
                 {move.designGrade && <span className={`card-badge ${gradeClass}`}>{move.designGrade}</span>}
               </span>
+              <span className="card-effect">{move.baseEffect}</span>
               <span className="card-reqs">
                 <span>{move.targetRange}</span>
                 <span>·</span>
                 <span>最低{move.minDice}枚</span>
-                <span>·</span>
-                <span>{move.qiNatureThreshold}</span>
               </span>
-              <span className={`card-status ${moveAvail.allowed ? "ok" : "no"}`}>
-                {moveAvail.allowed ? "✓ 可用" : moveAvail.reasons.join("、")}
+              <span className={`card-status ${canPrepare ? "ok" : "no"}`}>
+                {canPrepare ? "可配骰" : selectionReasons.join("、")}
               </span>
             </button>
           );
@@ -1616,11 +1686,29 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
         </button>
       </div>
 
-      {/* Confirm button */}
-      <button className="primary-action" type="button" disabled={confirmDisabled} onClick={handleConfirm}>
-        {confirmLabel}
-      </button>
-      {confirmDisabled ? <p className="hint">{confirmHint}</p> : null}
+      {props.selectedBasicAction ? (
+        <>
+          <button className="primary-action" type="button" disabled={confirmDisabled} onClick={handleConfirm}>
+            {confirmLabel}
+          </button>
+          {confirmDisabled ? <p className="hint">{confirmHint}</p> : null}
+        </>
+      ) : (
+        <div className="action-panel__handoff">
+          <span>下一步</span>
+          <strong>
+            {props.state.phase === "intercept_window"
+              ? "宣言已锁定；在底部命令条处理截击或放弃响应"
+              : props.state.phase === "react_window"
+                ? "招式已成形；在底部命令条处理应招或进入结算"
+                : props.state.phase === "outcome"
+                  ? "结果已生成；在底部命令条确认落果与资源去向"
+                  : props.state.phase === "round_end"
+                    ? "本轮已结束；在底部命令条确认势变化并开启下一轮"
+                    : "在气骰工作台中配置阴、阳槽并确认宣言"}
+          </strong>
+        </div>
+      )}
     </section>
   );
 }
@@ -2059,32 +2147,6 @@ function EnemyRoster({ actors, mode }: { actors: Actor[]; mode: "public" | "dm" 
   );
 }
 
-function PlayerFlowPanel({
-  onStartScene,
-  onForm,
-  onReact,
-  onOutcome,
-  hasPending,
-}: {
-  onStartScene: () => void;
-  onForm: () => void;
-  onReact: () => void;
-  onOutcome: () => void;
-  hasPending: boolean;
-}) {
-  return (
-    <section className="panel">
-      <h2>玩家阶段操作</h2>
-      <div className="flow-buttons">
-        <button type="button" onClick={onStartScene}>开始场景</button>
-        <button type="button" onClick={onForm} disabled={!hasPending}>确认成招</button>
-        <button type="button" onClick={onReact} disabled={!hasPending}>应招</button>
-        <button type="button" onClick={onOutcome} disabled={!hasPending}>查看落果</button>
-      </div>
-    </section>
-  );
-}
-
 function LogPanel({ state }: { state: CombatState }) {
   return (
     <section className="panel log-panel">
@@ -2113,19 +2175,6 @@ function PlaceholderPage({ session, go }: { session: AppSession; go: (route: App
       </div>
     </section>
   );
-}
-
-function regulateFirstRestDie(
-  patch: (updater: (current: CombatState) => CombatState) => void,
-  state: CombatState,
-  actorId: string,
-) {
-  const die = state.dice.find((item) => item.ownerId === actorId && item.zone === "QI_REST");
-  if (!die) {
-    patch((current) => dmOverride(current, "息库没有可调息气骰。"));
-    return;
-  }
-  patch((current) => regulateBreath(current, actorId, [die.id]));
 }
 
 function dieLabel(die: QiDie) {
