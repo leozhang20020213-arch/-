@@ -692,6 +692,30 @@
   line-height: 1.1;
 }
 
+.combat-action-deck-panel.is-basic-action .action-panel__selection {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  padding: 7px 116px 7px 9px;
+  overflow: auto;
+}
+
+.combat-action-deck-panel.is-basic-action > .primary-action {
+  grid-column: 1 / -1;
+}
+
+.basic-action-back {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border-color: rgba(105, 74, 42, 0.28);
+  background: rgba(255, 255, 255, 0.52);
+  color: var(--text-on-paper-secondary);
+  font-size: 12px;
+}
+
 /* These two status colors are authored inline by legacy markup. */
 .combat-action-deck-panel .action-summary .hint[style*="shield-green"] {
   color: var(--success-on-paper) !important;
@@ -1011,7 +1035,7 @@
   }
 
   .combat-workbench {
-    grid-template-rows: 126px minmax(0, 1fr);
+    grid-template-rows: 180px minmax(0, 1fr);
   }
 
   .combat-action-deck-panel {
@@ -1099,6 +1123,26 @@
 
 .response-dice-grid .qi-die-card { width: 100%; min-width: 0; }
 
+.response-slot-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.response-slot-summary span {
+  padding: 5px 7px;
+  border: 1px solid rgba(105, 74, 42, 0.2);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--ink-subtle);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.response-slot-summary span:first-child { box-shadow: inset 3px 0 0 var(--yin-die); }
+.response-slot-summary span:last-child { box-shadow: inset 3px 0 0 var(--yang-die); }
+
 .response-rule-summary {
   display: grid;
   gap: 3px;
@@ -1113,3 +1157,40 @@
 .response-empty { margin: 0; color: var(--ink-subtle); font-size: 12px; }
 .response-workbench__actions { justify-content: flex-end; }
 .response-workbench__actions button { min-height: var(--control-h-primary); padding-inline: 14px; }
+
+/* Explicit two-step 调息 configuration; keeps resource payment auditable. */
+.breath-config {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.breath-config > div {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  padding: 4px 6px;
+  border: 1px solid rgba(105, 74, 42, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.breath-config strong { font-size: 12px; }
+.breath-dice-options { display: flex; flex-wrap: wrap; gap: 3px; }
+.breath-dice-options button {
+  min-height: 26px;
+  padding: 2px 7px;
+  border-color: rgba(105, 74, 42, 0.24);
+  background: rgba(250, 245, 232, 0.9);
+  font-size: 12px;
+}
+.breath-dice-options button.is-selected {
+  border-color: var(--shield-green);
+  background: rgba(90, 132, 86, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(90, 132, 86, 0.28);
+}
+
+@media (max-width: 1120px) {
+  .breath-config { grid-template-columns: 1fr; }
+}

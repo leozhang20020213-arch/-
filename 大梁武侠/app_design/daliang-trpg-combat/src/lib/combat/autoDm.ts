@@ -1,5 +1,6 @@
 import {
   applyOutcome,
+  declareAction,
   endRound,
   formMove,
   resolveInterceptSuccess,
@@ -14,6 +15,8 @@ import type {
 
 export type AutoDmDecision =
   | "waiting_player"
+  | "enemy_declare"
+  | "enemy_skip"
   | "intercept"
   | "skip_intercept"
   | "react"
@@ -36,6 +39,14 @@ export interface AutoDmResult {
 interface LegalResponse {
   state: CombatState;
   response: ResponseAttachment;
+  diceIds: string[];
+}
+
+interface LegalDeclaration {
+  state: CombatState;
+  actor: Actor;
+  target: Actor;
+  moveName: string;
   diceIds: string[];
 }
 
@@ -102,6 +113,7 @@ function findLegalResponse(
   responseType: "截击" | "应招",
 ): LegalResponse | undefined {
   if (actor.responseQuotaUsed >= actor.maxResponseQuota) return undefined;
+  let fallback: LegalResponse | undefined;
 
   const diceIds = usableDiceIds(state, actor.id);
   const responses = [...(actor.responses ?? [])]
@@ -123,8 +135,30 @@ function findLegalResponse(
           const next = responseType === "截击"
             ? resolveInterceptSuccess(state, actor.id, response.id, candidate)
             : resolveReact(state, actor.id, response.id, candidate);
+          const legal = { state: next, response, diceIds: candidate };
+          fallback ??= legal;
 
-          return { state: next, response, diceIds: candidate };
+          // Enemy AI preserves a legal main action when an equally legal
+          // response can be paid with different dice (DM rule priority: main
+          // action before response preference).
+          if (actor.side === "enemy") {
+            const playerTarget = state.pendingAction
+              ? state.actors.find((entry) => entry.id === state.pendingAction?.actorId && entry.side === "player")
+              : undefined;
+            const updatedActor = next.actors.find((entry) => entry.id === actor.id);
+            if (playerTarget && updatedActor) {
+              const futureState: CombatState = {
+                ...next,
+                phase: "declare",
+                activeActorId: actor.id,
+                pendingAction: undefined,
+              };
+              if (findEnemyDeclaration(futureState, updatedActor, playerTarget)) return legal;
+              continue;
+            }
+          }
+
+          return legal;
         } catch {
           // This candidate is not legal under the canonical engine. Try the
           // next deterministic combination without changing the real state.
@@ -133,7 +167,7 @@ function findLegalResponse(
     }
   }
 
-  return undefined;
+  return fallback;
 }
 
 function interceptStartRound(options: AutoDmOptions): number {
@@ -144,12 +178,51 @@ function interceptStartRound(options: AutoDmOptions): number {
   return Math.max(1, Math.ceil(configured));
 }
 
+function findEnemyDeclaration(
+  state: CombatState,
+  actor: Actor,
+  target: Actor,
+): LegalDeclaration | undefined {
+  const diceIds = usableDiceIds(state, actor.id);
+  const diceById = new Map(state.dice.map((die) => [die.id, die]));
+  const moves = [...actor.moves].sort((left, right) =>
+    left.minDice - right.minDice || compareIds(left.id, right.id));
+
+  for (const move of moves) {
+    for (let size = Math.max(1, Math.ceil(move.minDice)); size <= diceIds.length; size += 1) {
+      for (const candidate of combinations(diceIds, size)) {
+        const yinFixed = candidate.filter((id) => diceById.get(id)?.nature === "yin");
+        const yangFixed = candidate.filter((id) => diceById.get(id)?.nature === "yang");
+        const raw = candidate.filter((id) => diceById.get(id)?.nature === "raw");
+        const allocations = 2 ** raw.length;
+
+        for (let mask = 0; mask < allocations; mask += 1) {
+          const yin = [...yinFixed];
+          const yang = [...yangFixed];
+          raw.forEach((id, index) => ((mask >> index) & 1 ? yang : yin).push(id));
+          try {
+            const next = declareAction(state, actor.id, target.id, move.id, candidate, {
+              yinSlotDiceIds: yin,
+              yangSlotDiceIds: yang,
+            });
+            return { state: next, actor, target, moveName: move.name, diceIds: candidate };
+          } catch {
+            // Try the next deterministic move, resource set, or raw allocation.
+          }
+        }
+      }
+    }
+  }
+
+  return undefined;
+}
+
 /**
  * Advance exactly one automatic DM step.
  *
- * Declaration remains a player action. During response windows this helper
- * only controls a pending target whose side is `enemy`; a player target always
- * returns `waiting_player` and no state is changed.
+ * Player declarations and player response choices remain manual. This helper
+ * controls enemy responses, one enemy main action, settlement, and handoff so
+ * a solo player can exercise both attacking and defending.
  */
 export function advanceAutoDm(
   state: CombatState,
@@ -234,15 +307,45 @@ export function advanceAutoDm(
         return result(state, "idle", "找不到指定玩家，轮末未推进。");
       }
 
+      const currentActor = state.actors.find((actor) => actor.id === state.activeActorId);
       const next = endRound(state);
+      if (currentActor?.side === "player") {
+        const livingEnemies = next.actors.filter((actor) => actor.side === "enemy" && actor.hp > 0);
+        const enemy = livingEnemies.find((actor) => Boolean(findEnemyDeclaration(next, actor, player)))
+          ?? livingEnemies[0];
+        if (enemy) {
+          return result(
+            { ...next, activeActorId: enemy.id },
+            "end_round",
+            `玩家行动结算完毕；由自动 DM 控制 ${enemy.name} 开始第 ${next.round} 轮主行动。`,
+          );
+        }
+      }
       return result(
         { ...next, activeActorId: playerActorId },
         "end_round",
-        `轮末处理完成，由玩家 ${player.name} 开始第 ${next.round} 轮宣言。`,
+        `敌方行动结算完毕；交还玩家 ${player.name} 开始第 ${next.round} 轮宣言。`,
       );
     }
 
     if (state.phase === "scene" || state.phase === "declare") {
+      const active = state.actors.find((actor) => actor.id === state.activeActorId);
+      const player = state.actors.find((actor) => actor.id === playerActorId && actor.side === "player");
+      if (active?.side === "enemy" && player && player.hp > 0) {
+        const declaration = findEnemyDeclaration(state, active, player);
+        if (declaration) {
+          return result(
+            declaration.state,
+            "enemy_declare",
+            `${active.name} 自动宣言「${declaration.moveName}」攻击 ${player.name}，投入 ${declaration.diceIds.length} 枚气骰；等待玩家处理响应窗口。`,
+          );
+        }
+        return result(
+          { ...state, phase: "round_end", pendingAction: undefined },
+          "enemy_skip",
+          `${active.name} 当前没有合法主动作与气骰配置，本轮放弃并进入轮末。`,
+        );
+      }
       return result(state, "waiting_player", "等待玩家宣言。");
     }
 

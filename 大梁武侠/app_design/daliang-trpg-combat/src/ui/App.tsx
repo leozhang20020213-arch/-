@@ -461,7 +461,12 @@ export function App() {
     clearActionDraft();
   }
 
-  function executeBasicAction(actorId: string, actionType: BasicActionType) {
+  function executeBasicAction(
+    actorId: string,
+    actionType: BasicActionType,
+    guideDieId?: string,
+    recoverDiceIds: string[] = [],
+  ) {
     if (!canControlActor(actorId) || actorId !== state.activeActorId) {
       showPermissionDenied("只有当前行动者本人或 DM 可以确认这个基础动作。");
       return;
@@ -472,12 +477,11 @@ export function App() {
       return;
     }
     if (actionType === "regulateBreath") {
-      const die = state.dice.find((d) => d.ownerId === actorId && d.zone === "QI_REST");
-      if (!die) {
-        setPrompt({ title: "调息失败", message: "息库没有可调息气骰。" });
+      if (!guideDieId || recoverDiceIds.length === 0) {
+        setPrompt({ title: "调息尚未配置", message: "请明确选择1枚气海/临气骰作为息引，并至少选择1枚息库常规骰取回。" });
         return;
       }
-      patch((current) => regulateBreath(current, actorId, [die.id], true));
+      patch((current) => regulateBreath(current, actorId, recoverDiceIds, true, undefined, guideDieId));
     }
     if (actionType === "fanzhao") {
       patch((current) => useReflection(current, actorId));
@@ -485,7 +489,11 @@ export function App() {
     clearActionDraft();
   }
 
-  function interceptPending(responseId?: string, diceIds?: string[]) {
+  function interceptPending(
+    responseId?: string,
+    diceIds?: string[],
+    slots?: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) {
     const pending = state.pendingAction;
     if (!pending) return;
     const responder = state.actors.find((actor) => actor.id === pending.targetId);
@@ -502,13 +510,17 @@ export function App() {
       return;
     }
     try {
-      setState(resolveInterceptSuccess(state, responder.id, response.id, submittedDice));
+      setState(resolveInterceptSuccess(state, responder.id, response.id, submittedDice, slots));
     } catch (error) {
       setPrompt({ title: "截击未通过规则校验", message: error instanceof Error ? error.message : "请重新检查气骰与响应条件。" });
     }
   }
 
-  function reactPending(responseId?: string, diceIds?: string[]) {
+  function reactPending(
+    responseId?: string,
+    diceIds?: string[],
+    slots?: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) {
     const pending = state.pendingAction;
     if (!pending) return;
     const responder = state.actors.find((actor) => actor.id === pending.targetId);
@@ -525,7 +537,7 @@ export function App() {
       return;
     }
     try {
-      setState(resolveReact(state, responder.id, response.id, submittedDice));
+      setState(resolveReact(state, responder.id, response.id, submittedDice, slots));
     } catch (error) {
       setPrompt({ title: "应招未通过规则校验", message: error instanceof Error ? error.message : "请重新检查气骰与响应条件。" });
     }
@@ -1128,8 +1140,16 @@ function PlayerSceneDesk(props: DeskProps & {
 function PlayerCombatDesk(props: DeskProps & {
   actorId: string;
   onStartScene: () => void;
-  onIntercept: (responseId?: string, diceIds?: string[]) => void;
-  onReact: (responseId?: string, diceIds?: string[]) => void;
+  onIntercept: (
+    responseId?: string,
+    diceIds?: string[],
+    slots?: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) => void;
+  onReact: (
+    responseId?: string,
+    diceIds?: string[],
+    slots?: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) => void;
   onSkipResponse: () => void;
 }) {
   const actor = props.state.actors.find((item) => item.id === props.actorId) ?? props.state.actors[0];
@@ -1498,7 +1518,12 @@ interface DeskProps {
   assignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
   removeDieFromSlot: (id: string) => void;
   declareFor: (actorId: string, targetId: string, moveId: string) => void;
-  executeBasicAction: (actorId: string, actionType: BasicActionType) => void;
+  executeBasicAction: (
+    actorId: string,
+    actionType: BasicActionType,
+    guideDieId?: string,
+    recoverDiceIds?: string[],
+  ) => void;
   patch: (updater: (current: CombatState) => CombatState) => void;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
   resetAll: () => void;
@@ -1723,6 +1748,13 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
 
   const isBreathSelected = props.selectedBasicAction === "regulateBreath";
   const isFanzhaoSelected = props.selectedBasicAction === "fanzhao";
+  const guideCandidates = props.state.dice.filter((die) =>
+    die.ownerId === props.actor.id && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"));
+  const recoveryCandidates = props.state.dice.filter((die) =>
+    die.ownerId === props.actor.id && die.zone === "QI_REST" && !die.temporary);
+  const selectedGuideIds = props.selectedDice.filter((id) => guideCandidates.some((die) => die.id === id));
+  const selectedRecoveryIds = props.selectedDice.filter((id) => recoveryCandidates.some((die) => die.id === id));
+  const breathConfigured = selectedGuideIds.length === 1 && selectedRecoveryIds.length > 0;
 
   // Dynamic confirm button
   const confirmLabel = isBreathSelected ? "确认调息"
@@ -1730,12 +1762,16 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
     : "确认宣言并锁气";
 
   const confirmDisabled = props.readOnly ? true
-    : isBreathSelected ? !regulateBreathAvail.usable
+    : isBreathSelected ? !regulateBreathAvail.usable || !breathConfigured
     : isFanzhaoSelected ? !fanzhaoAvail.usable
     : !moveAvailability.allowed;
 
   const confirmHint = isBreathSelected
-    ? (props.readOnly ? "旁观模式不能确认动作" : regulateBreathAvail.usable ? "调息：从息库取回气骰入气海" : regulateBreathAvail.detailReasons.join("、"))
+    ? (props.readOnly
+      ? "旁观模式不能确认动作"
+      : !regulateBreathAvail.usable
+        ? regulateBreathAvail.detailReasons.join("、")
+        : "请选择且仅选择1枚息引，并至少选择1枚息库骰取回")
     : isFanzhaoSelected
     ? (fanzhaoAvail.usable ? "返照：气海为空时取回最低起投气骰" : fanzhaoAvail.detailReasons.join("、"))
     : moveAvailability.allowed
@@ -1744,7 +1780,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
 
   function handleConfirm() {
     if (isBreathSelected) {
-      props.executeBasicAction(props.actor.id, "regulateBreath");
+      props.executeBasicAction(props.actor.id, "regulateBreath", selectedGuideIds[0], selectedRecoveryIds);
     } else if (isFanzhaoSelected) {
       props.executeBasicAction(props.actor.id, "fanzhao");
     } else {
@@ -1753,7 +1789,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
   }
 
   return (
-    <section className="panel combat-action-deck-panel">
+    <section className={`panel combat-action-deck-panel${props.selectedBasicAction ? " is-basic-action" : ""}`}>
       <div className="panel-title">
         <img src={iconMap.response} alt="" />
         <h2>招式与宣言</h2>
@@ -1783,13 +1819,48 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
 
       {/* Current selection summary */}
       <div className="action-panel__selection">
+        {props.selectedBasicAction ? (
+          <button className="basic-action-back" type="button" onClick={() => props.setSelectedBasicAction(null)}>
+            ← 返回招式列表
+          </button>
+        ) : null}
         {isBreathSelected && (
           <div className="action-summary">
             <p><strong>当前选择：调息</strong></p>
-            <p className="hint">类型：基础动作 · 目标：自身 · 距离：无</p>
-            <p className="hint">效果：从息库回气海</p>
+            <p className="hint">出手便行 · 消耗主行动：支付1枚息引（临时骰消失），所选息库常规骰重掷入气海。</p>
+            <div className="breath-config" aria-label="调息气骰配置">
+              <div>
+                <strong>① 选择1枚息引</strong>
+                <div className="breath-dice-options">
+                  {guideCandidates.map((die) => (
+                    <button
+                      key={die.id}
+                      type="button"
+                      className={selectedGuideIds.includes(die.id) ? "is-selected" : ""}
+                      onClick={() => {
+                        selectedGuideIds.filter((id) => id !== die.id).forEach(props.toggleDie);
+                        props.toggleDie(die.id);
+                      }}
+                    >{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"} D{die.sides}·{die.value ?? "?"}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <strong>② 选择取回骰（可多选）</strong>
+                <div className="breath-dice-options">
+                  {recoveryCandidates.map((die) => (
+                    <button
+                      key={die.id}
+                      type="button"
+                      className={selectedRecoveryIds.includes(die.id) ? "is-selected" : ""}
+                      onClick={() => props.toggleDie(die.id)}
+                    >{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"} D{die.sides}·{die.value ?? "?"}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
             <p className="hint" style={{ color: regulateBreathAvail.usable ? "var(--shield-green)" : "var(--hp-red)" }}>
-              {regulateBreathAvail.reasonTags.join("、")}
+              {breathConfigured ? `已配置：息引1枚，取回${selectedRecoveryIds.length}枚` : regulateBreathAvail.reasonTags.join("、")}
             </p>
           </div>
         )}
@@ -1809,7 +1880,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
       </div>
 
       {/* Action cards — compact, gameplay-relevant fields only */}
-      <div className="action-card-grid">
+      {!props.selectedBasicAction ? <div className="action-card-grid">
         {/* Normal moves */}
         {props.actor.moves.map((move) => {
           const selected = !props.selectedBasicAction && props.selectedMoveId === move.id;
@@ -1895,7 +1966,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
             {fanzhaoAvail.usable ? "✓ 可用" : fanzhaoAvail.reasonTags.join("、")}
           </span>
         </button>
-      </div>
+      </div> : null}
 
       {props.selectedBasicAction ? (
         <>
@@ -2352,7 +2423,7 @@ function DrawerContent(props: DeskProps & { actor: Actor; role: "player" | "dm" 
             disabled={props.readOnly}
             onChange={(event) => props.setAutoDmEnabled(event.target.checked)}
           />
-          <span><strong>测试自动 DM</strong><small>只处理敌方响应、落果与轮末推进。</small></span>
+          <span><strong>测试自动 DM</strong><small>处理敌方响应、敌方主行动、落果与轮末；玩家宣言和玩家响应始终由你决定。</small></span>
         </label>
         <p className="hint">进度已在本机自动保存。玩家与旁观者永远不会获得 DM 隐藏数据。</p>
         <button type="button" onClick={() => props.go("settings")}>打开完整设置</button>

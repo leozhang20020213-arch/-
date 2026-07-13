@@ -459,6 +459,65 @@ export function calculateSlotValues(state: CombatState): SlotValues {
   return { 阴值, 阳值, 合值, 阴阳差 };
 }
 
+/**
+ * Response attachments use their own dice for trigger values. Until the UI
+ * gains a full two-slot response editor, fixed-nature dice go to their matching
+ * slot and raw dice are assigned one-by-one to the currently lower total. This
+ * is deterministic, visible in the log, and never reuses the attacker's slots.
+ */
+export function calculateResponseSlotValues(
+  dice: QiDie[],
+  slots?: { yinSlotDiceIds?: string[]; yangSlotDiceIds?: string[] },
+): SlotValues {
+  if (slots) {
+    const yinIds = new Set(slots.yinSlotDiceIds ?? []);
+    const yangIds = new Set(slots.yangSlotDiceIds ?? []);
+    const 阴值 = dice.filter((die) => yinIds.has(die.id)).reduce((sum, die) => sum + (die.value ?? 0), 0);
+    const 阳值 = dice.filter((die) => yangIds.has(die.id)).reduce((sum, die) => sum + (die.value ?? 0), 0);
+    const 合值 = 阴值 + 阳值;
+    return { 阴值, 阳值, 合值, 阴阳差: Math.abs(阴值 - 阳值) };
+  }
+  let 阴值 = dice
+    .filter((die) => die.nature === "yin")
+    .reduce((sum, die) => sum + (die.value ?? 0), 0);
+  let 阳值 = dice
+    .filter((die) => die.nature === "yang")
+    .reduce((sum, die) => sum + (die.value ?? 0), 0);
+
+  const rawDice = dice
+    .filter((die) => die.nature === "raw")
+    .sort((left, right) => (right.value ?? 0) - (left.value ?? 0) || left.id.localeCompare(right.id));
+  for (const die of rawDice) {
+    if (阴值 <= 阳值) 阴值 += die.value ?? 0;
+    else 阳值 += die.value ?? 0;
+  }
+
+  const 合值 = 阴值 + 阳值;
+  return { 阴值, 阳值, 合值, 阴阳差: Math.abs(阴值 - 阳值) };
+}
+
+function validateResponseSlotAllocation(
+  dice: QiDie[],
+  slots?: { yinSlotDiceIds?: string[]; yangSlotDiceIds?: string[] },
+): void {
+  if (!slots) return;
+  const yinIds = slots.yinSlotDiceIds ?? [];
+  const yangIds = slots.yangSlotDiceIds ?? [];
+  const allIds = [...yinIds, ...yangIds];
+  const spentIds = dice.map((die) => die.id);
+  if (new Set(allIds).size !== allIds.length
+    || allIds.length !== spentIds.length
+    || spentIds.some((id) => !allIds.includes(id))) {
+    throw new Error("响应气骰必须各自明确分配到一个阴槽或阳槽。");
+  }
+  if (dice.some((die) => yinIds.includes(die.id) && die.nature === "yang")) {
+    throw new Error("阳气骰不能投入响应阴槽。");
+  }
+  if (dice.some((die) => yangIds.includes(die.id) && die.nature === "yin")) {
+    throw new Error("阴气骰不能投入响应阳槽。");
+  }
+}
+
 // ============================================================================
 // TRIGGER RESOLUTION
 // ============================================================================
@@ -519,11 +578,6 @@ export function canDeclareAction(
     reasons.push("当前时点不允许宣言");
   }
 
-  // Response quota check
-  if (actor.responseQuotaUsed >= actor.maxResponseQuota) {
-    reasons.push("本轮响应额度已用完");
-  }
-
   // Momentum validation
   const momentumCheck = validateMomentum(actor, move.shiCondition, move.allowedShi);
   if (!momentumCheck.valid && momentumCheck.reason) {
@@ -569,18 +623,21 @@ export function prepareCombatRound(state: CombatState): CombatState {
   let next = cloneState(state);
   next.phase = "initiative";
   next.pendingAction = undefined;
-  next.dice = next.dice.map((die) => (
-    die.temporary ? die : { ...die, zone: "QI_POOL" as QiZone, value: null }
-  ));
-  next = appendLog(next, "phase_changed", "交锋轮开始：进入先后确认，常规气骰回到气池。");
+  next = appendLog(next, "phase_changed", "交锋轮开始：进入先后确认；沿用当前气海、息库与骰值，不重投常规气骰。");
   return next;
 }
 
 export function confirmInitiative(state: CombatState): CombatState {
   let next = cloneState(state);
   const ordered = [...next.actors].sort((a, b) => {
-    const aScore = a.tableAttrs.观照 + a.tableAttrs.身势;
-    const bScore = b.tableAttrs.观照 + b.tableAttrs.身势;
+    const aHighestDie = Math.max(0, ...next.dice
+      .filter((die) => die.ownerId === a.id && die.value !== null && !die.temporary)
+      .map((die) => die.value ?? 0));
+    const bHighestDie = Math.max(0, ...next.dice
+      .filter((die) => die.ownerId === b.id && die.value !== null && !die.temporary)
+      .map((die) => die.value ?? 0));
+    const aScore = Math.max(a.tableAttrs.观照, a.tableAttrs.身势) + aHighestDie;
+    const bScore = Math.max(b.tableAttrs.观照, b.tableAttrs.身势) + bHighestDie;
     if (bScore !== aScore) return bScore - aScore;
     if (a.side !== b.side) return a.side === "player" ? -1 : 1;
     return a.name.localeCompare(b.name, "zh-Hans-CN");
@@ -590,13 +647,10 @@ export function confirmInitiative(state: CombatState): CombatState {
   next.phase = "scene";
   next.pendingAction = undefined;
   next.actors = next.actors.map((actor) => ({ ...actor, responseQuotaUsed: 0 }));
-  next.dice = next.dice.map((die) => (
-    die.temporary ? die : { ...die, zone: "QI_POOL" as QiZone, value: null }
-  ));
   next = appendLog(
     next,
     "phase_changed",
-    `先后确认：${firstActor?.name ?? "待定"} 先行动。常规气骰等待整体投掷入气海。`,
+    `先后确认：${firstActor?.name ?? "待定"} 先行动。先后值读取观照/身势择一与当前最高可用常规骰；气骰位置和值保持不变。`,
   );
   return next;
 }
@@ -688,11 +742,6 @@ export function declareAction(
     throw new Error(`当前时点「${next.phase}」不允许宣言招式。`);
   }
 
-  // Validate response quota
-  if (actor.responseQuotaUsed >= actor.maxResponseQuota) {
-    throw new Error(`${actor.name} 本轮响应额度已用完（${actor.responseQuotaUsed}/${actor.maxResponseQuota}）。`);
-  }
-
   // Validate momentum
   const momentumCheck = validateMomentum(actor, move.shiCondition, move.allowedShi);
   if (!momentumCheck.valid) {
@@ -765,6 +814,7 @@ export function resolveInterceptSuccess(
   responderId: string,
   responseId: string,
   diceIds: string[],
+  slotDice?: { yinSlotDiceIds?: string[]; yangSlotDiceIds?: string[] },
 ): CombatState {
   if (state.phase !== "intercept_window") {
     throw new Error(`当前时点「${state.phase}」不允许截击。`);
@@ -807,10 +857,59 @@ export function resolveInterceptSuccess(
     throw new Error(equipCheck.reason ?? "截击装备许可不满足");
   }
 
-  // Move responder's dice + action's dice to QI_REST
-  next.dice = moveDice(next.dice, [...responderDice, ...action.diceIds], "QI_REST");
-  next.phase = "round_end";
-  next.pendingAction = undefined;
+  validateResponseSlotAllocation(spentDice, slotDice);
+  const responseSlotValues = calculateResponseSlotValues(spentDice, slotDice);
+  const triggeredEffects = resolveSlotTriggers(response.triggers, responseSlotValues)
+    .filter((trigger) => trigger.triggered)
+    .map((trigger) => trigger.effect);
+  const moveActor = requireActor(next, action.actorId);
+  const move = requireMove(moveActor, action.moveId);
+
+  let updatedAction = { ...action };
+  let cancelAction = false;
+  let interceptEffect = response.baseEffect;
+
+  // A light weapon-line intercept closes one assigned yang die. It does not
+  // automatically erase the whole action when another legal yang die remains.
+  if (response.baseEffect.includes("不能进入阳槽")) {
+    const blockedDieId = [...updatedAction.yangSlotDiceIds]
+      .sort((leftId, rightId) => {
+        const left = next.dice.find((die) => die.id === leftId)?.value ?? 0;
+        const right = next.dice.find((die) => die.id === rightId)?.value ?? 0;
+        return left - right || leftId.localeCompare(rightId);
+      })[0];
+    if (blockedDieId) {
+      updatedAction.yangSlotDiceIds = updatedAction.yangSlotDiceIds.filter((id) => id !== blockedDieId);
+      next.dice = moveDice(next.dice, [blockedDieId], "QI_LOCK");
+      interceptEffect += `；锁气 ${blockedDieId} 被关闭阳槽许可`;
+    }
+  }
+
+  if (response.baseEffect.includes("势条件视为不满足") && move.shiCondition !== "无势") {
+    cancelAction = true;
+  }
+  if (response.baseEffect.includes("装备许可关闭") && !/无|徒手|不限/.test(move.equipPermission)) {
+    cancelAction = true;
+  }
+  if (triggeredEffects.some((effect) => effect.includes("动作不成招") || effect.includes("失去持械许可"))) {
+    cancelAction = true;
+  }
+
+  const damageReductionText = triggeredEffects.find((effect) => /基础效果-\d+气血/.test(effect));
+  const damageReduction = damageReductionText
+    ? Number(damageReductionText.match(/基础效果-(\d+)气血/)?.[1] ?? 0)
+    : 0;
+  updatedAction.preventedDamage = (updatedAction.preventedDamage ?? 0) + damageReduction;
+
+  next.dice = settleSpentDice(next.dice, responderDice);
+  if (cancelAction) {
+    next.dice = settleSpentDice(next.dice, action.diceIds);
+    next.phase = "round_end";
+    next.pendingAction = undefined;
+  } else {
+    next.phase = "intercept_window";
+    next.pendingAction = updatedAction;
+  }
 
   // Apply responder's postShi from the response
   if (response.postShi !== "不改势") {
@@ -819,11 +918,12 @@ export function resolveInterceptSuccess(
     );
   }
 
-  return appendLog(
+  const intercepted = appendLog(
     next,
     "INTERCEPT",
-    `${responder.name} 使用截击「${response.moveName}」，本次宣言不合法；双方已用气骰进入息库。${response.postShi !== "不改势" ? `势变更为「${response.postShi}」。` : ""}`,
+    `${responder.name} 使用截击「${response.moveName}」：${interceptEffect}。响应槽值 阴${responseSlotValues.阴值}/阳${responseSlotValues.阳值}/合${responseSlotValues.合值}。${cancelAction ? "声明前置被关闭，本次动作不成招；行动气骰结算。" : "声明仍合法，继续进入成招检查。"}${damageReduction > 0 ? `基础气血效果减轻 ${damageReduction} 点。` : ""}${response.postShi !== "不改势" ? `势变更为「${response.postShi}」。` : ""}`,
   );
+  return cancelAction ? intercepted : formMove(intercepted);
 }
 
 /**
@@ -842,15 +942,18 @@ export function formMove(state: CombatState): CombatState {
   const move = requireMove(actor, action.moveId);
   const diceCount = action.diceIds.length;
 
-  // Check minimum dice
-  if (diceCount < move.minDice) {
-    next.dice = moveDice(next.dice, action.diceIds, "QI_REST");
+  // Check minimum dice and re-check slot legality after any intercept changed
+  // a lock/slot permission.
+  const missingFormalSlot = move.timing === "正式出手"
+    && (action.yinSlotDiceIds.length === 0 || action.yangSlotDiceIds.length === 0);
+  if (diceCount < move.minDice || missingFormalSlot) {
+    next.dice = settleSpentDice(next.dice, action.diceIds);
     next.pendingAction = undefined;
     next.phase = "round_end";
     return appendLog(
       next,
       "FORM_MOVE",
-      `${actor.name} 的「${move.name}」最低投入不足（${diceCount}/${move.minDice}），未成招，锁气进入息库。`,
+      `${actor.name} 的「${move.name}」${missingFormalSlot ? "经截击后缺少合法阴/阳槽" : `最低投入不足（${diceCount}/${move.minDice}）`}，未成招，已用常规气骰进入息库，临时气骰消失。`,
     );
   }
 
@@ -901,6 +1004,7 @@ export function resolveReact(
   responderId: string,
   responseId: string,
   diceIds: string[],
+  slotDice?: { yinSlotDiceIds?: string[]; yangSlotDiceIds?: string[] },
 ): CombatState {
   if (state.phase !== "react_window") {
     throw new Error(`当前时点「${state.phase}」不允许应招。`);
@@ -944,7 +1048,7 @@ export function resolveReact(
   }
 
   // Move responder's dice to QI_REST
-  next.dice = moveDice(next.dice, responderDice, "QI_REST");
+  next.dice = settleSpentDice(next.dice, responderDice);
 
   // Parse base effect for prevent damage
   let additionalPrevent = 0;
@@ -962,9 +1066,11 @@ export function resolveReact(
     }
   }
 
-  // Resolve response triggers against current slot values
-  const currentSlotValues = action.slotValues ?? { 阴值: 0, 阳值: 0, 合值: 0, 阴阳差: 0 };
-  const resolvedTriggers = resolveSlotTriggers(response.triggers, currentSlotValues);
+  // Response triggers read the responder's own dice, never the attacker's
+  // already-formed slot values.
+  validateResponseSlotAllocation(spentDice, slotDice);
+  const responseSlotValues = calculateResponseSlotValues(spentDice, slotDice);
+  const resolvedTriggers = resolveSlotTriggers(response.triggers, responseSlotValues);
   const triggeredEffects = resolvedTriggers.filter((t) => t.triggered);
 
   for (const trigger of triggeredEffects) {
@@ -1002,7 +1108,7 @@ export function resolveReact(
   return appendLog(
     next,
     "REACT",
-    `${responder.name} 使用应招「${response.moveName}」，${reactLogExtra || `落果减轻 ${additionalPrevent}`}。当前共抵消 ${totalPrevented} 点。${finalResponderMomentum ? `势变更为「${finalResponderMomentum}」。` : ""}`,
+    `${responder.name} 使用应招「${response.moveName}」，响应槽值 阴${responseSlotValues.阴值}/阳${responseSlotValues.阳值}/合${responseSlotValues.合值}；${reactLogExtra || `落果减轻 ${additionalPrevent}`}。当前共抵消 ${totalPrevented} 点。${finalResponderMomentum ? `势变更为「${finalResponderMomentum}」。` : ""}`,
   );
 }
 
@@ -1112,7 +1218,7 @@ export function applyOutcome(state: CombatState): CombatState {
   ];
   // Deduplicate
   const uniqueDice = [...new Set(allActionDice)];
-  next.dice = moveDice(next.dice, uniqueDice, "QI_REST");
+  next.dice = settleSpentDice(next.dice, uniqueDice);
 
   next.pendingAction = undefined;
   next.phase = "round_end";
@@ -1144,6 +1250,7 @@ export function regulateBreath(
   diceIds: string[],
   active = false,
   roll: RollFn = defaultRoll,
+  guideDieId?: string,
 ): CombatState {
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
@@ -1154,24 +1261,38 @@ export function regulateBreath(
     ),
   );
 
+  if (restDice.length === 0) {
+    throw new Error("息库中没有选中的可取回常规气骰。");
+  }
+
   if (active) {
+    if ((next.phase !== "scene" && next.phase !== "declare") || next.activeActorId !== actorId) {
+      throw new Error("主动调息只能由当前行动者在场景/声明时点执行。");
+    }
+    const guideDie = next.dice.find((die) =>
+      die.id === guideDieId
+      && die.ownerId === actorId
+      && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"));
+    if (!guideDie) {
+      throw new Error("主动调息需要从气海或临气区明确选择1枚气骰作为息引。");
+    }
     // 主动调息: reroll dice values before moving to QI_SEA
     next.dice = next.dice.map((die) => {
       if (!restDice.includes(die.id)) return die;
       return { ...die, value: roll(die.sides), zone: "QI_SEA" as QiZone };
     });
+    next.dice = settleSpentDice(next.dice, [guideDie.id]);
+    next.phase = "round_end";
   } else {
     // 被动流转: move without reroll
     next.dice = moveDice(next.dice, restDice, "QI_SEA");
   }
 
-  next.phase = "scene";
-
   const mode = active ? "主动调息（重掷入气海）" : "被动流转（不重掷入气海）";
   return appendLog(
     next,
     "REGULATE_BREATH",
-    `${actor.name} ${mode}，${restDice.length} 枚气骰从息库回气海。`,
+    `${actor.name} ${mode}，${restDice.length} 枚常规气骰从息库回气海。${active ? "息引气骰已结算，本次主行动结束。" : ""}`,
   );
 }
 
@@ -1184,11 +1305,13 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
 
-  // Check 断气条件: QI_SEA is empty
-  const hasSea = next.dice.some(
-    (die) => die.ownerId === actorId && die.zone === "QI_SEA",
+  // Check 断气条件: neither pool nor sea has a usable regular die.
+  const hasUsableRegularDie = next.dice.some(
+    (die) => die.ownerId === actorId
+      && !die.temporary
+      && (die.zone === "QI_POOL" || die.zone === "QI_SEA"),
   );
-  if (hasSea) {
+  if (hasUsableRegularDie) {
     return appendLog(
       next,
       "REFLECTION",
@@ -1196,7 +1319,7 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
     );
   }
 
-  // Find the lowest-value die in QI_REST
+  // Find the lowest-rank innate die in QI_REST; value and id are stable ties.
   const candidate = next.dice
     .filter(
       (die) =>
@@ -1205,7 +1328,7 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
         die.value !== null &&
         !die.temporary,
     )
-    .sort((a, b) => (a.value ?? 0) - (b.value ?? 0))[0];
+    .sort((a, b) => a.sides - b.sides || (a.value ?? 0) - (b.value ?? 0) || a.id.localeCompare(b.id))[0];
 
   if (!candidate) {
     return appendLog(
@@ -1221,7 +1344,7 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
   return appendLog(
     next,
     "REFLECTION",
-    `${actor.name} 返照，取回最低可用气骰 ${candidate.sourceName}（${candidate.value}点），不重掷。`,
+    `${actor.name} 返照，取回最低阶先天气骰 ${candidate.sourceName}（D${candidate.sides}·${candidate.value}点），不重掷且不消耗主行动。`,
   );
 }
 
@@ -1281,15 +1404,31 @@ export function getBasicActionAvailability(
       detailReasons.push("息库没有可调息的气骰");
       reasonTags.push("息库为空");
     }
+    const hasGuideDie = state.dice.some(
+      (d) => d.ownerId === actorId && (d.zone === "QI_SEA" || d.zone === "TEMP_QI"),
+    );
+    if (!hasGuideDie) {
+      detailReasons.push("气海或临气区没有可作为息引的气骰");
+      reasonTags.push("缺少息引");
+    }
   }
 
   if (actionType === "fanzhao") {
-    const hasSeaDice = state.dice.some(
-      (d) => d.ownerId === actorId && d.zone === "QI_SEA",
+    const hasAvailableRegularDice = state.dice.some(
+      (d) => d.ownerId === actorId
+        && !d.temporary
+        && (d.zone === "QI_POOL" || d.zone === "QI_SEA"),
     );
-    if (hasSeaDice) {
-      detailReasons.push("气海仍有可用气骰，返照仅在气海为空时可用");
-      reasonTags.push("气海未空");
+    if (hasAvailableRegularDice) {
+      detailReasons.push("气池或气海仍有可用常规气骰，尚未满足断气条件");
+      reasonTags.push("尚未断气");
+    }
+    const hasInnateRestDie = state.dice.some(
+      (d) => d.ownerId === actorId && d.zone === "QI_REST" && !d.temporary,
+    );
+    if (!hasInnateRestDie) {
+      detailReasons.push("息库没有可返照的先天气骰");
+      reasonTags.push("息库为空");
     }
     // TODO: when reflection count tracking is implemented, check limit here
   }
@@ -1975,6 +2114,18 @@ function moveDice(dice: QiDie[], diceIds: string[], zone: QiZone): QiDie[] {
   return dice.map((die) =>
     diceIds.includes(die.id) ? { ...die, zone } : die,
   );
+}
+
+/**
+ * Complete a spend according to the seven-zone qi flow. Regular dice enter
+ * QI_REST; temporary dice are one-shot resources and leave the state instead
+ * of becoming recoverable dice.
+ */
+function settleSpentDice(dice: QiDie[], diceIds: string[]): QiDie[] {
+  const spent = new Set(diceIds);
+  return dice
+    .filter((die) => !(spent.has(die.id) && die.temporary))
+    .map((die) => spent.has(die.id) ? { ...die, zone: "QI_REST" as QiZone } : die);
 }
 
 function requirePendingAction(state: CombatState) {

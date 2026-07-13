@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Actor, CombatState, ResponseAttachment } from "../../../combat/types";
 import { QiDie } from "../dice/QiDie";
+import { RawQiSlotPicker } from "../dice/RawQiSlotPicker";
 import { sortQiDiceForPool } from "../dice/dicePresentation";
 
 export interface PlayerResponseWorkbenchProps {
   state: CombatState;
   actor: Actor;
   readOnly?: boolean;
-  onSubmit: (responseId: string, diceIds: string[]) => void;
+  onSubmit: (
+    responseId: string,
+    diceIds: string[],
+    slots: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) => void;
   onSkip: () => void;
 }
 
@@ -33,11 +38,16 @@ export function PlayerResponseWorkbench({
     [actor.id, state.dice],
   );
   const [selectedResponseId, setSelectedResponseId] = useState("");
-  const [selectedDiceIds, setSelectedDiceIds] = useState<string[]>([]);
+  const [yinSlotDiceIds, setYinSlotDiceIds] = useState<string[]>([]);
+  const [yangSlotDiceIds, setYangSlotDiceIds] = useState<string[]>([]);
+  const [rawChoiceDieId, setRawChoiceDieId] = useState<string | null>(null);
+  const selectedDiceIds = [...yinSlotDiceIds, ...yangSlotDiceIds];
 
   useEffect(() => {
     setSelectedResponseId(responses[0]?.id ?? "");
-    setSelectedDiceIds([]);
+    setYinSlotDiceIds([]);
+    setYangSlotDiceIds([]);
+    setRawChoiceDieId(null);
   }, [responseType, state.pendingAction?.actorId, state.pendingAction?.moveId, responses]);
 
   if (!responseType || state.pendingAction?.targetId !== actor.id) return null;
@@ -51,9 +61,31 @@ export function PlayerResponseWorkbench({
 
   function toggleDie(dieId: string) {
     if (readOnly) return;
-    setSelectedDiceIds((current) => current.includes(dieId)
-      ? current.filter((id) => id !== dieId)
-      : [...current, dieId]);
+    const die = availableDice.find((item) => item.id === dieId);
+    if (!die) return;
+    if (selectedDiceIds.includes(dieId)) {
+      setYinSlotDiceIds((current) => current.filter((id) => id !== dieId));
+      setYangSlotDiceIds((current) => current.filter((id) => id !== dieId));
+      return;
+    }
+    if (die.nature === "raw") {
+      setRawChoiceDieId(die.id);
+      return;
+    }
+    if (die.nature === "yin") setYinSlotDiceIds((current) => [...current, die.id]);
+    else setYangSlotDiceIds((current) => [...current, die.id]);
+  }
+
+  const rawChoiceDie = rawChoiceDieId
+    ? availableDice.find((die) => die.id === rawChoiceDieId)
+    : undefined;
+
+  function assignRawDie(slot: "yin" | "yang") {
+    const dieId = rawChoiceDieId;
+    setRawChoiceDieId(null);
+    if (!dieId) return;
+    if (slot === "yin") setYinSlotDiceIds((current) => [...current, dieId]);
+    else setYangSlotDiceIds((current) => [...current, dieId]);
   }
 
   return (
@@ -78,7 +110,9 @@ export function PlayerResponseWorkbench({
               disabled={readOnly}
               onSelect={() => {
                 setSelectedResponseId(response.id);
-                setSelectedDiceIds([]);
+                setYinSlotDiceIds([]);
+                setYangSlotDiceIds([]);
+                setRawChoiceDieId(null);
               }}
             />
           ))}
@@ -108,6 +142,17 @@ export function PlayerResponseWorkbench({
         ) : (
           <p className="response-empty">气海与临气区没有可投入的气骰。</p>
         )}
+        <div className="response-slot-summary" aria-label="响应阴阳槽配置">
+          <span>阴槽 {yinSlotDiceIds.length}枚 · {yinSlotDiceIds.reduce((sum, id) => sum + (availableDice.find((die) => die.id === id)?.value ?? 0), 0)}点</span>
+          <span>阳槽 {yangSlotDiceIds.length}枚 · {yangSlotDiceIds.reduce((sum, id) => sum + (availableDice.find((die) => die.id === id)?.value ?? 0), 0)}点</span>
+        </div>
+        {rawChoiceDie ? (
+          <RawQiSlotPicker
+            die={rawChoiceDie}
+            onChoose={assignRawDie}
+            onCancel={() => setRawChoiceDieId(null)}
+          />
+        ) : null}
       </div>
 
       {selectedResponse ? (
@@ -124,7 +169,10 @@ export function PlayerResponseWorkbench({
           className="primary-action"
           type="button"
           disabled={!canSubmit}
-          onClick={() => selectedResponse && onSubmit(selectedResponse.id, selectedDiceIds)}
+          onClick={() => selectedResponse && onSubmit(selectedResponse.id, selectedDiceIds, {
+            yinSlotDiceIds,
+            yangSlotDiceIds,
+          })}
         >
           确认{responseType}
         </button>

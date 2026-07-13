@@ -73,11 +73,16 @@ describe("test auto DM", () => {
     assert.equal(nextRound.decision, "end_round");
     assert.equal(nextRound.state.phase, "declare");
     assert.equal(nextRound.state.round, 2);
-    assert.equal(nextRound.state.activeActorId, PLAYER_ID);
+    assert.notEqual(nextRound.state.activeActorId, PLAYER_ID);
 
-    const waiting = advanceAutoDm(nextRound.state, PLAYER_ID);
+    const enemyTurn = advanceAutoDm(nextRound.state, PLAYER_ID);
+    assert.equal(enemyTurn.decision, "enemy_declare");
+    assert.equal(enemyTurn.state.phase, "intercept_window");
+    assert.equal(enemyTurn.state.pendingAction?.targetId, PLAYER_ID);
+
+    const waiting = advanceAutoDm(enemyTurn.state, PLAYER_ID);
     assert.equal(waiting.decision, "waiting_player");
-    assert.strictEqual(waiting.state, nextRound.state);
+    assert.strictEqual(waiting.state, enemyTurn.state);
   });
 
   it("uses a legal enemy intercept after the default first-round grace period", () => {

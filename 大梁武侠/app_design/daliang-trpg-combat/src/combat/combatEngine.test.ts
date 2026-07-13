@@ -16,6 +16,8 @@ import {
   equipItem,
   expireSource,
   formMove,
+  prepareCombatRound,
+  confirmInitiative,
   regulateBreath,
   resolveInterceptSuccess,
   resolveReact,
@@ -72,7 +74,7 @@ describe("combat engine", () => {
     assert.deepEqual(next.pendingAction?.yangSlotDiceIds, ["pc-d2"]);
   });
 
-  it("moves action dice to rest when intercept cancels declaration", () => {
+  it("lets a light intercept alter slots before formation decides legality", () => {
     let state = enterScene(createSeedState(), fixedRoll);
     state = declareAction(state, "pc-shen-qing", "enemy-short-blade", "WG001", ["pc-d1", "pc-d2"], {
       yinSlotDiceIds: ["pc-d1"],
@@ -103,18 +105,61 @@ describe("combat engine", () => {
     // RG002 baseEffect="抵消气血3点" → 3, trigger 阳值≥7 (8≥7=true) → +2 → total 5
     state = resolveReact(state, "pc-shen-qing", "RG002", ["pc-d1", "pc-d2"]);
     const afterReact = state.pendingAction;
-    assert.equal(afterReact?.preventedDamage, 5);
+    assert.equal(afterReact?.preventedDamage, 3);
     assert.equal(state.phase, "outcome");
     state = applyOutcome(state);
-    // total damage: max(0, 5 - 5) = 0, hp unchanged
+    // Response triggers read the responder's own two raw dice (4/4), so the
+    // attacker's 阳8 no longer grants the response's extra prevention.
     const shenQing = state.actors.find((actor) => actor.id === "pc-shen-qing")!;
-    assert.equal(shenQing.hp, 18);
+    assert.equal(shenQing.hp, 16);
     assert.equal(state.pendingAction, undefined);
     assert.equal(state.phase, "round_end");
     assert.equal(state.round, 1);
     state = endRound(state);
     assert.equal(state.phase, "declare");
     assert.equal(state.round, 2);
+  });
+
+  it("uses an explicit player response slot allocation for raw qi triggers", () => {
+    let state = enterScene(createSeedState(), fixedRoll);
+    state = declareAction(
+      state,
+      "enemy-short-blade",
+      "pc-shen-qing",
+      "WG002",
+      ["sb-d1", "sb-d2", "sb-d3"],
+      { yinSlotDiceIds: ["sb-d1"], yangSlotDiceIds: ["sb-d2", "sb-d3"] },
+    );
+    state = formMove(state);
+    state = resolveReact(
+      state,
+      "pc-shen-qing",
+      "RG002",
+      ["pc-d1", "pc-d2"],
+      { yinSlotDiceIds: [], yangSlotDiceIds: ["pc-d1", "pc-d2"] },
+    );
+    assert.equal(state.pendingAction?.preventedDamage, 5);
+
+    let invalid = enterScene(createSeedState(), fixedRoll);
+    invalid = declareAction(
+      invalid,
+      "enemy-short-blade",
+      "pc-shen-qing",
+      "WG002",
+      ["sb-d1", "sb-d2", "sb-d3"],
+      { yinSlotDiceIds: ["sb-d1"], yangSlotDiceIds: ["sb-d2", "sb-d3"] },
+    );
+    invalid = formMove(invalid);
+    assert.throws(
+      () => resolveReact(
+        invalid,
+        "pc-shen-qing",
+        "RG002",
+        ["pc-d3", "pc-d5"],
+        { yinSlotDiceIds: ["pc-d3", "pc-d5"], yangSlotDiceIds: [] },
+      ),
+      /阳气骰不能投入响应阴槽/,
+    );
   });
 
   it("skips react while preserving the pending action for one outcome", () => {
@@ -508,11 +553,83 @@ describe("combat engine", () => {
     assert.equal(beforeDie?.value, 4);
     // Active tiaoxi (active=true) — uses a different roll function
     const rerollFn = () => 5;
-    state = regulateBreath(state, "pc-shen-qing", ["pc-d1"], true, rerollFn);
+    state = endRound(state);
+    state = regulateBreath(state, "pc-shen-qing", ["pc-d1"], true, rerollFn, "pc-d3");
     const afterDie = state.dice.find((d) => d.id === "pc-d1");
     assert.equal(afterDie?.zone, "QI_SEA");
     // Active tiaoxi rerolls the value
     assert.equal(afterDie?.value, 5);
+    assert.equal(state.dice.find((d) => d.id === "pc-d3")?.zone, "QI_REST");
+    assert.equal(state.phase, "round_end");
+  });
+
+  it("removes temporary qi after action and response spending", () => {
+    let actionState = enterScene(createSeedState(), fixedRoll);
+    actionState = {
+      ...actionState,
+      dice: actionState.dice.map((die) => die.id === "pc-d1"
+        ? { ...die, temporary: true, zone: "TEMP_QI" as const }
+        : die),
+    };
+    actionState = declareAction(
+      actionState,
+      "pc-shen-qing",
+      "enemy-short-blade",
+      "WG001",
+      ["pc-d1", "pc-d3"],
+      { yinSlotDiceIds: ["pc-d1"], yangSlotDiceIds: ["pc-d3"] },
+    );
+    actionState = formMove(actionState);
+    actionState = skipReact(actionState);
+    actionState = applyOutcome(actionState);
+    assert.equal(actionState.dice.some((die) => die.id === "pc-d1"), false);
+    assert.equal(actionState.dice.find((die) => die.id === "pc-d3")?.zone, "QI_REST");
+
+    let responseState = enterScene(createSeedState(), fixedRoll);
+    responseState = {
+      ...responseState,
+      dice: responseState.dice.map((die) => die.id === "pc-d1"
+        ? { ...die, temporary: true, zone: "TEMP_QI" as const }
+        : die),
+    };
+    responseState = declareAction(
+      responseState,
+      "enemy-short-blade",
+      "pc-shen-qing",
+      "WG002",
+      ["sb-d1", "sb-d2", "sb-d3"],
+      { yinSlotDiceIds: ["sb-d1"], yangSlotDiceIds: ["sb-d2", "sb-d3"] },
+    );
+    responseState = formMove(responseState);
+    responseState = resolveReact(responseState, "pc-shen-qing", "RG002", ["pc-d1", "pc-d3"]);
+    assert.equal(responseState.dice.some((die) => die.id === "pc-d1"), false);
+    assert.equal(responseState.dice.find((die) => die.id === "pc-d3")?.zone, "QI_REST");
+  });
+
+  it("preserves scene qi values through combat initiative", () => {
+    const scene = enterScene(createSeedState(), fixedRoll);
+    const before = scene.dice.map((die) => ({ id: die.id, zone: die.zone, value: die.value }));
+    const prepared = prepareCombatRound(scene);
+    const confirmed = confirmInitiative(prepared);
+    assert.deepEqual(
+      confirmed.dice.map((die) => ({ id: die.id, zone: die.zone, value: die.value })),
+      before,
+    );
+  });
+
+  it("reflection retrieves the lowest-rank innate die without reroll", () => {
+    let state = enterScene(createSeedState(), fixedRoll);
+    state = {
+      ...state,
+      phase: "declare",
+      activeActorId: "pc-shen-qing",
+      dice: state.dice.map((die) => die.ownerId === "pc-shen-qing"
+        ? { ...die, zone: "QI_REST" as const, value: die.id === "pc-d4" ? 4 : 1 }
+        : die),
+    };
+    state = useReflection(state, "pc-shen-qing");
+    assert.equal(state.dice.find((die) => die.id === "pc-d4")?.zone, "QI_SEA");
+    assert.equal(state.dice.find((die) => die.id === "pc-d4")?.value, 4);
   });
 
   it("passive circulation does not reroll", () => {
