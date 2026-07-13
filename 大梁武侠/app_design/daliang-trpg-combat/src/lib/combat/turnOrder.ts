@@ -3,14 +3,14 @@
 // Reads CombatState, computes initiative-based actor order and turn metadata.
 // ==========================================================================
 
-import type { CombatState, ShiState } from "../../combat/types";
+import type { Actor, CombatState, ShiState } from "../../combat/types";
 
 // ---- Data Types ----
 
 export interface TurnOrderEntry {
   actorId: string;
   name: string;
-  /** Initiative score = 观照 + 身势 */
+  /** Initiative score = approved attribute + highest usable qi die + modifier */
   initiative: number;
   /** Has this actor already taken their action this round? */
   hasActed: boolean;
@@ -26,6 +26,31 @@ export interface TurnOrderEntry {
   side: "player" | "enemy";
   /** Short status tags for display */
   statusTags: string[];
+}
+
+/** The normal initiative attribute, or 观照 when the DM has approved it. */
+export type InitiativeAttribute = "身势" | "观照";
+
+/**
+ * Per-encounter initiative rulings that are not represented directly on Actor.
+ * Missing entries deliberately fall back to 身势 and the standard status rules.
+ */
+export interface InitiativeOptions {
+  /** Actors explicitly approved to use 观照 may be mapped to it here. */
+  approvedAttributeByActorId?: Readonly<Record<string, InitiativeAttribute>>;
+  /**
+   * Total status/scene modifier for an actor. When omitted, known standard
+   * status modifiers are derived from the actor's current statuses.
+   */
+  statusModifierByActorId?: Readonly<Record<string, number>>;
+}
+
+export interface InitiativeBreakdown {
+  attribute: InitiativeAttribute;
+  attributeValue: number;
+  highestUsableQi: number;
+  statusModifier: number;
+  total: number;
 }
 
 export interface TurnState {
@@ -66,20 +91,28 @@ export function shortPhaseLabel(phase: CombatState["phase"]): string {
  * Compute initiative-ordered turn queue from CombatState.
  *
  * Ordering rules:
- *   1. Sort by initiative descending (观照 + 身势)
+ *   1. Sort by initiative descending
+ *      (approved 身势/观照 + highest currently usable qi die + modifier)
  *   2. Tie-break: player side before enemy side
  *   3. Tie-break: name alphabetical (zh-CN)
  */
 export function computeTurnOrder(
   state: CombatState,
-  actedActorIds: Set<string> = new Set(),
+  actedActorIds: ReadonlySet<string> = new Set(),
+  options: InitiativeOptions = {},
 ): TurnOrderEntry[] {
   const actors = [...state.actors];
+  const initiativeByActorId = new Map(
+    actors.map((actor) => [
+      actor.id,
+      calculateInitiativeForActor(state, actor, options).total,
+    ]),
+  );
 
   // Sort by initiative descending
   actors.sort((a, b) => {
-    const aInit = a.tableAttrs.观照 + a.tableAttrs.身势;
-    const bInit = b.tableAttrs.观照 + b.tableAttrs.身势;
+    const aInit = initiativeByActorId.get(a.id) ?? 0;
+    const bInit = initiativeByActorId.get(b.id) ?? 0;
     if (bInit !== aInit) return bInit - aInit;
     // Player side first on tie
     if (a.side !== b.side) return a.side === "player" ? -1 : 1;
@@ -91,17 +124,16 @@ export function computeTurnOrder(
     state.phase === "intercept_window" || state.phase === "react_window";
 
   return actors.map((actor) => {
-    const initiative = actor.tableAttrs.观照 + actor.tableAttrs.身势;
+    const initiative = initiativeByActorId.get(actor.id) ?? 0;
     const isCurrent = actor.id === state.activeActorId;
     const hasActed = actedActorIds.has(actor.id);
 
-    // Can respond: in response window, not the declarer, not dying, has quota remaining
+    // Acting earlier in the round does not spend or remove response eligibility.
     const canRespond =
       isResponseWindow &&
       !isCurrent &&
       actor.hp > 0 &&
-      actor.responseQuotaUsed < actor.maxResponseQuota &&
-      !hasActed;
+      actor.responseQuotaUsed < actor.maxResponseQuota;
 
     return {
       actorId: actor.id,
@@ -121,18 +153,75 @@ export function computeTurnOrder(
 }
 
 /**
+ * Calculate one actor's initiative and expose the components for UI/audit use.
+ */
+export function calculateInitiative(
+  state: CombatState,
+  actorId: string,
+  options: InitiativeOptions = {},
+): InitiativeBreakdown {
+  const actor = state.actors.find((candidate) => candidate.id === actorId);
+  if (!actor) {
+    throw new Error(`Unknown actor for initiative: ${actorId}`);
+  }
+  return calculateInitiativeForActor(state, actor, options);
+}
+
+function calculateInitiativeForActor(
+  state: CombatState,
+  actor: Actor,
+  options: InitiativeOptions,
+): InitiativeBreakdown {
+  const attribute = options.approvedAttributeByActorId?.[actor.id] ?? "身势";
+  const attributeValue = actor.tableAttrs[attribute];
+  const highestUsableQi = state.dice.reduce((highest, die) => {
+    const isCurrentlyUsable = die.zone === "QI_SEA" || die.zone === "TEMP_QI";
+    if (
+      die.ownerId !== actor.id ||
+      !isCurrentlyUsable ||
+      die.value === null
+    ) {
+      return highest;
+    }
+    return Math.max(highest, die.value);
+  }, 0);
+
+  const configuredModifier = options.statusModifierByActorId?.[actor.id];
+  const statusModifier = typeof configuredModifier === "number" && Number.isFinite(configuredModifier)
+    ? configuredModifier
+    : standardStatusModifier(actor);
+
+  return {
+    attribute,
+    attributeValue,
+    highestUsableQi,
+    statusModifier,
+    total: attributeValue + highestUsableQi + statusModifier,
+  };
+}
+
+/** Known numeric initiative effects from the current rulebook. */
+function standardStatusModifier(actor: Actor): number {
+  const statuses = [...actor.statuses, ...(actor.hiddenStatuses ?? [])];
+  return statuses.some((status) => status.name === "迟滞" && status.layers >= 3)
+    ? -2
+    : 0;
+}
+
+/**
  * Derive full TurnState from CombatState + optional acted-set.
  */
 export function deriveTurnState(
   state: CombatState,
-  actedActorIds: Set<string> = new Set(),
+  actedActorIds: ReadonlySet<string> = new Set(),
+  options: InitiativeOptions = {},
 ): TurnState {
   return {
     round: state.round,
     phase: state.phase,
     shortPhase: shortPhaseLabel(state.phase),
     currentActorId: state.activeActorId,
-    order: computeTurnOrder(state, actedActorIds),
+    order: computeTurnOrder(state, actedActorIds, options),
     isResponseWindow:
       state.phase === "intercept_window" || state.phase === "react_window",
   };

@@ -2,6 +2,7 @@ import type {
   Actor,
   CombatLogEntry,
   CombatState,
+  DistanceBand,
   InventoryItem,
   Move,
   MoveTrigger,
@@ -765,6 +766,10 @@ export function resolveInterceptSuccess(
   responseId: string,
   diceIds: string[],
 ): CombatState {
+  if (state.phase !== "intercept_window") {
+    throw new Error(`当前时点「${state.phase}」不允许截击。`);
+  }
+
   let next = cloneState(state);
   const action = requirePendingAction(next);
   const responder = requireActor(next, responderId);
@@ -804,7 +809,7 @@ export function resolveInterceptSuccess(
 
   // Move responder's dice + action's dice to QI_REST
   next.dice = moveDice(next.dice, [...responderDice, ...action.diceIds], "QI_REST");
-  next.phase = "outcome";
+  next.phase = "round_end";
   next.pendingAction = undefined;
 
   // Apply responder's postShi from the response
@@ -826,6 +831,10 @@ export function resolveInterceptSuccess(
  * resolve triggers. If dice count < minDice, the action fails.
  */
 export function formMove(state: CombatState): CombatState {
+  if (state.phase !== "intercept_window") {
+    throw new Error(`当前时点「${state.phase}」不允许成招。`);
+  }
+
   let next = cloneState(state);
   const action = requirePendingAction(next);
   const actor = requireActor(next, action.actorId);
@@ -837,7 +846,7 @@ export function formMove(state: CombatState): CombatState {
   if (diceCount < move.minDice) {
     next.dice = moveDice(next.dice, action.diceIds, "QI_REST");
     next.pendingAction = undefined;
-    next.phase = "outcome";
+    next.phase = "round_end";
     return appendLog(
       next,
       "FORM_MOVE",
@@ -893,6 +902,10 @@ export function resolveReact(
   responseId: string,
   diceIds: string[],
 ): CombatState {
+  if (state.phase !== "react_window") {
+    throw new Error(`当前时点「${state.phase}」不允许应招。`);
+  }
+
   let next = cloneState(state);
   const action = requirePendingAction(next);
   const responder = requireActor(next, responderId);
@@ -984,6 +997,7 @@ export function resolveReact(
     ...action,
     preventedDamage: totalPrevented,
   };
+  next.phase = "outcome";
 
   return appendLog(
     next,
@@ -993,10 +1007,33 @@ export function resolveReact(
 }
 
 /**
+ * skipReact: Close the react window without spending response dice.
+ * The formed action stays pending so applyOutcome can resolve it exactly once.
+ */
+export function skipReact(state: CombatState): CombatState {
+  if (state.phase !== "react_window") {
+    throw new Error(`当前时点「${state.phase}」不允许跳过应招。`);
+  }
+
+  const next = cloneState(state);
+  const action = requirePendingAction(next);
+  if (!action.formed) {
+    throw new Error("当前宣言尚未成招，不能跳过应招。");
+  }
+
+  next.phase = "outcome";
+  return appendLog(next, "REACT", "目标放弃应招，进入落果结算。", true);
+}
+
+/**
  * applyOutcome: Calculate and apply final damage, status effects, postShi change.
- * Move all action dice to QI_REST, clear pendingAction, increment round.
+ * Move all action dice to QI_REST, clear pendingAction, and enter round end.
  */
 export function applyOutcome(state: CombatState): CombatState {
+  if (state.phase !== "outcome") {
+    throw new Error(`当前时点「${state.phase}」不允许结算落果。`);
+  }
+
   let next = cloneState(state);
   const action = requirePendingAction(next);
   const actor = requireActor(next, action.actorId);
@@ -1078,8 +1115,7 @@ export function applyOutcome(state: CombatState): CombatState {
   next.dice = moveDice(next.dice, uniqueDice, "QI_REST");
 
   next.pendingAction = undefined;
-  next.phase = "outcome";
-  next.round += 1;
+  next.phase = "round_end";
 
   const damageMsg =
     damage > 0
@@ -1561,10 +1597,14 @@ export function changeMomentum(
 }
 
 /**
- * endRound: End the current round.
- * Decay statuses, reset response quotas, increment round, set phase to "round_end".
+ * endRound: Finish round-end maintenance and begin the next declaration phase.
+ * Can only be called once from round_end.
  */
 export function endRound(state: CombatState): CombatState {
+  if (state.phase !== "round_end") {
+    throw new Error(`当前时点「${state.phase}」不允许进入下一轮。`);
+  }
+
   let next = cloneState(state);
   next.pendingAction = undefined;
 
@@ -1577,13 +1617,13 @@ export function endRound(state: CombatState): CombatState {
     responseQuotaUsed: 0,
   }));
 
-  next.phase = "round_end";
+  next.phase = "declare";
   next.round += 1;
 
   return appendLog(
     next,
     "ROUND_ENDED",
-    `第 ${next.round - 1} 轮结束，进入第 ${next.round} 轮准备。`,
+    `第 ${next.round - 1} 轮结束，进入第 ${next.round} 轮宣言。`,
   );
 }
 
@@ -1803,6 +1843,48 @@ export function dmOverride(
 ): CombatState {
   let next = cloneState(state);
   return appendLog(next, "DM_OVERRIDE", `DM裁定：${message}`, isPublic);
+}
+
+/**
+ * Authoritative DM distance edit used by the distance drawer. The relation is
+ * direction-agnostic for validation, so an existing reverse relation is
+ * updated instead of creating a duplicate edge.
+ */
+export function dmSetDistance(
+  state: CombatState,
+  fromActorId: string,
+  toActorId: string,
+  band: DistanceBand,
+  entangled?: boolean,
+): CombatState {
+  if (fromActorId === toActorId) throw new Error("不能设置角色与自身的距离。");
+  const from = state.actors.find((actor) => actor.id === fromActorId);
+  const to = state.actors.find((actor) => actor.id === toActorId);
+  if (!from || !to) throw new Error("距离关系中的角色不存在。");
+
+  const next = cloneState(state);
+  const relationIndex = next.distances.findIndex((relation) =>
+    (relation.fromActorId === fromActorId && relation.toActorId === toActorId)
+      || (relation.fromActorId === toActorId && relation.toActorId === fromActorId));
+  const previous = relationIndex >= 0 ? next.distances[relationIndex] : undefined;
+  const updated = {
+    id: previous?.id ?? `distance-${fromActorId}-${toActorId}`,
+    fromActorId: previous?.fromActorId ?? fromActorId,
+    toActorId: previous?.toActorId ?? toActorId,
+    band,
+    height: previous?.height ?? "同层" as const,
+    entangled: entangled ?? previous?.entangled ?? false,
+    public: previous?.public ?? true,
+  };
+
+  if (relationIndex >= 0) next.distances[relationIndex] = updated;
+  else next.distances.push(updated);
+
+  return appendLog(
+    next,
+    "DISTANCE_CHANGED",
+    `DM调整距离：${from.name}与${to.name}为${band}${updated.entangled ? "，处于纠缠" : ""}。`,
+  );
 }
 
 /**

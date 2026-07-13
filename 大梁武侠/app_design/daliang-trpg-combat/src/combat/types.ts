@@ -325,11 +325,30 @@ export interface CombatState {
 }
 
 // === App Session ===
+export type AppRoute =
+  | "home"
+  | "createRoom"
+  | "room"
+  | "joinRoom"
+  | "roomWaiting"
+  | "characterAssign"
+  | "playerScene"
+  | "playerCombat"
+  | "player"
+  | "dmScene"
+  | "dmCombat"
+  | "dm"
+  | "library"
+  | "packs"
+  | "settings";
+
 export interface AppSession {
-  route: string;
+  route: AppRoute;
   identity?: "dm" | "player" | "spectator";
   gameMode: "scene" | "combat";
   developerMode: boolean;
+  /** Local-only helper that advances enemy responses and DM settlement for solo testing. */
+  autoDmEnabled: boolean;
   roomCode: string;
   playerName: string;
   selectedActorId?: string;

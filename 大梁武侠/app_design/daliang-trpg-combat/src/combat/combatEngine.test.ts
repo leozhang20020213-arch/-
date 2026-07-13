@@ -10,6 +10,7 @@ import {
   commitDiceRollResults,
   decayStatuses,
   declareAction,
+  dmSetDistance,
   endRound,
   enterScene,
   equipItem,
@@ -19,6 +20,7 @@ import {
   resolveInterceptSuccess,
   resolveReact,
   resolveSlotTriggers,
+  skipReact,
   unequipItem,
   useInventoryItem,
   useReflection,
@@ -27,7 +29,7 @@ import {
 } from "./combatEngine";
 import { assertRuleCatalogValid } from "../rules/ruleCatalog";
 import { validateLanMessage, validateStatusRecord } from "../rules/schema";
-import type { StatusEffect, SlotValues, Move, Actor } from "./types";
+import type { StatusEffect, SlotValues, Move, Actor, CombatState } from "./types";
 
 const fixedRoll = () => 4;
 
@@ -78,8 +80,13 @@ describe("combat engine", () => {
     });
     state = resolveInterceptSuccess(state, "enemy-short-blade", "RG009", ["sb-d1", "sb-d2"]);
     assert.equal(state.pendingAction, undefined);
+    assert.equal(state.phase, "round_end");
+    assert.equal(state.round, 1);
     assert.equal(state.dice.find((die) => die.id === "pc-d1")?.zone, "QI_REST");
     assert.equal(state.dice.find((die) => die.id === "sb-d1")?.zone, "QI_REST");
+    state = endRound(state);
+    assert.equal(state.phase, "declare");
+    assert.equal(state.round, 2);
   });
 
   it("forms, reacts, and applies outcome", () => {
@@ -97,11 +104,60 @@ describe("combat engine", () => {
     state = resolveReact(state, "pc-shen-qing", "RG002", ["pc-d1", "pc-d2"]);
     const afterReact = state.pendingAction;
     assert.equal(afterReact?.preventedDamage, 5);
+    assert.equal(state.phase, "outcome");
     state = applyOutcome(state);
     // total damage: max(0, 5 - 5) = 0, hp unchanged
     const shenQing = state.actors.find((actor) => actor.id === "pc-shen-qing")!;
     assert.equal(shenQing.hp, 18);
     assert.equal(state.pendingAction, undefined);
+    assert.equal(state.phase, "round_end");
+    assert.equal(state.round, 1);
+    state = endRound(state);
+    assert.equal(state.phase, "declare");
+    assert.equal(state.round, 2);
+  });
+
+  it("skips react while preserving the pending action for one outcome", () => {
+    let state = enterScene(createSeedState(), fixedRoll);
+    state = declareAction(state, "pc-shen-qing", "enemy-short-blade", "WG001", ["pc-d1", "pc-d2"], {
+      yinSlotDiceIds: ["pc-d1"],
+      yangSlotDiceIds: ["pc-d2"],
+    });
+    state = formMove(state);
+    const pendingId = state.pendingAction?.moveId;
+
+    state = skipReact(state);
+    assert.equal(state.phase, "outcome");
+    assert.equal(state.pendingAction?.moveId, pendingId);
+
+    state = applyOutcome(state);
+    assert.equal(state.phase, "round_end");
+    assert.equal(state.pendingAction, undefined);
+    assert.equal(state.round, 1);
+    assert.throws(() => applyOutcome(state), /不允许结算落果/);
+  });
+
+  it("sends a failed formation directly to round end", () => {
+    let state = enterScene(createSeedState(), fixedRoll);
+    state = declareAction(state, "pc-shen-qing", "enemy-short-blade", "WG001", ["pc-d1", "pc-d2"], {
+      yinSlotDiceIds: ["pc-d1"],
+      yangSlotDiceIds: ["pc-d2"],
+    });
+    state = {
+      ...state,
+      actors: state.actors.map((actor) => actor.id === "pc-shen-qing"
+        ? {
+            ...actor,
+            moves: actor.moves.map((move) => move.id === "WG001" ? { ...move, minDice: 3 } : move),
+          }
+        : actor),
+    };
+
+    state = formMove(state);
+    assert.equal(state.phase, "round_end");
+    assert.equal(state.pendingAction, undefined);
+    assert.equal(state.dice.find((die) => die.id === "pc-d1")?.zone, "QI_REST");
+    assert.equal(state.dice.find((die) => die.id === "pc-d2")?.zone, "QI_REST");
   });
 
   it("regulates breath without rerolling", () => {
@@ -245,13 +301,15 @@ describe("combat engine", () => {
     );
   });
 
-  it("updates momentum and ends round", () => {
-    let state = createSeedState();
+  it("updates momentum and starts the next round exactly once", () => {
+    let state: CombatState = { ...createSeedState(), phase: "round_end" };
     state = changeMomentum(state, "pc-shen-qing", "合势");
     const actor = state.actors.find((a) => a.id === "pc-shen-qing")!;
     assert.equal(actor.momentum, "合势");
     state = endRound(state);
-    assert.equal(state.phase, "round_end");
+    assert.equal(state.phase, "declare");
+    assert.equal(state.round, 2);
+    assert.throws(() => endRound(state), /不允许进入下一轮/);
     assert.equal(state.round, 2);
   });
 
@@ -590,6 +648,7 @@ describe("combat engine", () => {
       yangSlotDiceIds: ["pc-d2"],
     });
     state = formMove(state);
+    state = skipReact(state);
     state = applyOutcome(state);
     const actor = state.actors.find((a) => a.id === "pc-shen-qing")!;
     assert.equal(actor.momentum, "阳盛");
@@ -634,5 +693,20 @@ describe("combat engine", () => {
     const sb = state.actors.find((a) => a.id === "enemy-short-blade")!;
     assert.equal(sb.tableAttrs.气血, 8);
     assert.equal(sb.tableAttrs.护体, 5);
+  });
+
+  it("updates a distance relation without duplicating its reverse edge", () => {
+    const state = createSeedState();
+    const beforeCount = state.distances.length;
+    const next = dmSetDistance(state, "enemy-short-blade", "pc-shen-qing", "中距", true);
+    const matching = next.distances.filter((relation) =>
+      [relation.fromActorId, relation.toActorId].includes("pc-shen-qing")
+        && [relation.fromActorId, relation.toActorId].includes("enemy-short-blade"));
+
+    assert.equal(next.distances.length, beforeCount);
+    assert.equal(matching.length, 1);
+    assert.equal(matching[0].band, "中距");
+    assert.equal(matching[0].entangled, true);
+    assert.match(next.logs.at(-1)?.message ?? "", /DM调整距离/);
   });
 });

@@ -14,6 +14,21 @@
   --ink-subtle:         #8a7a6a;
   --ink-muted:          #5a5044;
 
+  /* ---- Accessible text roles (do not reuse one color across light/dark surfaces) ---- */
+  --text-on-dark-primary:   #f2e6d5;
+  --text-on-dark-secondary: #c9bca9;
+  --text-on-dark-muted:     #a99a88;
+  --text-on-paper-primary:  #2d1f14;
+  --text-on-paper-secondary: #5f5144;
+  --text-on-paper-muted:    #6f5f50;
+  --yin-on-dark:            #8fb6d8;
+  --yang-on-dark:           #efad69;
+  --yang-on-paper:          #8f4f1e;
+  --success-on-paper:       #376247;
+  --danger-on-paper:        #9f2f27;
+  --success-on-dark:        #9dccaa;
+  --danger-on-dark:         #ff9f96;
+
   /* ---- Semantic Aliases (PHASE9) ---- */
   --color-bg-main:      var(--bg-deep);           /* 深黑褐 — 战盘背景 */
   --color-bg-panel:     var(--bg-parchment);      /* 米白 — 信息卡背景 */
@@ -56,6 +71,8 @@
   --border-card:        rgba(107, 75, 45, 0.32);
   --border-accent:      #c5ad8a;
   --card-glow:          rgba(212, 132, 58, 0.45);
+  --focus-ring:         #efb95f;
+  --focus-ring-shadow:  0 0 0 3px rgba(239, 185, 95, 0.28);
 
   /* ---- Shadows ---- */
   --shadow-card:        0 4px 16px rgba(0, 0, 0, 0.25);
@@ -116,6 +133,11 @@
   --fs-helper:          12px;
   --fs-button:          13px;
   --fs-app-name:        20px;
+
+  /* ---- Control sizing ---- */
+  --control-h-compact:  32px;
+  --control-h-default:  40px;
+  --control-h-primary:  40px;
 
   /* ---- Border Radius ---- */
   --radius-card:        6px;

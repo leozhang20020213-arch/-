@@ -31,16 +31,16 @@ export const PlayerPromptBar: FC<PlayerPromptBarProps> = ({ state }) => {
         }
         return `第${state.round}轮，${actorName}行动中。请选择招式、目标，并投入气骰。`;
 
-      case "响应":
-        return "等待主持人确认响应窗口。";
+      case "截击窗口":
+        return "截击窗口已开启：受招者可截击，或放弃截击让招式成形。";
 
-      case "计算":
-        return "等待主持人裁定应招结果。";
+      case "应招窗口":
+        return "招式已经成形：受招者可应招，或跳过并进入落果。";
 
-      case "结算":
-        return "本轮结算完成，请查看结果。";
+      case "落果":
+        return "等待主持人结算落果；玩家只能查看公开结果。";
 
-      case "势变化":
+      case "轮末":
         return "等待主持人推进下一轮。";
 
       case "结束":

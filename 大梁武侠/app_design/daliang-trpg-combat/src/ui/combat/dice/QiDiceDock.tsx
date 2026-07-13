@@ -1,10 +1,12 @@
-import { useState, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import type { CombatState, Move, QiDie } from "../../../combat/types";
 import { canConfirmDeclaration, canDropDieToSlot, type ConfirmCheck } from "../../../lib/combat/qiAssignment";
 import { QiPool } from "./QiPool";
 import { TemporaryQiPool } from "./TemporaryQiPool";
 import { RestPool } from "./RestPool";
 import { CurrentMoveSlots } from "./CurrentMoveSlots";
+import { RawQiSlotPicker } from "./RawQiSlotPicker";
+import { resolveQiDieActivation } from "./diceInteraction";
 
 export interface QiDiceDockProps {
   /** Full combat state (for phase check) */
@@ -26,6 +28,8 @@ export interface QiDiceDockProps {
   onRollToSea?: () => void;
   /** Distance validation warning (shown near confirm button) */
   distanceWarning?: string;
+  /** False for spectators and basic actions, which do not use declaration slots. */
+  declarationEnabled?: boolean;
 }
 
 /**
@@ -59,8 +63,10 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   onConfirm,
   onRollToSea,
   distanceWarning,
+  declarationEnabled = true,
 }) => {
   const [dragError, setDragError] = useState<string | null>(null);
+  const [rawSlotChoiceDieId, setRawSlotChoiceDieId] = useState<string | null>(null);
 
   const activeActorId = state.activeActorId;
 
@@ -76,8 +82,24 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
 
   // Whether drag is allowed now
   const canDrag = Boolean(
-    state.phase === "declare" || state.phase === "scene",
+    declarationEnabled && (state.phase === "declare" || state.phase === "scene"),
   );
+
+  const rawSlotChoiceDie = rawSlotChoiceDieId
+    ? actorDice.find((die) => die.id === rawSlotChoiceDieId)
+    : undefined;
+  const rawSlotChoiceAvailable = Boolean(
+    rawSlotChoiceDie &&
+    rawSlotChoiceDie.nature === "raw" &&
+    (rawSlotChoiceDie.zone === "QI_SEA" || rawSlotChoiceDie.zone === "TEMP_QI") &&
+    !assignedIds.has(rawSlotChoiceDie.id),
+  );
+
+  useEffect(() => {
+    if (rawSlotChoiceDieId && (!canDrag || !rawSlotChoiceAvailable)) {
+      setRawSlotChoiceDieId(null);
+    }
+  }, [rawSlotChoiceDieId, canDrag, rawSlotChoiceAvailable]);
 
   // Resolve slot dice objects
   const yinDice = yinSlotIds
@@ -141,16 +163,40 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   }
 
   function handleClickDie(dieId: string) {
-    if (assignedIds.has(dieId)) {
-      handleRemoveFromSlot(dieId);
-      return;
-    }
-    if (!canDrag) return;
     const die = actorDice.find((item) => item.id === dieId);
     if (!die) return;
-    if (die.nature === "yin") handleDropToYin(dieId);
-    else if (die.nature === "yang") handleDropToYang(dieId);
-    else if (yinSlotIds.length <= yangSlotIds.length) handleDropToYin(dieId);
+    const activation = resolveQiDieActivation(
+      die,
+      assignedIds.has(dieId),
+      canDrag,
+    );
+
+    if (activation !== "choose-raw-slot") setRawSlotChoiceDieId(null);
+
+    switch (activation) {
+      case "remove":
+        handleRemoveFromSlot(dieId);
+        break;
+      case "assign-yin":
+        handleDropToYin(dieId);
+        break;
+      case "assign-yang":
+        handleDropToYang(dieId);
+        break;
+      case "choose-raw-slot":
+        setDragError(null);
+        setRawSlotChoiceDieId(dieId);
+        break;
+      case "none":
+        break;
+    }
+  }
+
+  function handleRawSlotChoice(slot: "yin" | "yang") {
+    const dieId = rawSlotChoiceDieId;
+    setRawSlotChoiceDieId(null);
+    if (!dieId) return;
+    if (slot === "yin") handleDropToYin(dieId);
     else handleDropToYang(dieId);
   }
 
@@ -178,19 +224,37 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
           onClickDie={handleClickDie}
           onRoll={poolDice.length > 0 ? onRollToSea : undefined}
         />
-        <div className="qi-dock-divider" />
-        <CurrentMoveSlots
-          move={selectedMove}
-          yinDice={yinDice}
-          yangDice={yangDice}
-          requiresBoth={requiresBoth}
-          canAssign={canDrag}
-          onDropToYin={handleDropToYin}
-          onDropToYang={handleDropToYang}
-          onRemove={handleRemoveFromSlot}
-          onClickDie={handleClickDie}
-        />
+        {declarationEnabled ? (
+          <>
+            <div className="qi-dock-divider" />
+            <CurrentMoveSlots
+              move={selectedMove}
+              yinDice={yinDice}
+              yangDice={yangDice}
+              requiresBoth={requiresBoth}
+              canAssign={canDrag}
+              onDropToYin={handleDropToYin}
+              onDropToYang={handleDropToYang}
+              onRemove={handleRemoveFromSlot}
+              onClickDie={handleClickDie}
+            />
+          </>
+        ) : (
+          <div className="qi-basic-action-mode" role="status">
+            <strong>气骰总览</strong>
+            <span>当前为只读或基础动作模式，无需配置阴阳槽。</span>
+          </div>
+        )}
       </div>
+
+      {canDrag && rawSlotChoiceAvailable && rawSlotChoiceDie && (
+        <RawQiSlotPicker
+          key={rawSlotChoiceDie.id}
+          die={rawSlotChoiceDie}
+          onChoose={handleRawSlotChoice}
+          onCancel={() => setRawSlotChoiceDieId(null)}
+        />
+      )}
 
       {/* Drag error toast */}
       {dragError && (
@@ -198,7 +262,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       )}
 
       {/* Pre-selection hint */}
-      {!selectedMove && (yinSlotIds.length + yangSlotIds.length > 0) && (
+      {declarationEnabled && !selectedMove && (yinSlotIds.length + yangSlotIds.length > 0) && (
         <div className="qi-preselect-hint">
           已预选 {yinSlotIds.length + yangSlotIds.length} 枚气骰（阴{yinTotal}点 / 阳{yangTotal}点）
           — 选择招式和目标后即可确认
@@ -213,24 +277,28 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       />
 
       {/* ── 4. Confirm button ── */}
-      <button
-        className={`qi-confirm-btn${confirmCheck.allowed ? "" : " disabled"}`}
-        type="button"
-        disabled={!confirmCheck.allowed}
-        onClick={onConfirm}
-      >
-        确认宣言并锁气
-      </button>
-      {!confirmCheck.allowed && confirmCheck.reasons.length > 0 && (
-        <p className="qi-confirm-hint">
-          {confirmCheck.reasons.join("、")}
-        </p>
-      )}
-      {distanceWarning && (
-        <p className="qi-confirm-hint distance-warn">
-          ⚠ {distanceWarning}
-        </p>
-      )}
+      {declarationEnabled ? (
+        <>
+          <button
+            className={`qi-confirm-btn${confirmCheck.allowed ? "" : " disabled"}`}
+            type="button"
+            disabled={!confirmCheck.allowed}
+            onClick={onConfirm}
+          >
+            确认宣言并锁气
+          </button>
+          {!confirmCheck.allowed && confirmCheck.reasons.length > 0 && (
+            <p className="qi-confirm-hint">
+              {confirmCheck.reasons.join("、")}
+            </p>
+          )}
+          {distanceWarning && (
+            <p className="qi-confirm-hint distance-warn">
+              ⚠ {distanceWarning}
+            </p>
+          )}
+        </>
+      ) : null}
     </div>
   );
 };

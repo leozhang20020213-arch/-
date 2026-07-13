@@ -36,7 +36,9 @@ const DM_NAV: NavBtn[] = [
   { id: "character", label: "玩家" },
   { id: "dmEnemies", label: "敌人" },
   { id: "dmDistance", label: "距离" },
+  { id: "dmHidden", label: "隐藏" },
   { id: "dmRuling", label: "裁定" },
+  { id: "dmScene", label: "场景" },
   { id: "dmLog", label: "日志" },
   { id: "library", label: "资料" },
   { id: "settings", label: "设置" },
@@ -115,6 +117,7 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
 
       {/* Center-left: Round + phase. Current actor is the highlighted queue chip. */}
       <div className="combat-topbar__round-phase">
+        <span className="scene-badge" title={state.sceneName}>{state.sceneName}</span>
         <span className="round-badge">第{turnState.round}轮</span>
         <span className="phase-badge">{turnState.shortPhase}</span>
       </div>
@@ -155,8 +158,9 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
         <span className={`identity-badge ${isDM ? "dm" : "player"}`}>
           {identityLabel(session.identity)}
         </span>
+        {session.autoDmEnabled ? <span className="auto-dm-badge" title="本地测试自动 DM 已启用">自动DM</span> : null}
 
-        {session.developerMode && (
+        {isDM && session.developerMode && (
           <button
             className="combat-topbar__win-btn"
             title={debugView ? "关闭调试视图" : "开发调试视图"}
@@ -171,8 +175,8 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
           ↩
         </button>
 
-        <button className="combat-topbar__win-btn" title="重置" onClick={onReset} type="button">
-          ⚙
+        <button className="combat-topbar__win-btn" title="清空本地存档" aria-label="清空本地存档" onClick={onReset} type="button">
+          ⟲
         </button>
       </div>
     </header>

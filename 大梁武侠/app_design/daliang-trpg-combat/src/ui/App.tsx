@@ -5,6 +5,7 @@ import {
   changeMomentum,
   commitDiceRollResults,
   declareAction,
+  dmSetDistance,
   dmOverride,
   endRound,
   enterScene,
@@ -15,6 +16,7 @@ import {
   regulateBreath,
   resolveInterceptSuccess,
   resolveReact,
+  skipReact,
   unequipItem,
   useInventoryItem,
   useReflection,
@@ -29,8 +31,9 @@ import {
   saveAppSession,
   saveCombatState,
 } from "../combat/storage";
-import type { Actor, AppSession, CombatState, InventoryCategory, InventoryItem, Move, QiDie, QiZone } from "../combat/types";
+import type { Actor, AppSession, CombatState, DistanceBand, InventoryCategory, InventoryItem, Move, QiDie, QiZone } from "../combat/types";
 import { deriveTargetState } from "../lib/combat/targetValidation";
+import { advanceAutoDm } from "../lib/combat/autoDm";
 import { createLanClient, type LanClient, type LanConnectionStatus } from "../net/lanClient";
 // PhaserCombatBoard replaced by TacticalCombatStage in PHASE2
 import { QiDiceRollOverlay } from "../dice3d/QiDiceRollOverlay";
@@ -53,9 +56,10 @@ import { CombatStage as TacticalCombatStage } from "./combat/stage/CombatStage";
 import { buildStageData } from "../data/mockCombatData";
 import { EnemyPublicDrawer } from "./combat/enemy/EnemyPublicDrawer";
 import { QiDiceDock } from "./combat/dice/QiDiceDock";
+import { PlayerResponseWorkbench } from "./combat/player/PlayerResponseWorkbench";
 import { DmControlPanel } from "./combat/dm/DmControlPanel";
-import { PlayerPromptBar } from "./combat/player/PlayerPromptBar";
 import { DebugPanel } from "./debug/DebugPanel";
+import { LibraryPage, PacksPage, SettingsPage } from "./pages/SupportPages";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -121,6 +125,27 @@ interface DeclarationDraft {
   yangSlotIds: string[];
 }
 
+interface PromptState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  destructive?: boolean;
+  onConfirm?: () => void;
+}
+
+function targetCandidatesFor(state: CombatState, actor: Actor, move?: Move): Actor[] {
+  const targetRule = move?.targetRange ?? "";
+  const living = state.actors.filter((candidate) => candidate.hp > 0);
+
+  if (/自身|自己/.test(targetRule)) return [actor];
+  if (/队友|同伴|护人/.test(targetRule)) {
+    return living.filter((candidate) => candidate.side === actor.side);
+  }
+  if (/任意|所有角色|任一角色/.test(targetRule)) return living;
+  return living.filter((candidate) => candidate.id !== actor.id && candidate.side !== actor.side);
+}
+
 export function App() {
   const [state, setState] = useState<CombatState>(() => loadCombatState());
   const [session, setSession] = useState<AppSession>(() => loadAppSession());
@@ -140,10 +165,11 @@ export function App() {
   const [lanStatus, setLanStatus] = useState<LanConnectionStatus>("idle");
   const [lanDetail, setLanDetail] = useState("");
   const [rollRequest, setRollRequest] = useState<DiceRollRequest | null>(null);
-  const [prompt, setPrompt] = useState<{ title: string; message: string } | null>(null);
+  const [prompt, setPrompt] = useState<PromptState | null>(null);
   const [selectedCombatantId, setSelectedCombatantId] = useState<string | undefined>();
   const [actedActorIds, setActedActorIds] = useState<Set<string>>(new Set());
   const [selectedBasicAction, setSelectedBasicAction] = useState<BasicActionType | null>(null);
+  const [autoDmStatus, setAutoDmStatus] = useState("");
   const lanClientRef = useRef<LanClient | null>(null);
 
   const playerActorId = session.selectedActorId ?? "pc-shen-qing";
@@ -151,25 +177,54 @@ export function App() {
   const selectedMoveId = declarationDraft.moveId;
   const slotDice = { yin: declarationDraft.yinSlotIds, yang: declarationDraft.yangSlotIds };
   const playerState = useMemo(() => visibleForPlayer(state, playerActorId), [state, playerActorId]);
-  const currentActor = state.actors.find((actor) => actor.id === playerActorId) ?? state.actors[0];
+  const controlledActorId = session.identity === "dm" ? state.activeActorId : playerActorId;
+  const controlledActor = state.actors.find((actor) => actor.id === controlledActorId) ?? state.actors[0];
 
   useEffect(() => saveCombatState(state), [state]);
   useEffect(() => saveAppSession(session), [session]);
 
   useEffect(() => {
-    if (!currentActor.moves.some((move) => move.id === selectedMoveId)) {
-      setSelectedMoveId(currentActor.moves[0]?.id ?? "");
+    const isPlayerCombat = session.route === "playerCombat" || session.route === "player";
+    if (!session.autoDmEnabled || session.identity !== "player" || !isPlayerCombat) {
+      setAutoDmStatus("");
+      return;
+    }
+
+    const step = advanceAutoDm(state, playerActorId);
+    if (step.decision === "idle" || step.decision === "waiting_player") {
+      setAutoDmStatus(step.message.trim());
+      return;
+    }
+
+    setAutoDmStatus("自动 DM 正在按规则处理当前时点……");
+    const timer = window.setTimeout(() => {
+      setState(step.state);
+      setAutoDmStatus(step.message.trim());
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [playerActorId, session.autoDmEnabled, session.identity, session.route, state]);
+
+  useEffect(() => {
+    if (!selectedBasicAction && !controlledActor.moves.some((move) => move.id === selectedMoveId)) {
+      setSelectedMoveId(controlledActor.moves[0]?.id ?? "");
       setSelectedDice([]);
       setSlotDice({ yin: [], yang: [] });
     }
-  }, [currentActor, selectedMoveId]);
+  }, [controlledActor, selectedBasicAction, selectedMoveId]);
 
   useEffect(() => {
-    setDeclarationDraft((current) => current.actorId === state.activeActorId
-      ? current
-      : { ...current, actorId: state.activeActorId, yinSlotIds: [], yangSlotIds: [] });
+    const firstMove = controlledActor.moves[0];
+    const firstTarget = targetCandidatesFor(state, controlledActor, firstMove)[0];
+    setDeclarationDraft({
+      actorId: controlledActor.id,
+      moveId: firstMove?.id ?? "",
+      targetId: firstTarget?.id ?? controlledActor.id,
+      yinSlotIds: [],
+      yangSlotIds: [],
+    });
     setSelectedDice([]);
-  }, [state.activeActorId]);
+    setSelectedBasicAction(null);
+  }, [controlledActor.id, state.activeActorId]);
 
   function setSelectedTargetId(targetId: string) {
     setDeclarationDraft((current) => ({ ...current, targetId }));
@@ -191,6 +246,9 @@ export function App() {
 
   function patch(updater: (current: CombatState) => CombatState) {
     setState((current) => updater(current));
+  }
+
+  function clearActionDraft() {
     setSelectedDice([]);
     setSlotDice({ yin: [], yang: [] });
     setSelectedBasicAction(null);
@@ -202,14 +260,41 @@ export function App() {
   }
 
   function resetAll() {
-    setState(clearCombatState());
-    setSession(clearAppSession());
-    setSelectedDice([]);
+    setPrompt({
+      title: "清空本地存档？",
+      message: "这会重置当前房间、角色分配和交锋进度。此操作无法撤销。",
+      confirmLabel: "确认清空",
+      cancelLabel: "保留存档",
+      destructive: true,
+      onConfirm: () => {
+        setState(clearCombatState());
+        setSession(clearAppSession());
+        clearActionDraft();
+        setActedActorIds(new Set());
+      },
+    });
   }
 
   function enterAs(identity: "dm" | "player" | "spectator") {
     const route = identity === "dm" ? "dmScene" : "playerScene";
     go(route, { identity, gameMode: "scene" });
+  }
+
+  function canControlActor(actorId: string) {
+    if (session.identity === "dm") return true;
+    return session.identity === "player" && actorId === playerActorId;
+  }
+
+  function showPermissionDenied(message = "当前身份只能查看，不能修改权威游戏状态。") {
+    setPrompt({ title: "权限不足", message });
+  }
+
+  function setAutoDmEnabled(enabled: boolean) {
+    if (session.identity === "spectator") {
+      showPermissionDenied("旁观者不能启用测试自动 DM。");
+      return;
+    }
+    setSession((current) => ({ ...current, autoDmEnabled: enabled }));
   }
 
   function startLanRoom() {
@@ -250,8 +335,8 @@ export function App() {
 
   function toggleDie(dieId: string) {
     const die = state.dice.find((item) => item.id === dieId);
-    if (session.identity === "player" && die?.ownerId !== playerActorId) {
-      patch((current) => dmOverride(current, "玩家不能操作非本人气骰。"));
+    if (!die || !canControlActor(die.ownerId)) {
+      showPermissionDenied("玩家只能操作自己的气骰；旁观者不能操作气骰。");
       return;
     }
     setSelectedDice((current) => (current.includes(dieId) ? current.filter((id) => id !== dieId) : [...current, dieId]));
@@ -271,9 +356,9 @@ export function App() {
       window.setTimeout(() => setSlotHint(""), 1600);
       return false;
     }
-    if (session.identity === "player" && die.ownerId !== playerActorId) {
+    if (!canControlActor(die.ownerId)) {
       setSlotHint("玩家只能操作自己的气骰");
-      setPrompt({ title: "权限不足", message: "玩家只能操作自己的气骰。" });
+      showPermissionDenied("玩家只能操作自己的气骰；旁观者不能配置槽位。");
       window.setTimeout(() => setSlotHint(""), 1600);
       return false;
     }
@@ -304,13 +389,23 @@ export function App() {
 
   function selectBasicAction(action: BasicActionType | null) {
     setSelectedBasicAction(action);
+    if (action) setSelectedMoveId("");
     setSelectedDice([]);
     setSlotDice({ yin: [], yang: [] });
   }
 
   function requestSceneRoll() {
+    if (session.identity === "spectator" || !session.identity) {
+      showPermissionDenied("旁观者不能投掷或推进场景。");
+      return;
+    }
+    if (session.identity === "player" && !session.autoDmEnabled) {
+      showPermissionDenied("正式房间由 DM 开始新场景并整体投骰；如需单人测试，请启用测试自动 DM。");
+      return;
+    }
     const poolDice = state.dice.filter(
-      (die) => die.zone === "QI_POOL" && !die.temporary,
+      (die) => die.zone === "QI_POOL" && !die.temporary &&
+        (session.identity === "dm" || session.autoDmEnabled || die.ownerId === playerActorId),
     );
     if (poolDice.length === 0) {
       setPrompt({ title: "气池无骰", message: "当前没有可投入气海的常规气骰。" });
@@ -322,7 +417,7 @@ export function App() {
   function commitRollRequest(results: DiceRollResult[]) {
     if (!rollRequest) return;
     patch((current) => {
-      const prepared = rollRequest.mode === "enterScene"
+      const prepared = rollRequest.mode === "enterScene" && (session.identity === "dm" || session.autoDmEnabled)
         ? enterScene(current, () => 1)
         : current;
       return commitDiceRollResults(prepared, results);
@@ -335,8 +430,12 @@ export function App() {
   }
 
   function declareFor(actorId: string, targetId: string, moveId: string) {
-    if (session.identity === "player" && actorId !== playerActorId) {
-      patch((current) => dmOverride(current, "玩家只能宣言自己的角色。"));
+    if (!canControlActor(actorId)) {
+      showPermissionDenied("玩家只能为自己的角色宣言；旁观者不能宣言。");
+      return;
+    }
+    if (actorId !== state.activeActorId || actorId !== declarationDraft.actorId) {
+      setPrompt({ title: "行动者不一致", message: "当前草稿已失效，请按现在的行动者重新选择招式与目标。" });
       return;
     }
     const slottedDice = [...slotDice.yin, ...slotDice.yang];
@@ -347,12 +446,10 @@ export function App() {
     });
     if (!availability.allowed) {
       setPrompt({ title: "宣言不可用", message: availability.reasons.join("、") });
-      patch((current) => dmOverride(current, `宣言不可用：${availability.reasons.join("、")}`));
       return;
     }
     if (diceToUse.length === 0) {
       setPrompt({ title: "需要气骰", message: "需要先选择或拖入至少一枚可用气骰。" });
-      patch((current) => dmOverride(current, "需要先选择至少一枚可用气骰。"));
       return;
     }
     patch((current) =>
@@ -361,51 +458,93 @@ export function App() {
         yangSlotDiceIds: slotDice.yang,
       }),
     );
+    clearActionDraft();
   }
 
-  function executeBasicAction(actionType: BasicActionType) {
-    const availability = getBasicActionAvailability(state, playerActorId, actionType);
+  function executeBasicAction(actorId: string, actionType: BasicActionType) {
+    if (!canControlActor(actorId) || actorId !== state.activeActorId) {
+      showPermissionDenied("只有当前行动者本人或 DM 可以确认这个基础动作。");
+      return;
+    }
+    const availability = getBasicActionAvailability(state, actorId, actionType);
     if (!availability.usable) {
       setPrompt({ title: "动作不可用", message: availability.detailReasons.join("、") });
       return;
     }
     if (actionType === "regulateBreath") {
-      const die = state.dice.find((d) => d.ownerId === playerActorId && d.zone === "QI_REST");
+      const die = state.dice.find((d) => d.ownerId === actorId && d.zone === "QI_REST");
       if (!die) {
         setPrompt({ title: "调息失败", message: "息库没有可调息气骰。" });
         return;
       }
-      patch((current) => regulateBreath(current, playerActorId, [die.id], true));
+      patch((current) => regulateBreath(current, actorId, [die.id], true));
     }
     if (actionType === "fanzhao") {
-      patch((current) => useReflection(current, playerActorId));
+      patch((current) => useReflection(current, actorId));
     }
+    clearActionDraft();
   }
 
-  function interceptPending() {
+  function interceptPending(responseId?: string, diceIds?: string[]) {
     const pending = state.pendingAction;
     if (!pending) return;
     const responder = state.actors.find((actor) => actor.id === pending.targetId);
-    const response = responder?.responses.find((item) => item.responseType === "截击");
-    const dieId = responder ? pickFirstSeaDie(responder.id) : undefined;
-    if (!responder || !response || !dieId) {
-      patch((current) => dmOverride(current, "当前没有可用截击挂载或气骰。"));
+    if (responder && !canControlActor(responder.id)) {
+      showPermissionDenied("只有受招者本人或 DM 可以提交截击。");
       return;
     }
-    patch((current) => resolveInterceptSuccess(current, responder.id, response.id, [dieId]));
+    const response = responseId
+      ? responder?.responses.find((item) => item.id === responseId && item.responseType === "截击")
+      : responder?.responses.find((item) => item.responseType === "截击");
+    const submittedDice = diceIds ?? (responder ? [pickFirstSeaDie(responder.id)].filter(Boolean) as string[] : []);
+    if (!responder || !response || submittedDice.length === 0) {
+      setPrompt({ title: "无法截击", message: "当前没有可用截击挂载或气骰。" });
+      return;
+    }
+    try {
+      setState(resolveInterceptSuccess(state, responder.id, response.id, submittedDice));
+    } catch (error) {
+      setPrompt({ title: "截击未通过规则校验", message: error instanceof Error ? error.message : "请重新检查气骰与响应条件。" });
+    }
   }
 
-  function reactPending() {
+  function reactPending(responseId?: string, diceIds?: string[]) {
     const pending = state.pendingAction;
     if (!pending) return;
     const responder = state.actors.find((actor) => actor.id === pending.targetId);
-    const response = responder?.responses.find((item) => item.responseType === "应招");
-    const dieId = responder ? pickFirstSeaDie(responder.id) : undefined;
-    if (!responder || !response || !dieId) {
-      patch((current) => dmOverride(current, "当前没有可用应招挂载或气骰。"));
+    if (responder && !canControlActor(responder.id)) {
+      showPermissionDenied("只有受招者本人或 DM 可以提交应招。");
       return;
     }
-    patch((current) => resolveReact(current, responder.id, response.id, [dieId]));
+    const response = responseId
+      ? responder?.responses.find((item) => item.id === responseId && item.responseType === "应招")
+      : responder?.responses.find((item) => item.responseType === "应招");
+    const submittedDice = diceIds ?? (responder ? [pickFirstSeaDie(responder.id)].filter(Boolean) as string[] : []);
+    if (!responder || !response || submittedDice.length === 0) {
+      setPrompt({ title: "无法应招", message: "当前没有可用应招挂载或气骰。" });
+      return;
+    }
+    try {
+      setState(resolveReact(state, responder.id, response.id, submittedDice));
+    } catch (error) {
+      setPrompt({ title: "应招未通过规则校验", message: error instanceof Error ? error.message : "请重新检查气骰与响应条件。" });
+    }
+  }
+
+  function skipPendingResponse() {
+    const pending = state.pendingAction;
+    if (!pending) return;
+    if (!canControlActor(pending.targetId)) {
+      showPermissionDenied("只有受招者本人或 DM 可以放弃当前响应。");
+      return;
+    }
+    if (state.phase === "intercept_window") {
+      patch((current) => formMove(current));
+      return;
+    }
+    if (state.phase === "react_window") {
+      patch((current) => skipReact(current));
+    }
   }
 
   const common = {
@@ -438,24 +577,24 @@ export function App() {
     setSelectedBasicAction: selectBasicAction,
     setPrompt,
     actedActorIds,
+    readOnly: session.identity === "spectator",
+    setAutoDmEnabled,
+    autoDmStatus,
   };
 
   const isDeskRoute =
     session.route === "playerScene" || session.route === "playerCombat" || session.route === "player" ||
     session.route === "dmScene" || session.route === "dmCombat" || session.route === "dm";
 
-  const isDM = session.identity === "dm";
-
   // ---- Combat routes: each desk renders its own CombatShell ----
   if (isDeskRoute) {
-    const displayState = debugView && session.developerMode ? state : playerState;
+    const displayState = session.identity === "dm" ? state : playerState;
     return (
       <>
         {session.route === "playerScene" ? (
           <PlayerSceneDesk
             {...common}
             state={displayState}
-            rawState={state}
             actorId={playerActorId}
             onEnterCombat={() => go("playerCombat", { gameMode: "combat" })}
             onStartScene={requestSceneRoll}
@@ -465,12 +604,11 @@ export function App() {
           <PlayerCombatDesk
             {...common}
             state={displayState}
-            rawState={state}
             actorId={playerActorId}
             onStartScene={requestSceneRoll}
-            onForm={() => patch((current) => formMove(current))}
+            onIntercept={interceptPending}
             onReact={reactPending}
-            onOutcome={() => patch((current) => applyOutcome(current))}
+            onSkipResponse={skipPendingResponse}
           />
         ) : null}
         {session.route === "dmScene" ? (
@@ -490,8 +628,8 @@ export function App() {
             setDmNote={setDmNote}
             onStartScene={requestSceneRoll}
             onIntercept={interceptPending}
-            onForm={() => patch((current) => formMove(current))}
             onReact={reactPending}
+            onSkipResponse={skipPendingResponse}
             onOutcome={() => patch((current) => applyOutcome(current))}
             onEndRound={() => patch((current) => endRound(current))}
             onMomentum={(actorId, momentum) => patch((current) => changeMomentum(current, actorId, momentum))}
@@ -508,35 +646,49 @@ export function App() {
             }}
           />
         ) : null}
-        {prompt ? <PromptModal title={prompt.title} message={prompt.message} onClose={() => setPrompt(null)} /> : null}
-        <DebugPanel state={state} session={session} debugView={debugView} setDebugView={setDebugView} />
+        {prompt ? <PromptModal {...prompt} onClose={() => setPrompt(null)} /> : null}
+        {session.identity === "dm" && session.developerMode ? (
+          <DebugPanel state={state} session={session} debugView={debugView} setDebugView={setDebugView} />
+        ) : null}
       </>
     );
   }
 
   // ---- Non-combat routes: keep original app-shell ----
   return (
-    <div className="app-shell">
-      <TitleBar session={session} debugView={debugView} setDebugView={setDebugView} onHome={() => go("home")} onReset={resetAll} />
-      <div style={{ gridRow: "2 / -1", overflow: "auto" }}>
-        {session.route === "home" ? <HomeScreen session={session} go={go} resetAll={resetAll} /> : null}
-        {session.route === "createRoom" || session.route === "room" ? (
-          <CreateRoomPage session={session} setSession={setSession} go={go} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} startLanRoom={startLanRoom} />
-        ) : null}
-        {session.route === "joinRoom" ? (
-          <JoinRoomPage state={state} session={session} setSession={setSession} go={go} enterAs={enterAs} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} joinLanRoom={joinLanRoom} />
-        ) : null}
-        {session.route === "roomWaiting" ? (
-          <RoomWaitingPage state={state} session={session} setSession={setSession} go={go} />
-        ) : null}
-        {session.route === "characterAssign" ? (
-          <CharacterAssignPage state={state} session={session} setSession={setSession} enterAs={enterAs} go={go} />
-        ) : null}
-        {session.route === "library" || session.route === "packs" || session.route === "settings" ? (
-          <PlaceholderPage session={session} go={go} />
-        ) : null}
+    <>
+      <div className="app-shell">
+        <TitleBar session={session} debugView={debugView} setDebugView={setDebugView} onHome={() => go("home")} onReset={resetAll} />
+        <div style={{ gridRow: "2 / -1", overflow: "auto" }}>
+          {session.route === "home" ? <HomeScreen session={session} go={go} resetAll={resetAll} /> : null}
+          {session.route === "createRoom" || session.route === "room" ? (
+            <CreateRoomPage session={session} setSession={setSession} go={go} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} startLanRoom={startLanRoom} />
+          ) : null}
+          {session.route === "joinRoom" ? (
+            <JoinRoomPage state={state} session={session} setSession={setSession} go={go} enterAs={enterAs} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} joinLanRoom={joinLanRoom} />
+          ) : null}
+          {session.route === "roomWaiting" ? (
+            <RoomWaitingPage state={state} session={session} setSession={setSession} go={go} />
+          ) : null}
+          {session.route === "characterAssign" ? (
+            <CharacterAssignPage state={state} session={session} setSession={setSession} enterAs={enterAs} go={go} />
+          ) : null}
+          {session.route === "library" ? (
+            <LibraryPage state={session.identity === "dm" ? state : playerState} onBack={() => go("home")} />
+          ) : null}
+          {session.route === "packs" ? (
+            <PacksPage state={session.identity === "dm" ? state : playerState} session={session} onBack={() => go("home")} />
+          ) : null}
+          {session.route === "settings" ? (
+            <SettingsPage session={session} setSession={setSession} onBack={() => go("home")} onReset={resetAll} />
+          ) : null}
+        </div>
       </div>
-    </div>
+      {prompt ? <PromptModal {...prompt} onClose={() => setPrompt(null)} /> : null}
+      {session.identity === "dm" && session.developerMode ? (
+        <DebugPanel state={state} session={session} debugView={debugView} setDebugView={setDebugView} />
+      ) : null}
+    </>
   );
 }
 
@@ -564,7 +716,7 @@ function Topbar({
       </div>
       <div className="top-actions">
         <span className="identity-pill">{session.identity ? identityLabel(session.identity) : "未入席"}</span>
-        {session.developerMode ? (
+        {session.identity === "dm" && session.developerMode ? (
           <button type="button" onClick={() => setDebugView(!debugView)}>
             {debugView ? "关闭调试全量视图" : "开发调试视图"}
           </button>
@@ -598,16 +750,16 @@ function HomeScreen({
         <p>当前版本是本地单机房间。正式界面不再默认进入交锋，玩家端和 DM 端按身份分流。</p>
         <div className="home-actions">
           <button className="primary-action" type="button" onClick={() => go("createRoom", { identity: undefined })}>
-            开始游戏
+            创建本地房间
           </button>
-          <button type="button" onClick={() => go(session.identity === "dm" ? "dmScene" : session.identity ? "playerScene" : "roomWaiting")}>
+          <button type="button" disabled={!session.identity} onClick={() => go(session.identity === "dm" ? "dmScene" : "playerScene")}>
             继续上次
           </button>
-          <button type="button" onClick={() => go("createRoom", { identity: undefined })}>
-            创建房间
-          </button>
-          <button type="button" onClick={() => go("joinRoom", { identity: "player" })}>
+          <button type="button" onClick={() => go("joinRoom", { identity: undefined })}>
             加入房间
+          </button>
+          <button type="button" onClick={() => go("playerScene", { identity: "player", gameMode: "scene", autoDmEnabled: true })}>
+            单人规则测试
           </button>
           <button type="button" onClick={() => go("packs")}>
             团包管理
@@ -647,8 +799,25 @@ function CreateRoomPage({
   startLanRoom: () => void;
 }) {
   function updateRoom(key: keyof AppSession["room"], value: string | boolean | number) {
-    setSession((current) => ({ ...current, room: { ...current.room, [key]: value } }));
+    setSession((current) => {
+      if (key !== "maxPlayers") return { ...current, room: { ...current.room, [key]: value } };
+      const maxPlayers = Math.max(1, Math.min(8, Number(value) || 1));
+      const playerSeatCount = Math.max(1, maxPlayers - 1);
+      const dmSeat = current.seats.find((seat) => seat.id === "seat-dm") ?? { id: "seat-dm", label: "DM", ready: true };
+      const existingPlayers = current.seats.filter((seat) => seat.id !== "seat-dm");
+      const seats = [
+        dmSeat,
+        ...Array.from({ length: playerSeatCount }, (_, index) => existingPlayers[index] ?? {
+          id: `seat-${index + 1}`,
+          label: `玩家${index + 1}`,
+          ready: false,
+        }),
+      ];
+      return { ...current, seats, room: { ...current.room, maxPlayers } };
+    });
   }
+
+  const canCreate = session.room.roomName.trim().length > 0 && session.room.hostName.trim().length > 0;
 
   return (
     <section className="room-grid">
@@ -694,9 +863,10 @@ function CreateRoomPage({
           />
           开发模式
         </label>
-        <button className="primary-action" type="button" onClick={() => go("roomWaiting", { identity: "dm" })}>
+        <button className="primary-action" type="button" disabled={!canCreate} onClick={() => go("roomWaiting", { identity: "dm" })}>
           以 DM 身份开房
         </button>
+        {!canCreate ? <p className="form-error">请填写房间名与主持人名称。</p> : null}
       </div>
 
       <div className="panel">
@@ -721,7 +891,7 @@ function CreateRoomPage({
           </label>
           <p>房间码：{session.roomCode}</p>
           <p>连接状态：{lanStatus}{lanDetail ? ` · ${lanDetail}` : ""}</p>
-          <button type="button" onClick={startLanRoom}>开启局域网房间</button>
+          <button type="button" disabled={!canCreate} onClick={startLanRoom}>开启局域网房间</button>
         </div>
       </div>
     </section>
@@ -751,6 +921,7 @@ function JoinRoomPage({
   lanDetail: string;
   joinLanRoom: () => void;
 }) {
+  const canJoin = session.roomCode.trim().length > 0 && session.playerName.trim().length > 0 && Boolean(session.selectedActorId);
   return (
     <section className="room-grid">
       <div className="panel">
@@ -774,8 +945,8 @@ function JoinRoomPage({
         </label>
         <div className="split-actions">
           <button type="button" onClick={() => go("home")}>返回</button>
-          <button className="primary-action" type="button" onClick={() => enterAs("player")}>以玩家身份进入</button>
-          <button type="button" onClick={() => enterAs("spectator")} disabled={!session.room.allowSpectators}>旁观</button>
+          <button className="primary-action" type="button" disabled={!canJoin} onClick={() => enterAs("player")}>以玩家身份进入</button>
+          <button type="button" onClick={() => enterAs("spectator")} disabled={!session.room.allowSpectators || !session.roomCode.trim()}>旁观</button>
         </div>
         <div className="lan-box">
           <h3>局域网加入</h3>
@@ -784,7 +955,7 @@ function JoinRoomPage({
             <input value={lanUrl} onChange={(event) => setLanUrl(event.target.value)} />
           </label>
           <p>连接状态：{lanStatus}{lanDetail ? ` · ${lanDetail}` : ""}</p>
-          <button type="button" onClick={joinLanRoom}>连接局域网房间</button>
+          <button type="button" disabled={!canJoin} onClick={joinLanRoom}>连接局域网房间</button>
         </div>
       </div>
     </section>
@@ -803,6 +974,7 @@ function RoomWaitingPage({
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
 }) {
   const players = state.actors.filter((actor) => actor.side === "player");
+  const isHost = session.identity === "dm";
   return (
     <section className="room-grid">
       <div className="panel">
@@ -816,14 +988,15 @@ function RoomWaitingPage({
         <h2>角色分配</h2>
         {players.map((actor) => <div className="actor-card static" key={actor.id}><strong>{actor.name}</strong><span>{session.selectedActorId === actor.id ? "已分配" : "未分配"}</span></div>)}
         <label className="check-row">
-          <input checked={session.room.allowSpectators} type="checkbox" onChange={(event) => setSession((current) => ({ ...current, room: { ...current.room, allowSpectators: event.target.checked } }))} />
+          <input checked={session.room.allowSpectators} disabled={!isHost} type="checkbox" onChange={(event) => setSession((current) => ({ ...current, room: { ...current.room, allowSpectators: event.target.checked } }))} />
           允许旁观
         </label>
         <div className="split-actions">
           <button type="button" onClick={() => go("home")}>返回首页</button>
-          <button type="button" onClick={() => go("characterAssign")}>角色分配</button>
-          <button className="primary-action" type="button" onClick={() => go("dmScene", { identity: "dm", gameMode: "scene" })}>开始情景</button>
-          <button type="button" onClick={() => go("dmCombat", { identity: "dm", gameMode: "combat" })}>直接进入交锋</button>
+          {session.identity !== "spectator" ? <button type="button" onClick={() => go("characterAssign")}>{isHost ? "角色分配" : "选择角色"}</button> : null}
+          {isHost ? <button className="primary-action" type="button" onClick={() => go("dmScene", { gameMode: "scene" })}>开始情景</button> : null}
+          {isHost ? <button type="button" onClick={() => go("dmCombat", { gameMode: "combat" })}>直接进入交锋</button> : null}
+          {session.identity === "spectator" ? <button type="button" onClick={() => go("playerScene", { gameMode: "scene" })}>返回旁观桌面</button> : null}
         </div>
       </div>
     </section>
@@ -843,13 +1016,15 @@ function CharacterAssignPage({
   enterAs: (identity: "dm" | "player" | "spectator") => void;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
 }) {
+  const isHost = session.identity === "dm";
+  const isSpectator = session.identity === "spectator";
   return (
     <section className="room-grid">
       <div className="panel">
         <h2>角色分配</h2>
         <label>
           玩家角色
-          <select value={session.selectedActorId} onChange={(event) => setSession((current) => ({ ...current, selectedActorId: event.target.value }))}>
+          <select disabled={isSpectator} value={session.selectedActorId} onChange={(event) => setSession((current) => ({ ...current, selectedActorId: event.target.value }))}>
             {state.actors.filter((actor) => actor.side === "player").map((actor) => <option key={actor.id} value={actor.id}>{actor.name}</option>)}
           </select>
         </label>
@@ -859,8 +1034,8 @@ function CharacterAssignPage({
         <h2>进入桌面</h2>
         <div className="split-actions">
           <button type="button" onClick={() => go("roomWaiting")}>返回房间</button>
-          <button className="primary-action" type="button" onClick={() => enterAs("player")} disabled={!session.selectedActorId}>以玩家身份进入</button>
-          <button type="button" onClick={() => enterAs("dm")}>以 DM 身份进入</button>
+          {!isSpectator ? <button className="primary-action" type="button" onClick={() => enterAs("player")} disabled={!session.selectedActorId}>以玩家身份进入</button> : null}
+          {isHost ? <button type="button" onClick={() => enterAs("dm")}>返回 DM 桌面</button> : null}
         </div>
       </div>
     </section>
@@ -868,7 +1043,6 @@ function CharacterAssignPage({
 }
 
 function PlayerSceneDesk(props: DeskProps & {
-  rawState: CombatState;
   actorId: string;
   onStartScene: () => void;
   onEnterCombat: () => void;
@@ -937,17 +1111,14 @@ function PlayerSceneDesk(props: DeskProps & {
           }
           flowButtons={
             <div className="split-actions desk-primary-actions">
-              <button type="button" onClick={props.onStartScene}>开始/刷新当前场景</button>
-              <button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋</button>
+              <span className="hint">{props.readOnly ? "旁观模式仅显示公开内容" : "场景推进由 DM 确认"}</span>
+              <button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋视图</button>
             </div>
           }
         />
       }
       bottom={
-        <>
-          <PlayerPromptBar state={props.state} />
-          <PhaseActionBar state={props.state} isDM={false} />
-        </>
+        <PhaseActionBar state={props.state} isDM={false} readOnly />
       }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
@@ -955,18 +1126,21 @@ function PlayerSceneDesk(props: DeskProps & {
 }
 
 function PlayerCombatDesk(props: DeskProps & {
-  rawState: CombatState;
   actorId: string;
   onStartScene: () => void;
-  onForm: () => void;
-  onReact: () => void;
-  onOutcome: () => void;
+  onIntercept: (responseId?: string, diceIds?: string[]) => void;
+  onReact: (responseId?: string, diceIds?: string[]) => void;
+  onSkipResponse: () => void;
 }) {
   const actor = props.state.actors.find((item) => item.id === props.actorId) ?? props.state.actors[0];
   const enemies = props.state.actors.filter((item) => item.side !== "player");
-  const selectedEnemy = props.selectedCombatantId
-    ? enemies.find((e) => e.id === props.selectedCombatantId)
-    : undefined;
+  const selectedMove = props.selectedBasicAction
+    ? undefined
+    : actor.moves.find((move) => move.id === props.selectedMoveId);
+  const targets = targetCandidatesFor(props.state, actor, selectedMove);
+  const targetableActorIds = targets.map((target) => target.id);
+  const selectedEnemyId = props.selectedCombatantId ?? props.selectedTargetId;
+  const selectedEnemy = enemies.find((enemy) => enemy.id === selectedEnemyId);
 
   return (
     <CombatShell
@@ -986,19 +1160,20 @@ function PlayerCombatDesk(props: DeskProps & {
       left={<LeftCombatPanel actor={actor} state={props.state} />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
-          actionDeck={<ActionPanel {...props} actor={actor} enemies={enemies} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} targetableActorIds={targetableActorIds} onSelect={(id) => { props.setSelectedCombatantId(id); if (targetableActorIds.includes(id)) props.setSelectedTargetId(id); }} selectedMove={selectedMove} />}
+          actionDeck={<ActionPanel {...props} actor={actor} targets={targets} />}
           qiZone={
             <QiDiceDock
               state={props.state}
               actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
-              selectedMove={actor.moves.find((m) => m.id === props.selectedMoveId)}
+              selectedMove={selectedMove}
               hasSelectedTarget={Boolean(props.selectedTargetId)}
               yinSlotIds={props.slotDice.yin}
               yangSlotIds={props.slotDice.yang}
               onAssignDie={props.assignDieToSlot}
               onRemoveDie={props.removeDieFromSlot}
-              onRollToSea={props.requestSceneRoll}
+              onRollToSea={!props.readOnly && props.session.autoDmEnabled ? props.requestSceneRoll : undefined}
+              declarationEnabled={!props.readOnly && !props.selectedBasicAction && actor.id === props.state.activeActorId}
               distanceWarning={(() => {
                 const m = actor.moves.find((mv) => mv.id === props.selectedMoveId);
                 const ts = deriveTargetState(props.state, props.selectedTargetId, m);
@@ -1029,7 +1204,16 @@ function PlayerCombatDesk(props: DeskProps & {
       right={
         <RightCombatPanel
           actions={
-            selectedEnemy ? (
+            props.state.pendingAction?.targetId === actor.id
+              && (props.state.phase === "intercept_window" || props.state.phase === "react_window") ? (
+              <PlayerResponseWorkbench
+                state={props.state}
+                actor={actor}
+                readOnly={props.readOnly}
+                onSubmit={props.state.phase === "intercept_window" ? props.onIntercept : props.onReact}
+                onSkip={props.onSkipResponse}
+              />
+            ) : selectedEnemy ? (
               <EnemyPublicDrawer
                 actor={selectedEnemy}
                 mode="player"
@@ -1044,16 +1228,18 @@ function PlayerCombatDesk(props: DeskProps & {
         />
       }
       bottom={
-        <>
-          <PlayerPromptBar state={props.state} />
-          <PhaseActionBar
-            state={props.state}
-            isDM={false}
-            onStartScene={props.onStartScene}
-            onEnterDeclaration={props.onStartScene}
-            onResolveResult={props.onOutcome}
-          />
-        </>
+        <PhaseActionBar
+          state={props.state}
+          isDM={false}
+          readOnly={props.readOnly}
+          canCurrentUserRespond={props.state.pendingAction?.targetId === actor.id}
+          responseHandledInWorkbench
+          automationMessage={props.session.autoDmEnabled ? props.autoDmStatus : undefined}
+          onEnterDeclaration={props.onStartScene}
+          onIntercept={props.onIntercept}
+          onReact={props.onReact}
+          onSkipResponse={props.onSkipResponse}
+        />
       }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
@@ -1151,8 +1337,8 @@ function DmCombatDesk(props: DeskProps & {
   setDmNote: (value: string) => void;
   onStartScene: () => void;
   onIntercept: () => void;
-  onForm: () => void;
   onReact: () => void;
+  onSkipResponse: () => void;
   onOutcome: () => void;
   onEndRound: () => void;
   onMomentum: (actorId: string, momentum: Actor["momentum"]) => void;
@@ -1161,8 +1347,14 @@ function DmCombatDesk(props: DeskProps & {
 }) {
   const players = props.state.actors.filter((actor) => actor.side === "player");
   const enemies = props.state.actors.filter((actor) => actor.side !== "player");
-  const selectedEnemy = props.selectedCombatantId
-    ? enemies.find((e) => e.id === props.selectedCombatantId)
+  const activeActor = props.state.actors.find((actor) => actor.id === props.state.activeActorId) ?? props.state.actors[0];
+  const selectedMove = props.selectedBasicAction
+    ? undefined
+    : activeActor.moves.find((move) => move.id === props.selectedMoveId);
+  const targets = targetCandidatesFor(props.state, activeActor, selectedMove);
+  const targetableActorIds = targets.map((target) => target.id);
+  const selectedContextActor = props.selectedCombatantId
+    ? props.state.actors.find((actor) => actor.id === props.selectedCombatantId)
     : undefined;
 
   return (
@@ -1180,34 +1372,35 @@ function DmCombatDesk(props: DeskProps & {
           actedActorIds={props.actedActorIds}
         />
       }
-      left={<LeftCombatPanel actor={players[0] ?? props.state.actors[0]} state={props.state} isDM />}
+      left={<LeftCombatPanel actor={activeActor} state={props.state} isDM />}
       center={
         <CenterCombatPanel
-          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} onSelect={(id) => { props.setSelectedCombatantId(id); const a = props.state.actors.find((x) => x.id === id); if (a?.side !== "player") props.setSelectedTargetId(id); }} selectedMove={props.state.actors.find((a) => a.id === props.state.activeActorId)?.moves.find((m) => m.id === props.selectedMoveId)} />}
+          stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} targetableActorIds={targetableActorIds} onSelect={(id) => { props.setSelectedCombatantId(id); if (targetableActorIds.includes(id)) props.setSelectedTargetId(id); }} selectedMove={selectedMove} />}
           actionDeck={
             <ActionPanel
               {...props}
-              actor={props.state.actors.find((a) => a.id === props.state.activeActorId) ?? players[0] ?? props.state.actors[0]}
-              enemies={enemies}
+              actor={activeActor}
+              targets={targets}
             />
           }
           qiZone={
             (() => {
-              const dmActorId = props.session.selectedActorId ?? props.state.activeActorId;
-              const dmActor = props.state.actors.find((a) => a.id === dmActorId) ?? props.state.actors[0];
+              const dmActorId = activeActor.id;
+              const dmActor = activeActor;
               return (
                 <QiDiceDock
                   state={props.state}
                   actorDice={props.state.dice.filter((die) => die.ownerId === dmActorId)}
-                  selectedMove={dmActor?.moves.find((m) => m.id === props.selectedMoveId)}
+                  selectedMove={selectedMove}
                   hasSelectedTarget={Boolean(props.selectedTargetId)}
                   yinSlotIds={props.slotDice.yin}
                   yangSlotIds={props.slotDice.yang}
                   onAssignDie={props.assignDieToSlot}
                   onRemoveDie={props.removeDieFromSlot}
                   onRollToSea={props.requestSceneRoll}
+                  declarationEnabled={!props.selectedBasicAction}
                   onConfirm={() => {
-                    const move = dmActor?.moves.find((m) => m.id === props.selectedMoveId);
+                    const move = selectedMove;
                     if (!move || !props.selectedTargetId) return;
                     const diceToUse = [...props.slotDice.yin, ...props.slotDice.yang];
                     if (diceToUse.length === 0) {
@@ -1225,16 +1418,27 @@ function DmCombatDesk(props: DeskProps & {
       right={
         <RightCombatPanel
           actions={
-            selectedEnemy ? (
-              <EnemyPublicDrawer
-                actor={selectedEnemy}
-                mode="dm"
-                onClose={() => props.setSelectedCombatantId(undefined)}
-              />
+            selectedContextActor ? (
+              selectedContextActor.side !== "player" ? (
+                <EnemyPublicDrawer
+                  actor={selectedContextActor}
+                  mode="dm"
+                  onClose={() => props.setSelectedCombatantId(undefined)}
+                />
+              ) : (
+                <section className="panel combat-context-card">
+                  <div className="panel-title">
+                    <h2>玩家目标</h2>
+                    <button className="icon-button close-button" type="button" onClick={() => props.setSelectedCombatantId(undefined)} aria-label="关闭目标情报">×</button>
+                  </div>
+                  <UnitCard actor={selectedContextActor} mode="self" />
+                  <p className="hint">当前行动者可将该玩家设为合法目标；伤害与状态会在落果阶段统一结算。</p>
+                </section>
+              )
             ) : (
               <section className="panel combat-context-empty">
                 <span className="context-kicker">目标情报</span>
-                <h2>未选中敌人</h2>
+                <h2>未选中对象</h2>
                 <p className="hint">点击交锋台上的单位，查看完整情报、响应挂载与退场条件。</p>
               </section>
             )
@@ -1260,7 +1464,7 @@ function DmCombatDesk(props: DeskProps & {
           onEnterDeclaration={props.onStartScene}
           onIntercept={props.onIntercept}
           onReact={props.onReact}
-          onSkipResponse={props.onForm}
+          onSkipResponse={props.onSkipResponse}
           onResolveResult={props.onOutcome}
           onNextRound={props.onEndRound}
           onApplyMomentum={() => {
@@ -1269,7 +1473,7 @@ function DmCombatDesk(props: DeskProps & {
           }}
         />
       }
-      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={players[0] ?? props.state.actors[0]} role="dm" /> : null}
+      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={activeActor} role="dm" /> : null}
     />
   );
 }
@@ -1294,7 +1498,7 @@ interface DeskProps {
   assignDieToSlot: (id: string, slot: "yin" | "yang") => boolean;
   removeDieFromSlot: (id: string) => void;
   declareFor: (actorId: string, targetId: string, moveId: string) => void;
-  executeBasicAction: (actionType: BasicActionType) => void;
+  executeBasicAction: (actorId: string, actionType: BasicActionType) => void;
   patch: (updater: (current: CombatState) => CombatState) => void;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
   resetAll: () => void;
@@ -1302,8 +1506,11 @@ interface DeskProps {
   setSelectedCombatantId: (id: string | undefined) => void;
   selectedBasicAction: BasicActionType | null;
   setSelectedBasicAction: (action: BasicActionType | null) => void;
-  setPrompt: (p: { title: string; message: string } | null) => void;
+  setPrompt: (p: PromptState | null) => void;
   actedActorIds: Set<string>;
+  readOnly: boolean;
+  setAutoDmEnabled: (enabled: boolean) => void;
+  autoDmStatus: string;
 }
 
 function GameModeHeader({ state, modeLabel }: { state: CombatState; modeLabel: string }) {
@@ -1499,7 +1706,7 @@ function SixRootsSummary({ actor }: { actor: Actor }) {
   );
 }
 
-function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
+function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
   const selectedMove = props.selectedBasicAction
     ? undefined
     : props.actor.moves.find((move) => move.id === props.selectedMoveId) ?? props.actor.moves[0];
@@ -1522,12 +1729,13 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
     : isFanzhaoSelected ? "确认返照"
     : "确认宣言并锁气";
 
-  const confirmDisabled = isBreathSelected ? !regulateBreathAvail.usable
+  const confirmDisabled = props.readOnly ? true
+    : isBreathSelected ? !regulateBreathAvail.usable
     : isFanzhaoSelected ? !fanzhaoAvail.usable
     : !moveAvailability.allowed;
 
   const confirmHint = isBreathSelected
-    ? (regulateBreathAvail.usable ? "调息：从息库取回气骰入气海" : regulateBreathAvail.detailReasons.join("、"))
+    ? (props.readOnly ? "旁观模式不能确认动作" : regulateBreathAvail.usable ? "调息：从息库取回气骰入气海" : regulateBreathAvail.detailReasons.join("、"))
     : isFanzhaoSelected
     ? (fanzhaoAvail.usable ? "返照：气海为空时取回最低起投气骰" : fanzhaoAvail.detailReasons.join("、"))
     : moveAvailability.allowed
@@ -1536,9 +1744,9 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
 
   function handleConfirm() {
     if (isBreathSelected) {
-      props.executeBasicAction("regulateBreath");
+      props.executeBasicAction(props.actor.id, "regulateBreath");
     } else if (isFanzhaoSelected) {
-      props.executeBasicAction("fanzhao");
+      props.executeBasicAction(props.actor.id, "fanzhao");
     } else {
       props.declareFor(props.actor.id, props.selectedTargetId, props.selectedMoveId);
     }
@@ -1557,8 +1765,8 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
           <label>
             目标
             <select value={props.selectedTargetId} onChange={(event) => { const id = event.target.value; props.setSelectedTargetId(id); props.setSelectedCombatantId(id); }}>
-              {props.enemies.map((enemy) => (
-                <option key={enemy.id} value={enemy.id}>{enemy.name}</option>
+              {props.targets.map((target) => (
+                <option key={target.id} value={target.id}>{target.name}</option>
               ))}
             </select>
           </label>
@@ -1619,6 +1827,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
               className={`action-card ${selected ? "selected" : ""} ${!canPrepare ? "warn" : ""}`}
               type="button"
               key={move.id}
+              disabled={props.readOnly}
               aria-disabled={!canPrepare}
               title={[
                 `${move.name} · ${move.timing} · ${move.formPosition}`,
@@ -1661,6 +1870,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
         <button
           className={`action-card ${isBreathSelected ? "selected" : ""} ${!regulateBreathAvail.usable ? "warn" : ""}`}
           type="button"
+          disabled={props.readOnly}
           onClick={() => { props.setSelectedBasicAction("regulateBreath"); }}
         >
           <span className="card-name">调息</span>
@@ -1675,6 +1885,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
         <button
           className={`action-card ${isFanzhaoSelected ? "selected" : ""} ${!fanzhaoAvail.usable ? "warn" : ""}`}
           type="button"
+          disabled={props.readOnly}
           onClick={() => { props.setSelectedBasicAction("fanzhao"); }}
         >
           <span className="card-name">返照</span>
@@ -1713,10 +1924,11 @@ function ActionPanel(props: DeskProps & { actor: Actor; enemies: Actor[] }) {
   );
 }
 
-function CombatStage({ state, selectedId, selectedTargetId, onSelect, selectedMove }: {
+function CombatStage({ state, selectedId, selectedTargetId, targetableActorIds, onSelect, selectedMove }: {
   state: CombatState;
   selectedId?: string;
   selectedTargetId?: string;
+  targetableActorIds?: string[];
   onSelect: (id: string) => void;
   selectedMove?: Move;
 }) {
@@ -1727,6 +1939,7 @@ function CombatStage({ state, selectedId, selectedTargetId, onSelect, selectedMo
       state={state}
       selectedId={selectedId}
       selectedTargetId={selectedTargetId}
+      targetableActorIds={targetableActorIds}
       onSelectCombatant={onSelect}
       selectedMove={selectedMove}
     />
@@ -1914,33 +2127,105 @@ function DrawerToolbar({
   );
 }
 
-function PromptModal({ title, message, onClose }: { title: string; message: string; onClose: () => void }) {
+function PromptModal({
+  title,
+  message,
+  confirmLabel,
+  cancelLabel,
+  destructive,
+  onConfirm,
+  onClose,
+}: PromptState & { onClose: () => void }) {
+  const primaryRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    primaryRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  const confirm = () => {
+    onConfirm?.();
+    onClose();
+  };
+
   return (
-    <div className="modal-backdrop">
-      <section className="panel prompt-modal" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="panel prompt-modal" role={onConfirm ? "alertdialog" : "dialog"} aria-modal="true" aria-label={title}>
         <div className="panel-title">
           <h2>{title}</h2>
           <button className="icon-button close-button" type="button" onClick={onClose} aria-label="关闭提示">×</button>
         </div>
         <p>{message}</p>
-        <button className="primary-action" type="button" onClick={onClose}>明白</button>
+        <div className="prompt-modal__actions">
+          {onConfirm ? <button type="button" onClick={onClose}>{cancelLabel ?? "取消"}</button> : null}
+          <button
+            ref={primaryRef}
+            className={`${onConfirm && destructive ? "danger-action" : "primary-action"}`}
+            type="button"
+            onClick={onConfirm ? confirm : onClose}
+          >
+            {confirmLabel ?? (onConfirm ? "确认" : "明白")}
+          </button>
+        </div>
       </section>
     </div>
   );
 }
 
 function DrawerLayer(props: DeskProps & { actor: Actor; role: "player" | "dm" }) {
+  const drawerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!props.activeDrawer) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const drawer = drawerRef.current;
+    const focusables = () => Array.from(
+      drawer?.querySelectorAll<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])") ?? [],
+    ).filter((element) => !element.hasAttribute("disabled"));
+    focusables()[0]?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        props.setActiveDrawer(null);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus();
+    };
+  }, [props.activeDrawer, props.setActiveDrawer]);
+
   if (!props.activeDrawer) return null;
 
   const title = drawerTitle(props.activeDrawer);
   return (
-    <aside className="drawer-layer">
-      <div className="panel-title drawer-title">
-        <h2>{title}</h2>
-        <button className="icon-button close-button" type="button" onClick={() => props.setActiveDrawer(null)} aria-label="关闭抽屉">×</button>
-      </div>
-      <DrawerContent {...props} />
-    </aside>
+    <div className="drawer-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) props.setActiveDrawer(null); }}>
+      <aside ref={drawerRef} className="drawer-layer" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="panel-title drawer-title">
+          <h2>{title}</h2>
+          <button className="icon-button close-button" type="button" onClick={() => props.setActiveDrawer(null)} aria-label="关闭抽屉">×</button>
+        </div>
+        <DrawerContent {...props} />
+      </aside>
+    </div>
   );
 }
 
@@ -2020,7 +2305,7 @@ function DrawerContent(props: DeskProps & { actor: Actor; role: "player" | "dm" 
               <div className="inventory-group" key={category}>
                 <h3>{categoryLabels[category]}</h3>
                 {items.length === 0 ? <p className="empty-state">暂无</p> : null}
-                {items.map((item) => <InventoryItemCard key={item.id} actorId={actor.id} item={item} canManage={props.role !== "dm" || actor.side === "player"} patch={props.patch} />)}
+                {items.map((item) => <InventoryItemCard key={item.id} actorId={actor.id} item={item} canManage={!props.readOnly && (props.role !== "dm" || actor.side === "player")} patch={props.patch} />)}
               </div>
             );
           })}
@@ -2047,8 +2332,32 @@ function DrawerContent(props: DeskProps & { actor: Actor; role: "player" | "dm" 
     return <LogPanel state={props.state} />;
   }
 
-  if (drawer === "library" || drawer === "settings") {
-    return <p className="empty-state">{drawer === "library" ? "资料库抽屉占位：规则词条、招式、内功、状态、装备、世界观。" : "设置抽屉占位：窗口、本地保存、开发模式等。"}</p>;
+  if (drawer === "library") {
+    const moveCount = props.state.actors.reduce((sum, item) => sum + item.moves.length + item.responses.length, 0);
+    return (
+      <div className="drawer-content drawer-support-summary">
+        <p>当前公开数据包含 {props.state.actors.length} 名角色、{moveCount} 条招式与响应、{props.state.tracks.length} 条场景轨。</p>
+        <button className="primary-action" type="button" onClick={() => props.go("library")}>打开完整资料库</button>
+      </div>
+    );
+  }
+
+  if (drawer === "settings") {
+    return (
+      <div className="drawer-content drawer-settings">
+        <label className="check-row support-setting-row">
+          <input
+            type="checkbox"
+            checked={props.session.autoDmEnabled}
+            disabled={props.readOnly}
+            onChange={(event) => props.setAutoDmEnabled(event.target.checked)}
+          />
+          <span><strong>测试自动 DM</strong><small>只处理敌方响应、落果与轮末推进。</small></span>
+        </label>
+        <p className="hint">进度已在本机自动保存。玩家与旁观者永远不会获得 DM 隐藏数据。</p>
+        <button type="button" onClick={() => props.go("settings")}>打开完整设置</button>
+      </div>
+    );
   }
 
   if (drawer === "dmEnemies" && props.role === "dm") {
@@ -2056,26 +2365,70 @@ function DrawerContent(props: DeskProps & { actor: Actor; role: "player" | "dm" 
   }
 
   if (drawer === "dmDistance" && props.role === "dm") {
+    const target = props.state.actors.find((candidate) => candidate.id === props.selectedTargetId);
+    const relation = target
+      ? props.state.distances.find((item) =>
+        (item.fromActorId === actor.id && item.toActorId === target.id)
+          || (item.fromActorId === target.id && item.toActorId === actor.id))
+      : undefined;
+    const distanceBands: DistanceBand[] = ["贴身", "近身", "短距", "中距", "远距", "离场"];
     return (
       <div className="drawer-content">
         <DistanceLines state={props.state} />
+        <p className="hint">
+          调整对象：{actor.name} ↔ {target?.name ?? "请先在战场选择目标"}
+        </p>
         <div className="flow-buttons">
-          {["贴身", "近身", "短距", "中距", "远距", "离场", "纠缠", "解纠缠"].map((item) => <button type="button" key={item} onClick={() => props.patch((current) => dmOverride(current, `距离调整预览：${item}`))}>{item}</button>)}
+          {distanceBands.map((band) => (
+            <button
+              type="button"
+              key={band}
+              disabled={!target}
+              aria-pressed={relation?.band === band}
+              onClick={() => target && props.patch((current) => dmSetDistance(current, actor.id, target.id, band))}
+            >
+              {band}
+            </button>
+          ))}
+          <button
+            type="button"
+            disabled={!target}
+            aria-pressed={relation?.entangled === true}
+            onClick={() => target && props.patch((current) => dmSetDistance(
+              current,
+              actor.id,
+              target.id,
+              relation?.band ?? "近身",
+              !relation?.entangled,
+            ))}
+          >
+            {relation?.entangled ? "解除纠缠" : "设为纠缠"}
+          </button>
         </div>
       </div>
     );
   }
 
   if (drawer === "dmRuling" && props.role === "dm") {
+    const phaseAction = props.state.phase === "intercept_window"
+      ? { label: "无截击，进入成招", run: formMove }
+      : props.state.phase === "react_window"
+        ? { label: "无应招，进入落果", run: skipReact }
+        : props.state.phase === "outcome"
+          ? { label: "结算落果", run: applyOutcome }
+          : props.state.phase === "round_end"
+            ? { label: "结束本轮", run: endRound }
+            : undefined;
     return (
       <div className="drawer-content">
         <p>当前时点：{phaseLabel(props.state.phase)}</p>
         <p>当前行动：{props.state.pendingAction ? "有待结算宣言" : "暂无待结算宣言"}</p>
-        <div className="flow-buttons">
-          {["成招", "失败", "修改效阶", "修改伤害", "添加状态", "修改势", "修改距离"].map((item) => (
-            <button type="button" key={item} onClick={() => props.patch((current) => dmOverride(current, `DM裁定抽屉：${item}`))}>{item}</button>
-          ))}
-        </div>
+        {phaseAction ? (
+          <button className="primary-action" type="button" onClick={() => props.patch(phaseAction.run)}>
+            {phaseAction.label}
+          </button>
+        ) : <p className="empty-state">当前时点没有需要 DM 推进的裁定。</p>}
+        <p className="hint">伤害、状态、势与自由裁定请使用交锋台右侧 DM 工具；距离调整请使用“距离”抽屉。</p>
       </div>
     );
   }
@@ -2159,19 +2512,6 @@ function LogPanel({ state }: { state: CombatState }) {
             <small>第{log.round}轮 · {new Date(log.createdAt).toLocaleTimeString()}</small>
           </article>
         ))}
-      </div>
-    </section>
-  );
-}
-
-function PlaceholderPage({ session, go }: { session: AppSession; go: (route: AppSession["route"]) => void }) {
-  const title = session.route === "packs" ? "团包管理" : session.route === "library" ? "资料库" : "设置";
-  return (
-    <section className="home-screen">
-      <div className="panel home-hero">
-        <h2>{title}</h2>
-        <p>本轮先建立入口和页面层级；后续再接 xlsx 导入、规则资料检索和正式设置项。</p>
-        <button type="button" onClick={() => go("home")}>返回首页</button>
       </div>
     </section>
   );

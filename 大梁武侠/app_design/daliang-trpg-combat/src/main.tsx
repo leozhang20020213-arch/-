@@ -11,6 +11,8 @@ import "./styles/enemy-card.css";
 import "./styles/qi-dice.css";
 import "./styles/debug-panel.css";
 import "./styles/overrides.css";
+import "./styles/support-pages.css";
+import "./styles/accessibility.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

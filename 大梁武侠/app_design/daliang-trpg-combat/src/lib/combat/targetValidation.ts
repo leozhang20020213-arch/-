@@ -14,6 +14,8 @@ export type TargetDistanceKey = "touch" | "close" | "mid" | "far" | "extreme";
 export interface TargetState {
   actingActorId: string;
   selectedTargetId?: string;
+  /** Exact rulebook band, retained even when validation aliases share a key. */
+  actualDistanceBand?: DistanceBand;
   distanceBand?: TargetDistanceKey;
   isRangeValid: boolean;
   invalidReason?: string;
@@ -43,6 +45,15 @@ const KEY_DISPLAY: Record<TargetDistanceKey, string> = {
   mid: "中距",
   far: "远距",
   extreme: "超距",
+};
+
+/** Text aliases that may appear in free-form move range descriptions. */
+const KEY_ALIASES: Record<TargetDistanceKey, readonly string[]> = {
+  touch: ["贴身"],
+  close: ["近身", "短距"],
+  mid: ["中距"],
+  far: ["远距"],
+  extreme: ["超距", "离场"],
 };
 
 /** Distance keys ordered closest → furthest */
@@ -99,10 +110,15 @@ export function isDistanceValidForMove(
 
   const range = targetRangeText.trim();
   const actualKey = bandToKey(actualBand);
-  const actualDisplay = keyToDisplay(actualKey);
+  const actualDisplay = actualBand;
 
-  // "贴身" or "近身" — these specific bands mentioned in the range text
-  const bandsMentioned = KEY_ORDER.filter((k) => range.includes(keyToDisplay(k)));
+  // Parse every rulebook alias. In particular, 短距 shares the close-range
+  // validation bucket with 近身 but must still be recognised in move text.
+  const mentioned = KEY_ORDER.flatMap((key) => {
+    const labels = KEY_ALIASES[key].filter((label) => range.includes(label));
+    return labels.length > 0 ? [{ key, labels }] : [];
+  });
+  const bandsMentioned = mentioned.map(({ key }) => key);
 
   if (bandsMentioned.length > 0) {
     if (bandsMentioned.includes(actualKey)) {
@@ -122,7 +138,7 @@ export function isDistanceValidForMove(
 
     return {
       valid: false,
-      reason: `距离过远：当前${actualDisplay}，招式需要${bandsMentioned.map(keyToDisplay).join("、")}`,
+      reason: `距离不符：当前${actualDisplay}，招式需要${mentioned.flatMap(({ labels }) => labels).join("、")}`,
     };
   }
 
@@ -151,9 +167,8 @@ export function deriveTargetState(
   state: CombatState,
   selectedTargetId: string | undefined,
   selectedMove: Move | undefined,
+  actingActorId: string = state.activeActorId,
 ): TargetState {
-  const actingActorId = state.activeActorId;
-
   if (!selectedTargetId) {
     return {
       actingActorId,
@@ -172,6 +187,7 @@ export function deriveTargetState(
   return {
     actingActorId,
     selectedTargetId,
+    actualDistanceBand: band,
     distanceBand: band ? bandToKey(band) : undefined,
     isRangeValid: rangeCheck.valid,
     invalidReason: rangeCheck.reason,
@@ -188,9 +204,10 @@ export function targetLineTooltip(
   key: TargetDistanceKey | undefined,
   moveName: string | undefined,
   isValid: boolean,
+  exactBand?: DistanceBand,
 ): string {
   const parts = [`${fromName} → ${toName}`];
-  if (key) parts.push(`｜${keyToDisplay(key)}`);
+  if (exactBand || key) parts.push(`｜${exactBand ?? keyToDisplay(key!)}`);
   if (moveName) parts.push(`｜${moveName}${isValid ? "可用" : "不可用"}`);
   if (!isValid) parts.push("｜距离不合法");
   return parts.join("");

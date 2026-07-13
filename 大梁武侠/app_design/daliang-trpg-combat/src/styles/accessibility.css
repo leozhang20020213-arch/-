@@ -1,0 +1,130 @@
+/* Final accessibility and interaction layer. Keep this import last. */
+
+button:not([aria-hidden="true"]),
+[role="button"]:not([aria-hidden="true"]),
+input,
+select,
+textarea {
+  min-height: var(--control-h-compact);
+}
+
+.primary-action,
+.danger-action,
+.btn-primary,
+.qi-confirm-btn,
+.combat-phasebar__btn.primary {
+  min-height: var(--control-h-primary);
+}
+
+:is(
+  button,
+  a[href],
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px rgba(21, 14, 8, 0.92), var(--focus-ring-shadow);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  padding-left: 24px;
+  background: rgba(7, 5, 3, 0.66);
+  backdrop-filter: blur(3px);
+}
+
+.drawer-backdrop > .drawer-layer {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  width: min(440px, calc(100vw - 24px));
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 12px 0 0 12px;
+}
+
+.prompt-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.prompt-modal__actions > button {
+  min-height: var(--control-h-primary);
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.danger-action {
+  border: 1px solid #a23b32;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #b94a3e 0%, #8e2c26 100%);
+  color: #fff7f3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.danger-action:hover:not(:disabled) {
+  border-color: #d26a5d;
+  background: linear-gradient(180deg, #c65749 0%, #9f332b 100%);
+}
+
+.danger-action:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+:where(
+  .turn-chip-init,
+  .round-badge,
+  .combat-phasebar__label,
+  .combatant-hp-text,
+  .objective-nums,
+  .clock-value,
+  .enemy-public-hp-text,
+  .qi-die-value,
+  .qi-pool-count,
+  .qi-pool-sum,
+  .move-slots-total,
+  .qi-reserve-zone strong,
+  input[type="number"]
+) {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .drawer-backdrop {
+    padding-left: 0;
+  }
+
+  .drawer-backdrop > .drawer-layer {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .prompt-modal__actions > button {
+    flex: 1 1 140px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

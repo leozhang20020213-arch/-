@@ -47,7 +47,7 @@ export const TitleBar: FC<TitleBarProps> = ({
           {identityLabel(identity)}
         </span>
 
-        {session.developerMode && (
+        {identity === "dm" && session.developerMode && (
           <button
             className="window-btn"
             title={debugView ? "关闭调试视图" : "开发调试视图"}
@@ -62,12 +62,12 @@ export const TitleBar: FC<TitleBarProps> = ({
           ↩
         </button>
 
-        <button className="window-btn" title="保存" onClick={() => {}} type="button">
+        <button className="window-btn" title="进度会自动保存在本机" aria-label="进度已自动保存" disabled type="button">
           💾
         </button>
 
-        <button className="window-btn" title="重置" onClick={onReset} type="button">
-          ⚙
+        <button className="window-btn" title="清空本地存档" aria-label="清空本地存档" onClick={onReset} type="button">
+          ⟲
         </button>
       </div>
     </header>

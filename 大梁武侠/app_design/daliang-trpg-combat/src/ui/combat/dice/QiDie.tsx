@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import type { QiDie as QiDieType } from "../../../combat/types";
+import { qiDieAriaLabel, shortQiSourceName } from "./dicePresentation";
 
 export interface QiDieProps {
   die: QiDieType;
@@ -51,8 +52,10 @@ export const QiDie: FC<QiDieProps> = ({
   const natureLabel = NATURE_LABELS[die.nature] ?? "?";
   const natureCls = NATURE_CLASS[die.nature] ?? "";
 
-  const isTemp = die.temporary === true;
+  const isTemp = die.temporary === true || die.zone === "TEMP_QI";
   const isLocked = die.zone === "QI_LOCK";
+  const sourceLabel = shortQiSourceName(die.sourceName);
+  const accessibleLabel = qiDieAriaLabel(die, isAssigned);
 
   function handleDragStart(e: React.DragEvent) {
     if (!draggable) {
@@ -73,11 +76,12 @@ export const QiDie: FC<QiDieProps> = ({
         (isTemp ? " temp" : "") +
         (isLocked ? " locked" : "")
       }
+      data-qi-die-id={die.id}
       draggable={draggable}
       onClick={() => onClick(die.id)}
       onDragStart={handleDragStart}
-      title={`${natureLabel}骰 ${die.label} 点数${die.value ?? "?"} · ${die.sourceName}${isTemp ? "（临气）" : ""}${isLocked ? "（已锁）" : ""}`}
-      aria-label={`${natureLabel}骰 D${die.sides} 点数${die.value ?? "?"}`}
+      title={accessibleLabel}
+      aria-label={accessibleLabel}
     >
       {/* Top row: sides label */}
       <span className="qi-die-sides">D{die.sides}</span>
@@ -88,6 +92,7 @@ export const QiDie: FC<QiDieProps> = ({
       {/* Bottom row: nature + temp indicator */}
       <span className="qi-die-footer">
         <span className="qi-die-nature">{natureLabel}</span>
+        <span className="qi-die-source">{sourceLabel}</span>
         {isTemp && <span className="qi-die-temp-mark">临</span>}
         {isLocked && <span className="qi-die-lock-mark">锁</span>}
       </span>

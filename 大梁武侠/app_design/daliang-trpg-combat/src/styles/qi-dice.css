@@ -5,13 +5,18 @@
 
 .qi-dice-dock {
   display: grid;
-  grid-template-rows: auto minmax(92px, 1fr) auto auto;
+  grid-template-rows: auto minmax(92px, 1fr) auto 40px;
   gap: 4px;
   height: 100%;
   padding: 4px 8px;
   overflow: hidden;
   position: relative;
 }
+
+.qi-dice-dock > .temp-qi-zone { grid-row: 1; }
+.qi-dice-dock > .qi-dock-main { grid-row: 2; }
+.qi-dice-dock > .qi-reserve-strip { grid-row: 3; }
+.qi-dice-dock > .qi-confirm-btn { grid-row: 4; }
 
 /* ---- Main row: QiPool (58%) | MoveSlots (42%) ---- */
 .qi-dock-main {
@@ -36,9 +41,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  width: 46px;
-  min-width: 46px;
-  height: 58px;
+  width: 56px;
+  min-width: 56px;
+  height: 64px;
   padding: 3px 4px 4px;
   border: 1.5px solid rgba(107, 75, 45, 0.35);
   border-left-width: 4px;
@@ -87,9 +92,9 @@
 
 /* ---- Sides label (top-left) ---- */
 .qi-die-sides {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--ink-subtle);
+  color: var(--text-on-paper-secondary);
   line-height: 1;
   align-self: flex-start;
   letter-spacing: 0.02em;
@@ -109,18 +114,35 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  width: 100%;
+  min-width: 0;
 }
 
 .qi-die-nature {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--ink-dark);
   line-height: 1;
+  flex-shrink: 0;
+}
+
+.qi-die-source {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-on-paper-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .qi-die-temp-mark,
 .qi-die-lock-mark {
-  font-size: 7px;
+  position: absolute;
+  right: 2px;
+  font-size: 12px;
   font-weight: 800;
   padding: 0px 2px;
   border-radius: 2px;
@@ -175,18 +197,18 @@
 .temp-qi-title {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(247, 231, 187, 0.55);
+  color: var(--text-on-dark-secondary);
   letter-spacing: 0.06em;
 }
 
 .has-dice .temp-qi-title {
-  color: rgba(247, 231, 187, 0.75);
+  color: var(--text-on-dark-primary);
 }
 
 .temp-qi-count {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(247, 231, 187, 0.35);
+  color: var(--text-on-dark-muted);
 }
 
 .has-dice .temp-qi-count {
@@ -194,13 +216,16 @@
 }
 
 .temp-qi-sum {
-  font-size: 11px;
-  color: rgba(247, 231, 187, 0.4);
+  font-size: 12px;
+  color: var(--text-on-dark-secondary);
 }
 
+.qi-die-temp-mark { top: 2px; }
+.qi-die-lock-mark { top: 17px; }
+
 .temp-qi-sources {
-  font-size: 10px;
-  color: rgba(200, 180, 130, 0.4);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
   font-style: italic;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -208,12 +233,13 @@
 }
 
 .temp-qi-detail-btn {
-  font-size: 10px;
+  min-height: var(--control-h-compact);
+  font-size: 12px;
   padding: 2px 8px;
   border: 1px solid rgba(232, 198, 126, 0.15);
   border-radius: 4px;
   background: transparent;
-  color: rgba(247, 231, 187, 0.4);
+  color: var(--text-on-dark-secondary);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -221,7 +247,7 @@
 
 .temp-qi-detail-btn:hover {
   background: rgba(232, 198, 126, 0.08);
-  color: rgba(247, 231, 187, 0.6);
+  color: var(--text-on-dark-primary);
 }
 
 .temp-qi-dice {
@@ -238,14 +264,14 @@
 }
 
 .temp-qi-empty-text {
-  font-size: 11px;
-  color: rgba(247, 231, 187, 0.25);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
   font-style: italic;
 }
 
 .temp-qi-empty-hint {
-  font-size: 10px;
-  color: rgba(247, 231, 187, 0.15);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
 }
 
 /* Temp detail (expandable) */
@@ -261,17 +287,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .temp-qi-detail-die {
-  color: rgba(247, 231, 187, 0.6);
+  color: var(--text-on-dark-secondary);
   font-weight: 600;
   min-width: 60px;
 }
 
 .temp-qi-detail-source {
-  color: rgba(200, 180, 130, 0.4);
+  color: var(--text-on-dark-muted);
   font-style: italic;
 }
 
@@ -280,7 +306,7 @@
   border-radius: 3px;
   background: rgba(242, 193, 78, 0.2);
   color: #c8943e;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -307,7 +333,7 @@
 .qi-pool-label {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(247, 231, 187, 0.75);
+  color: var(--text-on-dark-primary);
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -318,18 +344,19 @@
 }
 
 .qi-pool-sum {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
-  color: rgba(247, 231, 187, 0.45);
+  color: var(--text-on-dark-secondary);
 }
 
 .qi-pool-roll-btn {
+  min-height: var(--control-h-compact);
   padding: 2px 10px;
   border: 1px solid rgba(200, 148, 62, 0.35);
   border-radius: 4px;
   background: rgba(200, 148, 62, 0.1);
   color: #c8943e;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -355,7 +382,7 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  color: rgba(247, 231, 187, 0.25);
+  color: var(--text-on-dark-muted);
   font-size: 13px;
   font-style: italic;
   align-self: center;
@@ -369,6 +396,7 @@
 }
 
 .qi-pool-empty-btn {
+  min-height: var(--control-h-compact);
   padding: 4px 14px;
   border: 1px solid rgba(200, 148, 62, 0.4);
   border-radius: 5px;
@@ -384,8 +412,8 @@
 }
 
 .qi-pool-empty-hint {
-  font-size: 10px;
-  color: rgba(247, 231, 187, 0.15);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
 }
 
 /* ==========================================================================
@@ -399,6 +427,31 @@
   min-width: 210px;
 }
 
+.qi-basic-action-mode {
+  flex: 0 0 42%;
+  min-width: 210px;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(232, 198, 126, 0.18);
+  border-radius: 6px;
+  background: rgba(232, 198, 126, 0.05);
+  color: var(--text-on-dark-secondary);
+  text-align: center;
+}
+
+.qi-basic-action-mode strong {
+  color: var(--text-on-dark-primary);
+  font-size: 14px;
+}
+
+.qi-basic-action-mode span {
+  max-width: 34ch;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .move-slots-empty {
   flex: 0 0 42%;
   display: flex;
@@ -406,15 +459,15 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: rgba(247, 231, 187, 0.3);
+  color: var(--text-on-dark-muted);
   font-size: 12px;
   font-style: italic;
   min-width: 180px;
 }
 
 .move-slots-empty-pre {
-  font-size: 10px;
-  color: rgba(200, 180, 130, 0.35);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
   font-style: normal;
 }
 
@@ -440,7 +493,7 @@
 }
 
 .move-slots-req-badge {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 999px;
@@ -448,17 +501,17 @@
 
 .move-slots-req-badge.met {
   background: rgba(74, 122, 92, 0.3);
-  color: var(--shield-green);
+  color: var(--success-on-dark);
 }
 
 .move-slots-req-badge.unmet {
   background: rgba(194, 58, 46, 0.2);
-  color: var(--hp-red);
+  color: var(--danger-on-dark);
 }
 
 .move-slots-requirement {
-  font-size: 10px;
-  color: var(--ink-subtle);
+  font-size: 12px;
+  color: var(--text-on-dark-secondary);
   padding: 1px 6px;
   border: 1px solid rgba(107, 75, 45, 0.2);
   border-radius: 999px;
@@ -515,14 +568,14 @@
 }
 
 .slot-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--ink-subtle);
+  color: var(--text-on-dark-secondary);
   letter-spacing: 0.06em;
 }
 
 .slot-req {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 999px;
@@ -531,12 +584,12 @@
 
 .slot-req.met {
   background: rgba(74, 122, 92, 0.3);
-  color: var(--shield-green);
+  color: var(--success-on-dark);
 }
 
 .slot-req.unmet {
   background: rgba(194, 58, 46, 0.2);
-  color: var(--hp-red);
+  color: var(--danger-on-dark);
 }
 
 .slot-dice {
@@ -549,8 +602,8 @@
 }
 
 .slot-placeholder {
-  font-size: 11px;
-  color: rgba(247, 231, 187, 0.2);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
   font-style: italic;
   align-self: center;
   margin: auto;
@@ -558,8 +611,8 @@
 
 /* Slot totals bar */
 .move-slots-total {
-  font-size: 10px;
-  color: rgba(247, 231, 187, 0.5);
+  font-size: 12px;
+  color: var(--text-on-dark-secondary);
   text-align: center;
   flex-shrink: 0;
   padding: 2px 0;
@@ -570,13 +623,93 @@
    Pre-selection hint
    ========================================================================== */
 .qi-preselect-hint {
-  font-size: 11px;
-  color: rgba(200, 180, 130, 0.55);
+  position: absolute;
+  right: 10px;
+  bottom: 136px;
+  left: 10px;
+  z-index: 20;
+  font-size: 12px;
+  color: var(--text-on-dark-primary);
   text-align: center;
   padding: 3px 8px;
-  background: rgba(232, 198, 126, 0.05);
+  border: 1px solid rgba(232, 198, 126, 0.3);
+  background: rgba(24, 18, 12, 0.96);
   border-radius: 4px;
-  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* Explicit raw-die destination choice; floats so it cannot add an implicit grid row. */
+.raw-qi-slot-picker {
+  position: absolute;
+  right: 10px;
+  bottom: 96px;
+  left: 10px;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(239, 173, 105, 0.46);
+  border-radius: 7px;
+  background: rgba(20, 15, 10, 0.98);
+  color: var(--text-on-dark-primary);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.48);
+}
+
+.raw-qi-slot-picker-summary {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.raw-qi-slot-picker-summary strong,
+.raw-qi-slot-picker-source {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.raw-qi-slot-picker-source {
+  color: var(--text-on-dark-secondary);
+}
+
+.raw-qi-slot-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.raw-qi-slot-choice,
+.raw-qi-slot-cancel {
+  min-height: var(--control-h-primary);
+  padding: 0 12px;
+  border: 1px solid rgba(232, 198, 126, 0.28);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-on-dark-primary);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.raw-qi-slot-choice.yin-choice {
+  border-color: rgba(143, 182, 216, 0.62);
+  background: rgba(58, 92, 122, 0.38);
+  color: #dbeeff;
+}
+
+.raw-qi-slot-choice.yang-choice {
+  border-color: rgba(239, 173, 105, 0.62);
+  background: rgba(143, 79, 30, 0.38);
+  color: #ffe4c6;
+}
+
+.raw-qi-slot-cancel {
+  min-height: var(--control-h-compact);
+  color: var(--text-on-dark-secondary);
 }
 
 /* ==========================================================================
@@ -637,17 +770,18 @@
 }
 
 .rest-pool-sum {
-  font-size: 11px;
-  color: rgba(247, 231, 187, 0.4);
+  font-size: 12px;
+  color: var(--text-on-dark-secondary);
 }
 
 .rest-pool-detail-btn {
-  font-size: 10px;
+  min-height: var(--control-h-compact);
+  font-size: 12px;
   padding: 2px 8px;
   border: 1px solid rgba(232, 198, 126, 0.15);
   border-radius: 4px;
   background: transparent;
-  color: rgba(247, 231, 187, 0.35);
+  color: var(--text-on-dark-secondary);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -655,7 +789,7 @@
 
 .rest-pool-detail-btn:hover {
   background: rgba(232, 198, 126, 0.08);
-  color: rgba(247, 231, 187, 0.55);
+  color: var(--text-on-dark-primary);
 }
 
 /* Dice chips preview (息库内骰子小列表) */
@@ -667,19 +801,19 @@
 }
 
 .rest-pool-die-chip {
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(107, 75, 45, 0.2);
   border-radius: 4px;
-  color: rgba(247, 231, 187, 0.55);
+  color: var(--text-on-dark-secondary);
   font-weight: 600;
   white-space: nowrap;
 }
 
 .rest-pool-empty-hint {
-  font-size: 10px;
-  color: rgba(247, 231, 187, 0.2);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
   font-style: italic;
   margin-top: 2px;
 }
@@ -691,32 +825,32 @@
   gap: 12px;
   padding: 4px 8px;
   border-top: 1px solid rgba(232, 198, 126, 0.06);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .rest-secondary-stat {
   display: flex;
   align-items: center;
   gap: 3px;
-  color: rgba(247, 231, 187, 0.3);
+  color: var(--text-on-dark-muted);
 }
 
 .rest-secondary-stat strong {
-  color: rgba(247, 231, 187, 0.45);
+  color: var(--text-on-dark-secondary);
   font-weight: 700;
 }
 
 .rest-secondary-stat.locked-stat {
-  color: rgba(247, 231, 187, 0.25);
+  color: var(--text-on-dark-muted);
 }
 
 .rest-secondary-stat.pool-stat {
-  color: rgba(247, 231, 187, 0.35);
+  color: var(--text-on-dark-muted);
 }
 
 .rest-secondary-points {
-  font-size: 9px;
-  color: rgba(247, 231, 187, 0.25);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
 }
 
 .rest-secondary-stat.empty-stat {
@@ -743,9 +877,9 @@
 }
 
 .rest-detail-zone-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  color: rgba(247, 231, 187, 0.55);
+  color: var(--text-on-dark-secondary);
   letter-spacing: 0.05em;
 }
 
@@ -756,12 +890,12 @@
 }
 
 .rest-detail-die {
-  font-size: 9px;
+  font-size: 12px;
   padding: 2px 6px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(107, 75, 45, 0.2);
   border-radius: 4px;
-  color: rgba(247, 231, 187, 0.55);
+  color: var(--text-on-dark-secondary);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -773,8 +907,8 @@
 }
 
 .rest-detail-source {
-  font-size: 8px;
-  color: rgba(200, 180, 130, 0.35);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
   font-style: italic;
 }
 
@@ -783,7 +917,8 @@
    ========================================================================== */
 .qi-confirm-btn {
   width: 100%;
-  height: 34px;
+  height: 40px;
+  min-height: var(--control-h-primary);
   border: 1px solid var(--btn-primary);
   border-radius: 5px;
   background: linear-gradient(180deg, var(--btn-hover) 0%, var(--btn-primary) 100%);
@@ -808,11 +943,27 @@
 }
 
 .qi-confirm-hint {
+  position: absolute;
+  right: 10px;
+  bottom: 46px;
+  left: 10px;
+  z-index: 20;
   margin: 0;
-  font-size: 11px;
-  color: var(--hp-red);
+  padding: 5px 8px;
+  border: 1px solid rgba(194, 58, 46, 0.45);
+  border-radius: 4px;
+  background: rgba(46, 16, 14, 0.96);
+  color: #ffd4cc;
+  font-size: 12px;
   text-align: center;
-  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.qi-confirm-hint.distance-warn {
+  bottom: 96px;
+  border-color: rgba(239, 173, 105, 0.5);
+  background: rgba(50, 31, 15, 0.97);
+  color: #ffe0b9;
 }
 
 /* ==========================================================================
@@ -827,6 +978,7 @@
 }
 
 .qi-reserve-zone {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto auto;
@@ -850,8 +1002,8 @@
 }
 
 .qi-reserve-label {
-  color: rgba(247, 231, 187, 0.54);
-  font-size: 10px;
+  color: var(--text-on-dark-secondary);
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -866,16 +1018,55 @@
   grid-column: 1 / -1;
   min-width: 0;
   overflow: hidden;
-  color: rgba(247, 231, 187, 0.3);
-  font-size: 9px;
+  color: var(--text-on-dark-muted);
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-height: 820px) {
+  .qi-dice-dock {
+    grid-template-rows: 30px minmax(78px, 1fr) 28px 38px;
+    gap: 2px;
+    padding: 3px 6px;
+  }
+
+  .temp-qi-zone {
+    justify-content: center;
+    min-height: 0;
+    padding: 2px 6px;
+    overflow: hidden;
+  }
+
+  .temp-qi-empty-hint,
+  .temp-qi-sources,
+  .qi-reserve-zone small {
+    display: none;
+  }
+
+  .temp-qi-empty { padding: 0; }
+
+  .qi-reserve-strip {
+    min-height: 0;
+    gap: 3px;
+  }
+
+  .qi-reserve-zone {
+    grid-template-rows: 1fr;
+    padding: 2px 5px;
+  }
+
+  .qi-confirm-btn {
+    height: 38px;
+  }
 }
 
 .qi-reserve-zone .rest-pool-detail-btn {
   position: absolute;
   right: 5px;
   top: 4px;
+  min-width: var(--control-h-compact);
+  min-height: var(--control-h-compact);
   padding: 1px 5px;
 }
 
@@ -900,13 +1091,19 @@
   justify-content: space-between;
   margin-bottom: 6px;
   color: #f5e6c8;
-  font-size: 11px;
+  font-size: 12px;
+}
+
+.qi-reserve-zone.rest {
+  padding-right: 42px;
 }
 
 .qi-reserve-popover__header button {
+  min-width: var(--control-h-compact);
+  min-height: var(--control-h-compact);
   border: 0;
   background: transparent;
-  color: var(--ink-subtle);
+  color: var(--text-on-dark-secondary);
 }
 
 .qi-reserve-popover__group {
@@ -915,8 +1112,8 @@
   gap: 6px;
   padding: 4px 0;
   border-top: 1px solid rgba(232, 198, 126, 0.08);
-  color: rgba(247, 231, 187, 0.5);
-  font-size: 9px;
+  color: var(--text-on-dark-secondary);
+  font-size: 12px;
 }
 
 .qi-reserve-popover__group > div {
@@ -932,8 +1129,8 @@
 }
 
 .qi-reserve-popover .rest-detail-die small {
-  color: rgba(200, 180, 130, 0.35);
-  font-size: 8px;
+  color: var(--text-on-dark-muted);
+  font-size: 12px;
 }
 
 .qi-drag-error {
@@ -953,7 +1150,7 @@
   border-radius: 4px;
   background: rgba(194, 58, 46, 0.15);
   color: #faa;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-align: center;
   flex-shrink: 0;

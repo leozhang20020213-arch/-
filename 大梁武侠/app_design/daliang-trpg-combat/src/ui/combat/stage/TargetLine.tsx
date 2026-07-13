@@ -23,6 +23,22 @@ export interface TargetLineProps {
   toName?: string;
 }
 
+export interface TargetLineLabelProps {
+  /** Line positions in stage percentages, used to anchor the HTML label. */
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  band?: TargetDistanceKey;
+  distanceLabel?: string;
+  isValid: boolean;
+  invalidReason?: string;
+  tooltip: string;
+  fromName: string;
+  toName: string;
+  moveName?: string;
+}
+
 const BAND_COLORS: Record<TargetDistanceKey, string> = {
   touch:   "rgba(220,80,60,0.9)",
   close:   "rgba(230,150,70,0.9)",
@@ -43,11 +59,10 @@ const BAND_GLOW: Record<TargetDistanceKey, string> = {
  * SVG target line — draws from the acting actor to the selected target.
  *
  * SIZED FOR viewBox="0 0 100 100" — all values are in viewBox units.
- * Font sizes ~3.2, pill ~18×8, lines ~0.6–2 stroke.
- *
  * Visual variants:
- *   - Valid distance: colored solid line with arrowhead, band-colored label pill
- *   - Invalid distance: red dashed line with ⚠ warning pill and reason
+ *   - Valid distance: colored solid line with arrowhead
+ *   - Invalid distance: red dashed line
+ *   - Text/legality details are rendered by TargetLineLabel in HTML space
  *   - Hover: SVG `<title>` tooltip
  *   - `pointer-events: none` so it never blocks clicks on combatant nodes
  */
@@ -63,9 +78,6 @@ export const TargetLine: FC<TargetLineProps> = ({
   fromName,
   toName,
 }) => {
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2;
-
   // Colors
   const strokeColor = isValid
     ? (band ? BAND_COLORS[band] : "rgba(212,180,100,0.9)")
@@ -76,15 +88,6 @@ export const TargetLine: FC<TargetLineProps> = ({
     : "rgba(220,60,50,0.2)";
 
   const bandLabel = band ? keyToDisplay(band) : "";
-  const labelBg = isValid
-    ? "rgba(18,14,8,0.92)"
-    : "rgba(40,10,10,0.92)";
-  const labelBorder = isValid
-    ? strokeColor
-    : "rgba(220,60,50,0.8)";
-  const labelTextColor = isValid
-    ? "rgba(250,240,200,0.95)"
-    : "rgba(255,160,160,0.95)";
 
   const hoverText = [
     tooltip,
@@ -95,12 +98,6 @@ export const TargetLine: FC<TargetLineProps> = ({
 
   // Arrowhead size scaled for viewBox 0–100
   const arrowSize = isValid ? 1.6 : 1.3;
-
-  // Pill dimensions (compact — viewBox-scale)
-  const pillW = 17;
-  const pillH = 8;
-  const pillRx = 3;
-  const pillTextY = my + 2.8;
 
   return (
     <g
@@ -118,6 +115,7 @@ export const TargetLine: FC<TargetLineProps> = ({
         strokeWidth="2"
         strokeLinecap="round"
         opacity="0.5"
+        vectorEffect="non-scaling-stroke"
       />
 
       {/* Mid glow */}
@@ -126,6 +124,7 @@ export const TargetLine: FC<TargetLineProps> = ({
         stroke={glowColor}
         strokeWidth="1"
         strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
       />
 
       {/* Main target line */}
@@ -135,27 +134,8 @@ export const TargetLine: FC<TargetLineProps> = ({
         strokeWidth={isValid ? "0.7" : "0.8"}
         strokeDasharray={isValid ? "none" : "3 1.5"}
         strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
       />
-
-      {/* Directional dots along the line (every ~25% of length) */}
-      {isValid && (
-        <>
-          {[0.25, 0.5, 0.75].map((t) => {
-            const dx = x1 + (x2 - x1) * t;
-            const dy = y1 + (y2 - y1) * t;
-            return (
-              <circle
-                key={t}
-                cx={dx}
-                cy={dy}
-                r="0.3"
-                fill={strokeColor}
-                opacity="0.5"
-              />
-            );
-          })}
-        </>
-      )}
 
       {/* Arrowhead at target end */}
       <polygon
@@ -163,74 +143,70 @@ export const TargetLine: FC<TargetLineProps> = ({
         fill={strokeColor}
         opacity="0.95"
       />
-
-      {/* Distance label pill at midpoint */}
-      {bandLabel && (
-        <>
-          {/* Pill background */}
-          <rect
-            x={mx - pillW / 2}
-            y={my - pillH / 2}
-            width={pillW}
-            height={pillH}
-            rx={pillRx}
-            fill={labelBg}
-            stroke={labelBorder}
-            strokeWidth="0.5"
-          />
-          {/* Pill glow */}
-          <rect
-            x={mx - pillW / 2}
-            y={my - pillH / 2}
-            width={pillW}
-            height={pillH}
-            rx={pillRx}
-            fill="none"
-            stroke={glowColor}
-            strokeWidth="1.2"
-            opacity="0.5"
-          />
-          {/* Label text */}
-          <text
-            x={mx}
-            y={pillTextY}
-            textAnchor="middle"
-            fill={labelTextColor}
-            fontSize="3.2"
-            fontWeight="900"
-            fontFamily="'Cinzel', 'EB Garamond', 'Noto Serif SC', 'Microsoft YaHei', serif"
-          >
-            {bandLabel}
-          </text>
-        </>
-      )}
-
-      {/* Warning indicator for invalid distance */}
-      {!isValid && (
-        <>
-          <rect
-            x={mx - 12}
-            y={my - pillH / 2 - 10}
-            width="24"
-            height="7"
-            rx="2.5"
-            fill="rgba(40,10,10,0.92)"
-            stroke="rgba(220,60,50,0.7)"
-            strokeWidth="0.4"
-          />
-          <text
-            x={mx}
-            y={my - pillH / 2 - 4.2}
-            textAnchor="middle"
-            fill="rgba(255,140,140,0.95)"
-            fontSize="2.8"
-            fontWeight="800"
-          >
-            ⚠ 距离不符
-          </text>
-        </>
-      )}
     </g>
+  );
+};
+
+/**
+ * Non-SVG target label. Keeping text in an HTML overlay prevents
+ * preserveAspectRatio="none" from stretching glyphs with the battlefield.
+ */
+export const TargetLineLabel: FC<TargetLineLabelProps> = ({
+  x1,
+  y1,
+  x2,
+  y2,
+  band,
+  distanceLabel,
+  isValid,
+  invalidReason,
+  tooltip,
+  fromName,
+  toName,
+  moveName,
+}) => {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  const bandLabel = distanceLabel ?? (band ? keyToDisplay(band) : "距离未知");
+  const legalityLabel = isValid ? "合法" : "不合法";
+  const strokeColor = isValid
+    ? (band ? BAND_COLORS[band] : "rgba(212,180,100,0.9)")
+    : "rgba(220,60,50,0.9)";
+  const accessibleLabel = `${fromName} → ${toName}；招式：${moveName ?? "未选招式"}；距离：${bandLabel}；${legalityLabel}${invalidReason ? `：${invalidReason}` : ""}`;
+
+  return (
+    <div
+      data-target-line-label="true"
+      role="status"
+      aria-label={accessibleLabel}
+      title={tooltip}
+      style={{
+        position: "absolute",
+        left: `${mx}%`,
+        top: `${my}%`,
+        transform: "translate(-50%, -50%)",
+        maxWidth: "min(320px, 42%)",
+        padding: "5px 8px",
+        border: `1px solid ${strokeColor}`,
+        borderRadius: "6px",
+        background: isValid ? "rgba(18,14,8,0.94)" : "rgba(40,10,10,0.94)",
+        boxShadow: `0 2px 12px ${isValid ? "rgba(0,0,0,0.45)" : "rgba(220,60,50,0.18)"}`,
+        color: isValid ? "rgba(250,240,200,0.98)" : "rgba(255,174,166,0.98)",
+        fontFamily: "'Noto Serif SC', 'Microsoft YaHei', serif",
+        lineHeight: 1.3,
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: "11px", fontWeight: 800, whiteSpace: "nowrap" }}>
+        {fromName} → {toName}
+      </div>
+      <div style={{ marginTop: "2px", fontSize: "10px", whiteSpace: "nowrap" }}>
+        {moveName ?? "未选招式"} · {bandLabel} · <strong>{legalityLabel}</strong>
+      </div>
+      {!isValid && invalidReason && (
+        <div style={{ marginTop: "2px", fontSize: "9px" }}>{invalidReason}</div>
+      )}
+    </div>
   );
 };
 

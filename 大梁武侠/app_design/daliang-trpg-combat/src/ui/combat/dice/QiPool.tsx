@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import type { QiDie as QiDieType } from "../../../combat/types";
 import { QiDie } from "./QiDie";
+import { sortQiDiceForPool } from "./dicePresentation";
 
 export interface QiPoolProps {
   /** Dice currently in QI_SEA (available for assignment) */
@@ -35,6 +36,7 @@ export const QiPool: FC<QiPoolProps> = ({
   const yangCount = dice.filter((d) => d.nature === "yang").length;
   const rawCount = dice.filter((d) => d.nature === "raw").length;
   const totalValue = dice.reduce((sum, d) => sum + (d.value ?? 0), 0);
+  const sortedDice = sortQiDiceForPool(dice);
 
   return (
     <div className="qi-pool-area">
@@ -61,7 +63,7 @@ export const QiPool: FC<QiPoolProps> = ({
 
       <div className="qi-pool-dice">
         {dice.length > 0 ? (
-          dice.map((d) => (
+          sortedDice.map((d) => (
             <QiDie
               key={d.id}
               die={d}

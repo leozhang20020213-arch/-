@@ -22,7 +22,7 @@ export const DebugPanel: FC<DebugPanelProps> = ({
   const [tab, setTab] = useState<"state" | "logs" | "perf">("state");
   const isDev = import.meta.env.DEV;
 
-  if (!debugView || !session.developerMode) return null;
+  if (!debugView || !session.developerMode || session.identity !== "dm") return null;
 
   return (
     <div className="debug-panel">

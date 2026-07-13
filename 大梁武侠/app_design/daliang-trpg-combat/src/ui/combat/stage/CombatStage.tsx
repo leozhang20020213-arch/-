@@ -3,8 +3,17 @@ import type { StageData } from "../../../types/combat";
 import type { CombatState, Move } from "../../../combat/types";
 import { deriveTargetState, targetLineTooltip } from "../../../lib/combat/targetValidation";
 import { CombatantNode } from "./CombatantNode";
-import { TargetLine } from "./TargetLine";
+import { TargetLine, TargetLineLabel } from "./TargetLine";
 import { SceneObjectiveMini } from "./SceneObjectiveMini";
+
+/** One action-to-target line rendered on the combat stage. */
+export interface CombatStageTargetLine {
+  /** Defaults to state.activeActorId. */
+  sourceActorId?: string;
+  targetActorId: string;
+  /** Defaults to CombatStage.selectedMove. */
+  move?: Move;
+}
 
 export interface CombatStageProps {
   data: StageData;
@@ -18,6 +27,13 @@ export interface CombatStageProps {
   onSelectCombatant?: (id: string) => void;
   /** Currently selected move (for distance validation) */
   selectedMove?: Move;
+  /** Actor IDs the caller currently permits as click targets. */
+  targetableActorIds?: Iterable<string>;
+  /**
+   * Explicit target lines for one-to-many actions. When omitted, the legacy
+   * selectedTargetId/selectedId single-line behaviour remains active.
+   */
+  targetLines?: readonly CombatStageTargetLine[];
 }
 
 /**
@@ -35,7 +51,7 @@ export interface CombatStageProps {
  * Key design decisions:
  *   - Combatants positioned by slot system (x,y in 0–100% viewBox space)
  *   - Side zones rendered as visual containers with labels
- *   - Only ONE target line shown: from {activeActorId} → {selectedTargetId}
+ *   - Supports one-to-many target lines; legacy single-target props still work
  *   - Current actor card gets the "current-actor" gold glow
  *   - Selected target card gets the "targeted" red ring
  *   - Defeated actors are dimmed and unclickable
@@ -48,6 +64,8 @@ export const CombatStage: FC<CombatStageProps> = ({
   selectedTargetId,
   onSelectCombatant,
   selectedMove,
+  targetableActorIds,
+  targetLines,
 }) => {
   // Internal fallback selected ID when no external control
   const [internalSelected, setInternalSelected] = useState<string | undefined>(
@@ -64,40 +82,49 @@ export const CombatStage: FC<CombatStageProps> = ({
     }
   }
 
-  // ---- Determine the effective target ID ----
+  // ---- Legacy single-target fallback ----
   const effectiveTargetId = selectedTargetId ?? activeSelected;
 
-  // Derive target state for the target line
-  const targetState = deriveTargetState(
-    state,
-    effectiveTargetId,
-    selectedMove,
+  const requestedTargetLines: readonly CombatStageTargetLine[] = targetLines ?? (
+    effectiveTargetId
+      ? [{ targetActorId: effectiveTargetId, move: selectedMove }]
+      : []
   );
 
-  // ---- Find positions for the target line ----
-  const actingCombatant = data.combatants.find(
-    (c) => c.id === state.activeActorId,
-  );
-  const targetCombatant = effectiveTargetId
-    ? data.combatants.find((c) => c.id === effectiveTargetId)
-    : undefined;
+  // Resolve positions and legality independently for every target line.
+  const resolvedTargetLines = requestedTargetLines.flatMap((request, index) => {
+    const sourceActorId = request.sourceActorId ?? state.activeActorId;
+    if (sourceActorId === request.targetActorId) return [];
 
-  const showTargetLine = Boolean(
-    actingCombatant &&
-    targetCombatant &&
-    effectiveTargetId &&
-    effectiveTargetId !== state.activeActorId,
-  );
+    const source = data.combatants.find((combatant) => combatant.id === sourceActorId);
+    const target = data.combatants.find((combatant) => combatant.id === request.targetActorId);
+    if (!source || !target) return [];
 
-  const tooltip = showTargetLine
-    ? targetLineTooltip(
-        actingCombatant!.name,
-        targetCombatant!.name,
-        targetState.distanceBand,
-        selectedMove?.name,
-        targetState.isRangeValid,
-      )
-    : "";
+    const move = request.move ?? selectedMove;
+    const targetState = deriveTargetState(
+      state,
+      request.targetActorId,
+      move,
+      sourceActorId,
+    );
+    const tooltip = targetLineTooltip(
+      source.name,
+      target.name,
+      targetState.distanceBand,
+      move?.name,
+      targetState.isRangeValid,
+      targetState.actualDistanceBand,
+    );
+
+    return [{
+      key: `${sourceActorId}:${request.targetActorId}:${move?.id ?? "no-move"}:${index}`,
+      source,
+      target,
+      move,
+      targetState,
+      tooltip,
+    }];
+  });
 
   // ---- Determine which actors are defeated / targetable ----
   const defeatedIds = new Set(
@@ -107,9 +134,15 @@ export const CombatStage: FC<CombatStageProps> = ({
   );
 
   const targetableIds = new Set(
-    state.actors
+    targetableActorIds ?? state.actors
       .filter((a) => a.side !== "player" && a.hp > 0)
       .map((a) => a.id),
+  );
+
+  const targetedIds = new Set(
+    targetLines === undefined
+      ? (effectiveTargetId ? [effectiveTargetId] : [])
+      : targetLines.map((line) => line.targetActorId),
   );
 
   // ---- Group combatants by side ----
@@ -121,9 +154,9 @@ export const CombatStage: FC<CombatStageProps> = ({
   // ---- Render a single combatant node with all state computed ----
   function renderCombatant(c: (typeof data.combatants)[number]) {
     const isCurrent = c.id === state.activeActorId;
-    const isTarget = c.id === effectiveTargetId;
+    const isTarget = targetedIds.has(c.id);
     const isDefeated = defeatedIds.has(c.id);
-    const canTarget = targetableIds.has(c.id);
+    const canTarget = targetableIds.has(c.id) && !isDefeated;
 
     return (
       <CombatantNode
@@ -210,21 +243,46 @@ export const CombatStage: FC<CombatStageProps> = ({
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
         >
-          {showTargetLine && (
+          {resolvedTargetLines.map((line) => (
             <TargetLine
-              x1={actingCombatant!.x}
-              y1={actingCombatant!.y}
-              x2={targetCombatant!.x}
-              y2={targetCombatant!.y}
-              band={targetState.distanceBand}
-              isValid={targetState.isRangeValid}
-              invalidReason={targetState.invalidReason}
-              tooltip={tooltip}
-              fromName={actingCombatant!.name}
-              toName={targetCombatant!.name}
+              key={line.key}
+              x1={line.source.x}
+              y1={line.source.y}
+              x2={line.target.x}
+              y2={line.target.y}
+              band={line.targetState.distanceBand}
+              isValid={line.targetState.isRangeValid}
+              invalidReason={line.targetState.invalidReason}
+              tooltip={line.tooltip}
+              fromName={line.source.name}
+              toName={line.target.name}
             />
-          )}
+          ))}
         </svg>
+
+        {/* HTML labels stay legible when the SVG geometry is stretched. */}
+        <div
+          className="target-line-label-layer"
+          style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
+        >
+          {resolvedTargetLines.map((line) => (
+            <TargetLineLabel
+              key={line.key}
+              x1={line.source.x}
+              y1={line.source.y}
+              x2={line.target.x}
+              y2={line.target.y}
+              band={line.targetState.distanceBand}
+              distanceLabel={line.targetState.actualDistanceBand}
+              isValid={line.targetState.isRangeValid}
+              invalidReason={line.targetState.invalidReason}
+              tooltip={line.tooltip}
+              fromName={line.source.name}
+              toName={line.target.name}
+              moveName={line.move?.name}
+            />
+          ))}
+        </div>
 
         {/* Combatant nodes layer — absolutely positioned in viewBox space */}
         <div className="combatant-layer">

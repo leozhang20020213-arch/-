@@ -25,6 +25,14 @@ export interface PhaseActionBarProps {
   onResolveResult?: () => void;
   onApplyMomentum?: () => void;
   onNextRound?: () => void;
+  /** Spectator mode: expose phase context without executable commands. */
+  readOnly?: boolean;
+  /** True only for the player who currently owns the response decision. */
+  canCurrentUserRespond?: boolean;
+  /** Response submit/skip controls are rendered by the dedicated response workbench. */
+  responseHandledInWorkbench?: boolean;
+  /** Optional local test automation status, rendered inside this command bar. */
+  automationMessage?: string;
 }
 
 /**
@@ -50,6 +58,10 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
   onResolveResult,
   onApplyMomentum,
   onNextRound,
+  readOnly = false,
+  canCurrentUserRespond = false,
+  responseHandledInWorkbench = false,
+  automationMessage,
 }) => {
   const displayPhase = toDisplayPhase(state.phase);
   const hasPending = Boolean(state.pendingAction);
@@ -61,6 +73,7 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
     hasSelectedTarget: hasSelectedTarget ?? false,
     hasSlottedDice: hasSlottedDice ?? false,
     isDM,
+    canCurrentUserRespond,
     round: state.round,
   });
 
@@ -70,10 +83,15 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
   );
   // Declaration confirmation lives in the qi workbench. Keeping it out of the
   // command bar guarantees one authoritative submit path.
-  const commandActions = visibleActions.filter(
-    (action) => action.type !== "CONFIRM_DECLARATION",
+  const commandActions = visibleActions.filter((action) =>
+    action.type !== "CONFIRM_DECLARATION"
+      && (!responseHandledInWorkbench || ![
+        "DECLARE_INTERCEPT",
+        "DECLARE_RESPONSE",
+        "SKIP_RESPONSE",
+      ].includes(action.type)),
   );
-  const enabledActions = commandActions.filter((action) => action.enabled);
+  const enabledActions = readOnly ? [] : commandActions.filter((action) => action.enabled);
 
   const hint = getPhaseHint(state.phase, isDM, hasPending);
 
@@ -125,8 +143,11 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
       </div>
 
       <span className="combat-phasebar__hint" aria-live="polite">
-        {disabledHints.length > 0 ? disabledHints.join(" · ") : hint}
+        {readOnly ? "旁观模式：只显示公开进程，不能提交操作。" : disabledHints.length > 0 ? disabledHints.join(" · ") : hint}
       </span>
+      {automationMessage ? (
+        <span className="auto-dm-status" role="status">自动 DM · {automationMessage}</span>
+      ) : null}
     </div>
   );
 };

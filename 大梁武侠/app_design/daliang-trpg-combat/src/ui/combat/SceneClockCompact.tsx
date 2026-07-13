@@ -19,12 +19,13 @@ export const SceneClockCompact: FC<SceneClockCompactProps> = ({
   clocks,
   maxVisible = 1,
 }) => {
+  const [showAll, setShowAll] = useState(false);
   const visible = getVisibleClocks(clocks);
   if (visible.length === 0) return null;
 
   const primary = visible[0];
-  const rest = visible.slice(1, maxVisible);
-  const hidden = visible.slice(maxVisible);
+  const rest = visible.slice(1, showAll ? visible.length : maxVisible);
+  const hidden = showAll ? [] : visible.slice(maxVisible);
 
   return (
     <div className="scene-clock-compact">
@@ -37,11 +38,25 @@ export const SceneClockCompact: FC<SceneClockCompactProps> = ({
       ))}
 
       {/* Hidden count */}
-      {hidden.length > 0 && (
-        <span className="clock-hidden-count">
-          +{hidden.length} 个折叠轨
-        </span>
-      )}
+      {hidden.length > 0 ? (
+        <button
+          className="clock-hidden-count"
+          type="button"
+          aria-expanded={false}
+          onClick={() => setShowAll(true)}
+        >
+          展开其余 {hidden.length} 条轨
+        </button>
+      ) : showAll && visible.length > maxVisible ? (
+        <button
+          className="clock-hidden-count"
+          type="button"
+          aria-expanded="true"
+          onClick={() => setShowAll(false)}
+        >
+          收起次要轨
+        </button>
+      ) : null}
     </div>
   );
 };

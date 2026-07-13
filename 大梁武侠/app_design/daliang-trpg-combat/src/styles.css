@@ -1902,6 +1902,15 @@ meter::-webkit-meter-optimum-value {
 
 .dice-roll-phase.phase-arranging { color: var(--yang-die); }
 .dice-roll-phase.phase-done { color: var(--shield-green); }
+.dice-roll-phase.phase-fallback { color: var(--yang-die); }
+
+.dice-canvas.is-fallback {
+  min-height: 140px;
+  height: 140px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(212, 132, 58, 0.2), transparent 45%),
+    linear-gradient(135deg, #211b16, #35291f);
+}
 
 .dice-roll-overlay .mini-dice-list {
   display: flex;

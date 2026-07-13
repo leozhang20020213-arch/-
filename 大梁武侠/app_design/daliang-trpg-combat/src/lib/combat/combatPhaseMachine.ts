@@ -15,10 +15,10 @@ export type DisplayPhase =
   | "未开始"
   | "准备"
   | "宣言"
-  | "计算"
-  | "响应"
-  | "结算"
-  | "势变化"
+  | "截击窗口"
+  | "应招窗口"
+  | "落果"
+  | "轮末"
   | "结束";
 
 /** Map engine phase → display phase */
@@ -31,13 +31,13 @@ export function toDisplayPhase(phase: CombatState["phase"]): DisplayPhase {
     case "declare":
       return "宣言";
     case "intercept_window":
-      return "响应";
+      return "截击窗口";
     case "react_window":
-      return "计算";
+      return "应招窗口";
     case "outcome":
-      return "结算";
+      return "落果";
     case "round_end":
-      return "势变化";
+      return "轮末";
     default:
       return "未开始";
   }
@@ -84,6 +84,7 @@ interface ActionCheckInput {
   hasSelectedTarget: boolean;
   hasSlottedDice: boolean;  // at least 1 yin + 1 yang
   isDM: boolean;
+  canCurrentUserRespond?: boolean;
   round: number;
 }
 
@@ -144,65 +145,51 @@ export function getAvailablePhaseActions(input: ActionCheckInput): PhaseAction[]
       });
       break;
 
-    case "响应":
+    case "截击窗口":
       actions.push({
         type: "DECLARE_INTERCEPT",
         label: "截击",
-        visibleTo: "dm",
-        enabled: input.hasPendingAction && input.isDM,
-        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : "",
+        visibleTo: "both",
+        enabled: input.hasPendingAction && (input.isDM || Boolean(input.canCurrentUserRespond)),
+        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : !input.isDM && !input.canCurrentUserRespond ? "仅受招者可以截击" : "",
       });
       actions.push({
         type: "SKIP_RESPONSE",
-        label: "放弃响应",
-        visibleTo: "dm",
-        enabled: input.isDM,
-        disabledReason: "",
-      });
-      actions.push({
-        type: "DECLARE_RESPONSE",
-        label: "应招",
-        visibleTo: "dm",
-        enabled: input.hasPendingAction && input.isDM,
-        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : "",
+        label: "放弃截击并成招",
+        visibleTo: "both",
+        enabled: input.hasPendingAction && (input.isDM || Boolean(input.canCurrentUserRespond)),
+        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : !input.isDM && !input.canCurrentUserRespond ? "等待受招者或 DM 处理截击" : "",
       });
       break;
 
-    case "计算":
+    case "应招窗口":
       actions.push({
         type: "DECLARE_RESPONSE",
         label: "应招",
-        visibleTo: "dm",
-        enabled: input.hasPendingAction && input.isDM,
-        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : "",
+        visibleTo: "both",
+        enabled: input.hasPendingAction && (input.isDM || Boolean(input.canCurrentUserRespond)),
+        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : !input.isDM && !input.canCurrentUserRespond ? "仅受招者可以应招" : "",
       });
       actions.push({
         type: "SKIP_RESPONSE",
         label: "跳过应招",
-        visibleTo: "dm",
-        enabled: input.isDM,
-        disabledReason: "",
+        visibleTo: "both",
+        enabled: input.hasPendingAction && (input.isDM || Boolean(input.canCurrentUserRespond)),
+        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : !input.isDM && !input.canCurrentUserRespond ? "等待受招者或 DM 处理应招" : "",
       });
       break;
 
-    case "结算":
+    case "落果":
       actions.push({
         type: "RESOLVE_RESULT",
-        label: "查看落果",
-        visibleTo: "both",
-        enabled: true,
-        disabledReason: "",
+        label: "结算落果",
+        visibleTo: "dm",
+        enabled: input.isDM && input.hasPendingAction,
+        disabledReason: !input.hasPendingAction ? "没有待结算宣言" : !input.isDM ? "由主持人结算落果" : "",
       });
       break;
 
-    case "势变化":
-      actions.push({
-        type: "APPLY_MOMENTUM",
-        label: "结算势变化",
-        visibleTo: "dm",
-        enabled: input.isDM,
-        disabledReason: !input.isDM ? "由 DM 操作" : "",
-      });
+    case "轮末":
       actions.push({
         type: "NEXT_ROUND",
         label: "进入下一轮",
@@ -261,7 +248,7 @@ export function getPhaseHint(
     case "react_window":
       return "等待主持人裁定应招";
     case "outcome":
-      return "查看落果结算";
+      return "落果由主持人结算，可查看公开结果";
     case "round_end":
       return "等待主持人推进下一轮";
     default:
@@ -288,13 +275,13 @@ export function canTransition(
     case "DECLARE_INTERCEPT":
       return hasPendingAction && from === "intercept_window";
     case "DECLARE_RESPONSE":
-      return hasPendingAction && (from === "react_window" || from === "intercept_window");
+      return hasPendingAction && from === "react_window";
     case "SKIP_RESPONSE":
       return from === "intercept_window" || from === "react_window";
     case "RESOLVE_RESULT":
-      return from === "outcome" || from === "react_window";
+      return from === "outcome" && hasPendingAction;
     case "APPLY_MOMENTUM":
-      return from === "round_end" || from === "outcome";
+      return false;
     case "NEXT_ROUND":
       return from === "round_end";
     case "END_SCENE":

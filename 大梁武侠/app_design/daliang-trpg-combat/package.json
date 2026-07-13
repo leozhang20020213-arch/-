@@ -4,15 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node -e \"console.error('R5 UI is disabled. Use app_design/daliang-trpg-godot-r6 with Godot 4.7. Legacy preview: npm run dev:legacy.'); process.exit(1)\"",
-    "dev:legacy": "vite --host 127.0.0.1",
+    "dev": "vite --host 127.0.0.1",
+    "dev:legacy": "npm run dev",
     "dev:lan:ui": "vite --host 0.0.0.0",
     "dev:lan": "tsx server/lanHost.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "tsx --test src/combat/combatEngine.test.ts",
-    "test:lib": "tsx --test src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts",
-    "test:all": "tsx --test src/combat/combatEngine.test.ts src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts"
+    "test:lib": "tsx --test src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts src/lib/combat/autoDm.test.ts src/lib/combat/targetValidation.test.ts src/lib/combat/turnOrder.test.ts",
+    "test:all": "tsx --test src/combat/combatEngine.test.ts src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts src/lib/combat/autoDm.test.ts src/lib/combat/targetValidation.test.ts src/lib/combat/turnOrder.test.ts src/ui/combat/stage/CombatStage.test.tsx src/ui/combat/dice/dicePresentation.test.ts src/ui/combat/dice/DiceComponents.test.tsx"
   },
   "dependencies": {
     "@types/react": "^19.0.0",
