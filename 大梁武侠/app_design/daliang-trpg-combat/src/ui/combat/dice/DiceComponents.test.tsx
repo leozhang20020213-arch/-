@@ -27,6 +27,7 @@ function makeDie(overrides: Partial<QiDieType> = {}): QiDieType {
 type InspectableProps = {
   children?: ReactNode;
   onClick?: () => void;
+  onDoubleClick?: () => void;
   onKeyDown?: (event: { key: string; preventDefault: () => void }) => void;
   autoFocus?: boolean;
 };
@@ -56,6 +57,27 @@ describe("QiDie", () => {
     assert.match(html, /class="qi-die-source"/);
     assert.match(html, /一段非常完整…·目窍/);
     assert.match(html, new RegExp(`aria-label="[^"]*${sourceName}[^"]*"`));
+  });
+
+  it("uses double-click and Enter for the same reversible assignment", () => {
+    const events: string[] = [];
+    const tree = QiDie({
+      die: makeDie({ id: "activation-die", nature: "yang" }),
+      isAssigned: false,
+      draggable: false,
+      onDragStart: () => {},
+      onClick: (id) => events.push(id),
+    }) as ReactElement<InspectableProps>;
+
+    tree.props.onDoubleClick?.();
+    let prevented = false;
+    tree.props.onKeyDown?.({
+      key: "Enter",
+      preventDefault: () => { prevented = true; },
+    });
+    assert.deepEqual(events, ["activation-die", "activation-die"]);
+    assert.equal(prevented, true);
+    assert.equal(tree.props.onClick, undefined);
   });
 });
 

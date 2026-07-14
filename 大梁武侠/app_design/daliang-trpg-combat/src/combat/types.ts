@@ -68,6 +68,8 @@ export interface InnerArt {
   attrContributions: AttrContribution[];  // 表属性运算
   qiGeneration: QiGeneration[];       // 取气运算
   passive: string;                    // 被动
+  /** 规则条目明确给予的调息额外取回数量；默认0。 */
+  regulateBreathBonus?: number;
   disperseRules: string;              // 散功处理
   parallelRestriction?: string;       // 并行限制
 }
@@ -242,6 +244,15 @@ export interface Actor {
   publicWeakness?: string;
   hiddenGoal?: string;
   behaviorHint?: string;
+  /** 单人自动主持使用的结构化行动偏好；真人DM模式只作为建议。 */
+  aiProfile?: {
+    role: "assault" | "guard" | "skirmish" | "support" | "objective";
+    preferredRange?: DistanceBand;
+    protectActorIds?: string[];
+    retreatHpRatio?: number;
+    conserveResponsesBelowDice?: number;
+    objective?: string;
+  };
   entryCondition?: string;
   lootOrClue?: string;
   publicNote: string;
@@ -370,6 +381,30 @@ export interface CombatLogEntry {
   createdAt: number;
 }
 
+export type FeedbackKind =
+  | "turn"
+  | "declare"
+  | "intercept"
+  | "formed"
+  | "react"
+  | "outcome"
+  | "damage"
+  | "status"
+  | "momentum"
+  | "resource"
+  | "round";
+
+export interface CombatFeedbackEvent {
+  id: string;
+  kind: FeedbackKind;
+  actorId?: string;
+  targetId?: string;
+  title: string;
+  detail?: string;
+  delta?: number;
+  createdAt: number;
+}
+
 export interface CombatState {
   campaignName: string;
   sceneName: string;
@@ -377,6 +412,14 @@ export interface CombatState {
   round: number;
   phase: CombatPhase;
   activeActorId: string;
+  /** 本次交锋固定先后序；只在新交锋或DM明确重排时重新计算。 */
+  initiativeOrder: string[];
+  /** 本轮已经完成主行动的角色。响应不会写入此列表。 */
+  actedActorIds: string[];
+  /** 情景交锋与战斗交锋共用轮转，仅改变合法动作和桌面表现。 */
+  encounterMode: "scene" | "combat";
+  /** 真人DM可暂停自动轮转并手动接管。 */
+  turnPaused: boolean;
   actors: Actor[];
   dice: QiDie[];
   tracks: SceneTrack[];
@@ -384,6 +427,7 @@ export interface CombatState {
   distances: DistanceRelation[];
   pendingAction?: PendingAction;
   logs: CombatLogEntry[];
+  feedback: CombatFeedbackEvent[];
   lastSavedAt?: number;
 }
 

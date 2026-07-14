@@ -277,10 +277,8 @@ export const CombatStage: FC<CombatStageProps> = ({
                 </div>
               </>
             ) : (
-              <div className="engagement-focus__empty">
-                <span>{selectedMove ? "招式已选" : "当前无目标线"}</span>
-                <strong>{selectedMove?.name ?? "从下方行动牌开始"}</strong>
-                <small>选择目标后，这里只显示本次动作、距离与合法性。</small>
+              <div className={`engagement-focus__empty${selectedMove ? " awaiting-target" : ""}`} aria-label={selectedMove ? `${selectedMove.name}等待目标` : "当前无目标线"}>
+                {selectedMove ? <strong>{selectedMove.name}</strong> : <i aria-hidden="true" />}
               </div>
             )}
           </div>

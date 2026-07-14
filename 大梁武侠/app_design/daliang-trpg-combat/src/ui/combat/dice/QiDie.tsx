@@ -10,7 +10,7 @@ export interface QiDieProps {
   draggable: boolean;
   /** Called when the user starts dragging */
   onDragStart: (dieId: string) => void;
-  /** Called on click (for selection toggle / remove from slot) */
+  /** Called by double-click or Enter (selection toggle / remove from slot). */
   onClick: (dieId: string) => void;
 }
 
@@ -78,7 +78,13 @@ export const QiDie: FC<QiDieProps> = ({
       }
       data-qi-die-id={die.id}
       draggable={draggable}
-      onClick={() => onClick(die.id)}
+      onDoubleClick={() => onClick(die.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          onClick(die.id);
+        }
+      }}
       onDragStart={handleDragStart}
       title={accessibleLabel}
       aria-label={accessibleLabel}

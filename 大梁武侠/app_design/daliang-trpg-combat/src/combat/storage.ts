@@ -168,11 +168,26 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
   });
 
   const valueRec = value as unknown as Record<string, unknown>;
+  const actorIds = new Set(actors.map((actor) => actor.id));
+  const storedOrder = Array.isArray(valueRec.initiativeOrder)
+    ? valueRec.initiativeOrder.filter((id): id is string => typeof id === "string" && actorIds.has(id))
+    : [];
+  const initiativeOrder = [
+    ...storedOrder,
+    ...actors.map((actor) => actor.id).filter((id) => !storedOrder.includes(id)),
+  ];
+  const actedActorIds = Array.isArray(valueRec.actedActorIds)
+    ? valueRec.actedActorIds.filter((id): id is string => typeof id === "string" && actorIds.has(id))
+    : [];
 
   return {
     ...seed,
     ...value,
     actors,
+    initiativeOrder,
+    actedActorIds,
+    encounterMode: value.encounterMode === "combat" ? "combat" : "scene",
+    turnPaused: Boolean(value.turnPaused),
     dice: normalizeDice(
       (Array.isArray(valueRec.dice) ? valueRec.dice : seed.dice) as CombatState["dice"],
       seed.dice,
@@ -181,6 +196,7 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
     scene: value.scene ? { ...seed.scene, ...value.scene } : seed.scene,
     distances: (Array.isArray(valueRec.distances) ? valueRec.distances : seed.distances) as CombatState["distances"],
     logs: (Array.isArray(valueRec.logs) ? valueRec.logs : seed.logs) as CombatState["logs"],
+    feedback: (Array.isArray(valueRec.feedback) ? valueRec.feedback : seed.feedback) as CombatState["feedback"],
   };
 }
 

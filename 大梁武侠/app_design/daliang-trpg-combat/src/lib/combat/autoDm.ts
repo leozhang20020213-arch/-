@@ -1,11 +1,14 @@
 import {
+  advanceTurn,
   applyOutcome,
   declareAction,
-  endRound,
   formMove,
+  getBasicActionAvailability,
+  regulateBreath,
   resolveInterceptSuccess,
   resolveReact,
   skipReact,
+  useReflection,
 } from "../../combat/combatEngine";
 import type {
   Actor,
@@ -217,6 +220,65 @@ function findEnemyDeclaration(
   return undefined;
 }
 
+function chooseAutomaticTarget(
+  state: CombatState,
+  actor: Actor,
+  playerActorId: string,
+): Actor | undefined {
+  const candidates = state.actors.filter((target) => {
+    if (target.id === actor.id || target.hp <= 0) return false;
+    if (actor.side === "player") return target.side === "enemy" || target.side === "pressure";
+    return target.side === "player";
+  });
+  if (candidates.length === 0) return undefined;
+
+  const protectedIds = new Set(actor.aiProfile?.protectActorIds ?? []);
+  return [...candidates].sort((left, right) => {
+    if (actor.side !== "player") {
+      const leftPlayer = left.id === playerActorId ? 0 : 1;
+      const rightPlayer = right.id === playerActorId ? 0 : 1;
+      if (leftPlayer !== rightPlayer) return leftPlayer - rightPlayer;
+    }
+    const leftProtected = protectedIds.has(left.id) ? 0 : 1;
+    const rightProtected = protectedIds.has(right.id) ? 0 : 1;
+    if (leftProtected !== rightProtected) return leftProtected - rightProtected;
+    const leftRatio = left.maxHp > 0 ? left.hp / left.maxHp : 1;
+    const rightRatio = right.maxHp > 0 ? right.hp / right.maxHp : 1;
+    return leftRatio - rightRatio || compareIds(left.id, right.id);
+  })[0];
+}
+
+function tryAutomaticRecovery(state: CombatState, actor: Actor): AutoDmResult | undefined {
+  const reflection = getBasicActionAvailability(state, actor.id, "fanzhao");
+  if (reflection.usable) {
+    return result(
+      useReflection(state, actor.id),
+      "enemy_skip",
+      `${actor.name} 无合法招式，按策略执行返照并结束主行动。`,
+    );
+  }
+
+  const breath = getBasicActionAvailability(state, actor.id, "regulateBreath");
+  if (!breath.usable) return undefined;
+  const guide = state.dice.find(
+    (die) => die.ownerId === actor.id && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"),
+  );
+  const limit = 1 + actor.innerArts
+    .filter((art) => art.currentLevel > 0)
+    .reduce((total, art) => total + Math.max(0, art.regulateBreathBonus ?? 0), 0);
+  const restDice = state.dice
+    .filter((die) => die.ownerId === actor.id && die.zone === "QI_REST" && !die.temporary)
+    .sort((left, right) => left.sides - right.sides || compareIds(left.id, right.id))
+    .slice(0, limit)
+    .map((die) => die.id);
+  if (!guide || restDice.length === 0) return undefined;
+  return result(
+    regulateBreath(state, actor.id, restDice, true, undefined, guide.id),
+    "enemy_skip",
+    `${actor.name} 无合法招式，支付息引并调息取回 ${restDice.length} 枚气骰。`,
+  );
+}
+
 /**
  * Advance exactly one automatic DM step.
  *
@@ -245,16 +307,44 @@ export function advanceAutoDm(
         return result(state, "idle", "待结算宣言的目标不存在，未推进。");
       }
 
-      if (target.id === playerActorId || target.side === "player") {
+      const source = state.actors.find((actor) => actor.id === pending.actorId);
+      const move = source?.moves.find((entry) => entry.id === pending.moveId);
+      if (state.phase === "intercept_window" && move && !move.hasIntercept) {
+        return result(
+          formMove(state),
+          "skip_intercept",
+          `「${move.name}」没有截击窗口，直接进入成招。`,
+        );
+      }
+      if (state.phase === "react_window" && move && !move.hasReact) {
+        return result(
+          skipReact(state),
+          "skip_react",
+          `「${move.name}」没有应招窗口，直接进入落果。`,
+        );
+      }
+
+      if (target.id === playerActorId) {
+        const responseType = state.phase === "intercept_window" ? "截击" : "应招";
+        const legalPlayerResponse = findLegalResponse(state, target, responseType);
+        if (!legalPlayerResponse) {
+          return state.phase === "intercept_window"
+            ? result(
+              formMove(state),
+              "skip_intercept",
+              `${target.name} 没有合法截击或响应额度，宣言自动进入成招。`,
+            )
+            : result(
+              skipReact(state),
+              "skip_react",
+              `${target.name} 没有合法应招或响应额度，自动进入落果。`,
+            );
+        }
         return result(
           state,
           "waiting_player",
           `等待玩家 ${target.name} 处理${state.phase === "intercept_window" ? "截击" : "应招"}窗口。`,
         );
-      }
-
-      if (target.side !== "enemy") {
-        return result(state, "waiting_player", `目标 ${target.name} 不是自动 DM 控制的敌人。`);
       }
 
       if (state.phase === "intercept_window") {
@@ -300,50 +390,40 @@ export function advanceAutoDm(
     }
 
     if (state.phase === "round_end") {
-      const player = state.actors.find(
-        (actor) => actor.id === playerActorId && actor.side === "player",
-      );
+      const player = state.actors.find((actor) => actor.id === playerActorId && actor.side === "player");
       if (!player) {
         return result(state, "idle", "找不到指定玩家，轮末未推进。");
       }
-
-      const currentActor = state.actors.find((actor) => actor.id === state.activeActorId);
-      const next = endRound(state);
-      if (currentActor?.side === "player") {
-        const livingEnemies = next.actors.filter((actor) => actor.side === "enemy" && actor.hp > 0);
-        const enemy = livingEnemies.find((actor) => Boolean(findEnemyDeclaration(next, actor, player)))
-          ?? livingEnemies[0];
-        if (enemy) {
-          return result(
-            { ...next, activeActorId: enemy.id },
-            "end_round",
-            `玩家行动结算完毕；由自动 DM 控制 ${enemy.name} 开始第 ${next.round} 轮主行动。`,
-          );
-        }
-      }
+      const next = advanceTurn(state);
+      const nextActor = next.actors.find((actor) => actor.id === next.activeActorId);
       return result(
-        { ...next, activeActorId: playerActorId },
+        next,
         "end_round",
-        `敌方行动结算完毕；交还玩家 ${player.name} 开始第 ${next.round} 轮宣言。`,
+        `行动序列推进；轮到 ${nextActor?.name ?? "下一位"}。`,
       );
     }
 
     if (state.phase === "scene" || state.phase === "declare") {
       const active = state.actors.find((actor) => actor.id === state.activeActorId);
-      const player = state.actors.find((actor) => actor.id === playerActorId && actor.side === "player");
-      if (active?.side === "enemy" && player && player.hp > 0) {
-        const declaration = findEnemyDeclaration(state, active, player);
+      if (!active || active.hp <= 0) {
+        return result({ ...state, phase: "round_end" }, "enemy_skip", "当前角色已离场，推进行动序列。");
+      }
+      if (active.id !== playerActorId) {
+        const target = chooseAutomaticTarget(state, active, playerActorId);
+        const declaration = target ? findEnemyDeclaration(state, active, target) : undefined;
         if (declaration) {
           return result(
             declaration.state,
             "enemy_declare",
-            `${active.name} 自动宣言「${declaration.moveName}」攻击 ${player.name}，投入 ${declaration.diceIds.length} 枚气骰；等待玩家处理响应窗口。`,
+            `${active.name} 自动宣言「${declaration.moveName}」指向 ${declaration.target.name}，投入 ${declaration.diceIds.length} 枚气骰。`,
           );
         }
+        const recovery = tryAutomaticRecovery(state, active);
+        if (recovery) return recovery;
         return result(
           { ...state, phase: "round_end", pendingAction: undefined },
           "enemy_skip",
-          `${active.name} 当前没有合法主动作与气骰配置，本轮放弃并进入轮末。`,
+          `${active.name} 当前没有合法招式、便行或恢复动作，本轮放弃出手。`,
         );
       }
       return result(state, "waiting_player", "等待玩家宣言。");

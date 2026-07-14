@@ -1,6 +1,7 @@
 import type {
   Actor,
   CombatLogEntry,
+  CombatFeedbackEvent,
   CombatState,
   DistanceBand,
   InventoryItem,
@@ -15,6 +16,7 @@ import type {
   ShiCondition,
 } from "./types";
 import { deriveTargetState } from "../lib/combat/targetValidation";
+import { computeTurnOrder } from "../lib/combat/turnOrder";
 
 export type RollFn = (sides: number) => number;
 
@@ -623,6 +625,7 @@ export function canDeclareAction(
 export function prepareCombatRound(state: CombatState): CombatState {
   let next = cloneState(state);
   next.phase = "initiative";
+  next.encounterMode = "combat";
   next.pendingAction = undefined;
   next = appendLog(next, "phase_changed", "交锋轮开始：进入先后确认；沿用当前气海、息库与骰值，不重投常规气骰。");
   return next;
@@ -630,30 +633,25 @@ export function prepareCombatRound(state: CombatState): CombatState {
 
 export function confirmInitiative(state: CombatState): CombatState {
   let next = cloneState(state);
-  const ordered = [...next.actors].sort((a, b) => {
-    const aHighestDie = Math.max(0, ...next.dice
-      .filter((die) => die.ownerId === a.id && die.value !== null && !die.temporary)
-      .map((die) => die.value ?? 0));
-    const bHighestDie = Math.max(0, ...next.dice
-      .filter((die) => die.ownerId === b.id && die.value !== null && !die.temporary)
-      .map((die) => die.value ?? 0));
-    const aScore = Math.max(a.tableAttrs.观照, a.tableAttrs.身势) + aHighestDie;
-    const bScore = Math.max(b.tableAttrs.观照, b.tableAttrs.身势) + bHighestDie;
-    if (bScore !== aScore) return bScore - aScore;
-    if (a.side !== b.side) return a.side === "player" ? -1 : 1;
-    return a.name.localeCompare(b.name, "zh-Hans-CN");
-  });
+  const ordered = computeTurnOrder(next).filter((entry) => !entry.isDying);
   const firstActor = ordered[0];
-  if (firstActor) next.activeActorId = firstActor.id;
-  next.phase = "scene";
+  next.initiativeOrder = ordered.map((entry) => entry.actorId);
+  next.actedActorIds = [];
+  if (firstActor) next.activeActorId = firstActor.actorId;
+  next.phase = "declare";
   next.pendingAction = undefined;
   next.actors = next.actors.map((actor) => ({ ...actor, responseQuotaUsed: 0 }));
   next = appendLog(
     next,
     "phase_changed",
-    `先后确认：${firstActor?.name ?? "待定"} 先行动。先后值读取观照/身势择一与当前最高可用常规骰；气骰位置和值保持不变。`,
+    `先后确认：${firstActor?.name ?? "待定"} 先行动。先后值读取身势（经DM许可可改观照）与当前最高可用常规骰；气骰位置和值保持不变。`,
   );
-  return next;
+  return appendFeedback(next, {
+    kind: "turn",
+    actorId: firstActor?.actorId,
+    title: `轮到 ${firstActor?.name ?? "待定"}`,
+    detail: "先后序已锁定",
+  });
 }
 
 /**
@@ -666,6 +664,9 @@ export function confirmInitiative(state: CombatState): CombatState {
 export function enterScene(state: CombatState, roll: RollFn = defaultRoll): CombatState {
   let next = cloneState(state);
   next.phase = "scene";
+  next.encounterMode = "scene";
+  next.actedActorIds = [];
+  next.turnPaused = false;
   next.pendingAction = undefined;
 
   // Move all QI_POOL dice (non-temporary) to QI_SEA with rolled values
@@ -688,7 +689,17 @@ export function enterScene(state: CombatState, roll: RollFn = defaultRoll): Comb
   // Decay statuses with "每轮结束-1层" rule
   next = decayStatusesInternal(next, "每轮结束-1层");
 
-  return appendLog(next, "ENTER_SCENE", "DM开始新场景：常规气骰从气池投出并进入气海。");
+  const order = computeTurnOrder(next).filter((entry) => !entry.isDying);
+  next.initiativeOrder = order.map((entry) => entry.actorId);
+  if (order[0]) next.activeActorId = order[0].actorId;
+  next.phase = "declare";
+  next = appendLog(next, "ENTER_SCENE", "DM开始新场景：常规气骰从气池投出并进入气海；情景交锋先后序已建立。");
+  return appendFeedback(next, {
+    kind: "round",
+    actorId: next.activeActorId,
+    title: "新场景开局",
+    detail: "气海已生成，进入情景交锋",
+  });
 }
 
 /**
@@ -737,6 +748,16 @@ export function declareAction(
   const actor = requireActor(next, actorId);
   const target = requireActor(next, targetId);
   const move = requireMove(actor, moveId);
+
+  // The confrontation order is authoritative in both scene and combat modes.
+  // UI guards are not sufficient because auto-DM and LAN callers use this
+  // function directly as well.
+  if (next.activeActorId !== actorId) {
+    throw new Error(`${actor.name}不是当前行动者。`);
+  }
+  if (next.actedActorIds.includes(actorId)) {
+    throw new Error(`${actor.name}本轮已经完成主行动。`);
+  }
 
   const targetState = deriveTargetState(next, target.id, move, actor.id);
   if (!targetState.isRangeValid) {
@@ -804,11 +825,18 @@ export function declareAction(
   next.phase = "intercept_window";
   next.activeActorId = actorId;
 
-  return appendLog(
+  next = appendLog(
     next,
     "DECLARE_ACTION",
     `${actor.name} 宣言「${move.name}」指向 ${target.name}，锁气 ${usableDice.length} 枚（阴槽 ${yinSlotIds.length} / 阳槽 ${yangSlotIds.length}），打开截击窗口。`,
   );
+  return appendFeedback(next, {
+    kind: "declare",
+    actorId,
+    targetId,
+    title: move.name,
+    detail: `锁气 ${usableDice.length} 枚`,
+  });
 }
 
 /**
@@ -924,11 +952,18 @@ export function resolveInterceptSuccess(
     );
   }
 
-  const intercepted = appendLog(
+  let intercepted = appendLog(
     next,
     "INTERCEPT",
     `${responder.name} 使用截击「${response.moveName}」：${interceptEffect}。响应槽值 阴${responseSlotValues.阴值}/阳${responseSlotValues.阳值}/合${responseSlotValues.合值}。${cancelAction ? "声明前置被关闭，本次动作不成招；行动气骰结算。" : "声明仍合法，继续进入成招检查。"}${damageReduction > 0 ? `基础气血效果减轻 ${damageReduction} 点。` : ""}${response.postShi !== "不改势" ? `势变更为「${response.postShi}」。` : ""}`,
   );
+  intercepted = appendFeedback(intercepted, {
+    kind: "intercept",
+    actorId: responderId,
+    targetId: action.actorId,
+    title: response.moveName,
+    detail: cancelAction ? "截断宣言" : "改变成招条件",
+  });
   return cancelAction ? intercepted : formMove(intercepted);
 }
 
@@ -956,11 +991,18 @@ export function formMove(state: CombatState): CombatState {
     next.dice = settleSpentDice(next.dice, action.diceIds);
     next.pendingAction = undefined;
     next.phase = "round_end";
-    return appendLog(
+    next = appendLog(
       next,
       "FORM_MOVE",
       `${actor.name} 的「${move.name}」${missingFormalSlot ? "经截击后缺少合法阴/阳槽" : `最低投入不足（${diceCount}/${move.minDice}）`}，未成招，已用常规气骰进入息库，临时气骰消失。`,
     );
+    return appendFeedback(next, {
+      kind: "outcome",
+      actorId: actor.id,
+      targetId: target.id,
+      title: "未成招",
+      detail: move.name,
+    });
   }
 
   // Move yin slot dice from QI_LOCK to YIN_SLOT
@@ -994,11 +1036,18 @@ export function formMove(state: CombatState): CombatState {
       ? `触发效果：${triggeredEffects.map((t) => `「${t.condition}」→ ${t.effect}`).join("；")}`
       : "无槽值触发";
 
-  return appendLog(
+  next = appendLog(
     next,
     "FORM_MOVE",
     `${actor.name} 的「${move.name}」成招（阴值 ${slotValues.阴值} / 阳值 ${slotValues.阳值} / 合值 ${slotValues.合值} / 阴阳差 ${slotValues.阴阳差}）。${triggerLog}。目标 ${target.name} 可在落果前应招。`,
   );
+  return appendFeedback(next, {
+    kind: "formed",
+    actorId: actor.id,
+    targetId: target.id,
+    title: "成招",
+    detail: move.name,
+  });
 }
 
 /**
@@ -1111,11 +1160,18 @@ export function resolveReact(
   };
   next.phase = "outcome";
 
-  return appendLog(
+  next = appendLog(
     next,
     "REACT",
     `${responder.name} 使用应招「${response.moveName}」，响应槽值 阴${responseSlotValues.阴值}/阳${responseSlotValues.阳值}/合${responseSlotValues.合值}；${reactLogExtra || `落果减轻 ${additionalPrevent}`}。当前共抵消 ${totalPrevented} 点。${finalResponderMomentum ? `势变更为「${finalResponderMomentum}」。` : ""}`,
   );
+  return appendFeedback(next, {
+    kind: "react",
+    actorId: responderId,
+    targetId: action.actorId,
+    title: response.moveName,
+    detail: `抵消 ${totalPrevented} 点`,
+  });
 }
 
 /**
@@ -1203,6 +1259,39 @@ export function applyOutcome(state: CombatState): CombatState {
     next = applyStatusEffectByName(next, action.targetId, status.name, status.layers);
   }
 
+  // Scene confrontations use the same declaration/response/outcome pipeline.
+  // Rule-authored scene deltas are applied only after the move has legally
+  // formed, so investigation and combat never need separate turn machinery.
+  if (next.encounterMode === "scene") {
+    const explicitTrackDelta = (move as Move & { trackDelta?: number }).trackDelta ?? 0;
+    const trackChanges = new Map<string, number>();
+    if (explicitTrackDelta !== 0 && !/(危机|解密|调查)[+-]\d+/.test(move.baseEffect)) {
+      const insightTrack = next.tracks.find((track) => track.kind === "insight" || /解密|调查/.test(track.name));
+      if (insightTrack) trackChanges.set(insightTrack.id, explicitTrackDelta);
+    }
+    const effectTexts = [move.baseEffect, ...resolvedTriggers.filter((trigger) => trigger.triggered).map((trigger) => trigger.effect)];
+    for (const effectText of effectTexts) {
+      for (const match of effectText.matchAll(/(危机|解密|调查)([+-])(\d+)/g)) {
+        const track = next.tracks.find((candidate) =>
+          match[1] === "危机"
+            ? candidate.kind === "crisis" || candidate.name.includes("危机")
+            : candidate.kind === "insight" || /解密|调查/.test(candidate.name));
+        if (!track) continue;
+        const delta = Number(match[3]) * (match[2] === "+" ? 1 : -1);
+        trackChanges.set(track.id, (trackChanges.get(track.id) ?? 0) + delta);
+      }
+    }
+    if (trackChanges.size > 0) {
+      next.tracks = next.tracks.map((track) => {
+        const delta = trackChanges.get(track.id);
+        return delta === undefined ? track : { ...track, value: Math.max(0, Math.min(track.max, track.value + delta)) };
+      });
+      const detail = [...trackChanges].map(([trackId, delta]) => `${next.tracks.find((track) => track.id === trackId)?.name ?? trackId}${delta >= 0 ? "+" : ""}${delta}`).join("、");
+      next = appendLog(next, "SCENE_TRACK_CHANGED", `情景落果：${detail}。`);
+      next = appendFeedback(next, { kind: "status", actorId: actor.id, targetId: target.id, title: "场景推进", detail });
+    }
+  }
+
   // Apply postShi change (risk trigger momentum change overrides move.postShi)
   const finalMomentum = riskMomentumChange ?? (move.postShi !== "不改势" ? move.postShi : undefined);
   if (finalMomentum) {
@@ -1234,11 +1323,29 @@ export function applyOutcome(state: CombatState): CombatState {
       ? `${target.name} 气血-${damage}（基础 ${extractDamage(move.baseEffect)} + 触发 ${triggerDamage} - 抵消 ${action.preventedDamage ?? 0}）`
       : "未造成气血损失";
 
-  return appendLog(
+  next = appendLog(
     next,
     "APPLY_OUTCOME",
     `${actor.name} 的「${move.name}」落果：${damageMsg}。`,
   );
+  next = appendFeedback(next, {
+    kind: "outcome",
+    actorId: actor.id,
+    targetId: target.id,
+    title: "落果",
+    detail: move.name,
+  });
+  if (damage > 0) {
+    next = appendFeedback(next, {
+      kind: "damage",
+      actorId: actor.id,
+      targetId: target.id,
+      title: `${target.name} 受击`,
+      detail: `气血 -${damage}`,
+      delta: -damage,
+    });
+  }
+  return next;
 }
 
 // ============================================================================
@@ -1246,24 +1353,27 @@ export function applyOutcome(state: CombatState): CombatState {
 // ============================================================================
 
 /**
- * regulateBreath: Move dice from QI_REST to QI_SEA.
- *   active=true (主动调息): WITH reroll
- *   active=false (被动流转): WITHOUT reroll
+ * regulateBreath: Move dice from QI_REST to QI_SEA without changing faces.
+ * Active regulation spends one guide die and the actor's main action. Passive
+ * circulation is used only by explicit entries and does not consume an action.
  */
 export function regulateBreath(
   state: CombatState,
   actorId: string,
   diceIds: string[],
   active = false,
-  roll: RollFn = defaultRoll,
+  _roll: RollFn = defaultRoll,
   guideDieId?: string,
 ): CombatState {
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
 
-  const restDice = diceIds.filter((id) =>
+  const restDice = [...new Set(diceIds)].filter((id) =>
     next.dice.some(
-      (die) => die.id === id && die.ownerId === actorId && die.zone === "QI_REST",
+      (die) => die.id === id
+        && die.ownerId === actorId
+        && die.zone === "QI_REST"
+        && !die.temporary,
     ),
   );
 
@@ -1282,11 +1392,14 @@ export function regulateBreath(
     if (!guideDie) {
       throw new Error("主动调息需要从气海或临气区明确选择1枚气骰作为息引。");
     }
-    // 主动调息: reroll dice values before moving to QI_SEA
-    next.dice = next.dice.map((die) => {
-      if (!restDice.includes(die.id)) return die;
-      return { ...die, value: roll(die.sides), zone: "QI_SEA" as QiZone };
-    });
+    const recoveryLimit = 1 + actor.innerArts
+      .filter((art) => art.currentLevel > 0)
+      .reduce((total, art) => total + Math.max(0, art.regulateBreathBonus ?? 0), 0);
+    if (restDice.length > recoveryLimit) {
+      throw new Error(`本次调息最多取回 ${recoveryLimit} 枚常规气骰。`);
+    }
+    // 2026-06-20 rule package: recovery preserves every die face.
+    next.dice = moveDice(next.dice, restDice, "QI_SEA");
     next.dice = settleSpentDice(next.dice, [guideDie.id]);
     next.phase = "round_end";
   } else {
@@ -1294,12 +1407,18 @@ export function regulateBreath(
     next.dice = moveDice(next.dice, restDice, "QI_SEA");
   }
 
-  const mode = active ? "主动调息（重掷入气海）" : "被动流转（不重掷入气海）";
-  return appendLog(
+  const mode = active ? "主动调息" : "被动流转";
+  next = appendLog(
     next,
     "REGULATE_BREATH",
-    `${actor.name} ${mode}，${restDice.length} 枚常规气骰从息库回气海。${active ? "息引气骰已结算，本次主行动结束。" : ""}`,
+    `${actor.name} ${mode}，${restDice.length} 枚常规气骰保持原点数从息库回气海。${active ? "息引气骰已结算，本次主行动结束。" : ""}`,
   );
+  return appendFeedback(next, {
+    kind: "resource",
+    actorId,
+    title: active ? "调息" : "气机流转",
+    detail: `取回 ${restDice.length} 枚，不重掷`,
+  });
 }
 
 /**
@@ -1311,11 +1430,16 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
 
-  // Check 断气条件: neither pool nor sea has a usable regular die.
+  if ((next.phase !== "scene" && next.phase !== "declare") || next.activeActorId !== actorId) {
+    throw new Error("返照只能由当前行动者在场景/声明时点执行。");
+  }
+
+  // 断气 checks the usable sea only. QI_POOL is the unrolled reservoir and
+  // must not make a valid mid-scene reflection illegal.
   const hasUsableRegularDie = next.dice.some(
     (die) => die.ownerId === actorId
       && !die.temporary
-      && (die.zone === "QI_POOL" || die.zone === "QI_SEA"),
+      && die.zone === "QI_SEA",
   );
   if (hasUsableRegularDie) {
     return appendLog(
@@ -1346,12 +1470,19 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
 
   // Move to QI_SEA WITHOUT reroll (keep original value)
   next.dice = moveDice(next.dice, [candidate.id], "QI_SEA");
+  next.phase = "round_end";
 
-  return appendLog(
+  next = appendLog(
     next,
     "REFLECTION",
-    `${actor.name} 返照，取回最低阶先天气骰 ${candidate.sourceName}（D${candidate.sides}·${candidate.value}点），不重掷且不消耗主行动。`,
+    `${actor.name} 返照，取回最低阶先天气骰 ${candidate.sourceName}（D${candidate.sides}·${candidate.value}点），保持原点数，本次主行动结束。`,
   );
+  return appendFeedback(next, {
+    kind: "resource",
+    actorId,
+    title: "返照",
+    detail: `D${candidate.sides}·${candidate.value} 回到气海`,
+  });
 }
 
 // ============================================================================
@@ -1423,10 +1554,10 @@ export function getBasicActionAvailability(
     const hasAvailableRegularDice = state.dice.some(
       (d) => d.ownerId === actorId
         && !d.temporary
-        && (d.zone === "QI_POOL" || d.zone === "QI_SEA"),
+        && d.zone === "QI_SEA",
     );
     if (hasAvailableRegularDice) {
-      detailReasons.push("气池或气海仍有可用常规气骰，尚未满足断气条件");
+      detailReasons.push("气海仍有可用常规气骰，尚未满足断气条件");
       reasonTags.push("尚未断气");
     }
     const hasInnateRestDie = state.dice.some(
@@ -1436,7 +1567,8 @@ export function getBasicActionAvailability(
       detailReasons.push("息库没有可返照的先天气骰");
       reasonTags.push("息库为空");
     }
-    // TODO: when reflection count tracking is implemented, check limit here
+    // 返照 consumes the actor's main action; the actedActorIds gate above is
+    // the authoritative once-per-round limit and is reset only at round end.
   }
 
   const usable = detailReasons.length === 0;
@@ -1764,12 +1896,71 @@ export function endRound(state: CombatState): CombatState {
 
   next.phase = "declare";
   next.round += 1;
+  next.actedActorIds = [];
+  next.turnPaused = false;
+  const livingOrder = next.initiativeOrder.filter((actorId) =>
+    next.actors.some((actor) => actor.id === actorId && actor.hp > 0));
+  const missingLiving = next.actors
+    .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
+    .map((actor) => actor.id);
+  next.initiativeOrder = [...livingOrder, ...missingLiving];
+  next.activeActorId = next.initiativeOrder[0] ?? next.activeActorId;
 
-  return appendLog(
+  next = appendLog(
     next,
     "ROUND_ENDED",
     `第 ${next.round - 1} 轮结束，进入第 ${next.round} 轮宣言。`,
   );
+  return appendFeedback(next, {
+    kind: "round",
+    actorId: next.activeActorId,
+    title: `第 ${next.round} 轮`,
+    detail: "全员响应次数已重置",
+  });
+}
+
+/**
+ * Complete the active actor's main action and pass control to the next living
+ * actor. Round maintenance runs only after everyone in the fixed initiative
+ * order has acted, never after every individual action.
+ */
+export function advanceTurn(state: CombatState): CombatState {
+  if (state.phase !== "round_end") {
+    throw new Error(`当前时点「${state.phase}」不允许推进角色顺序。`);
+  }
+
+  let next = cloneState(state);
+  const livingOrder = next.initiativeOrder.filter((actorId) =>
+    next.actors.some((actor) => actor.id === actorId && actor.hp > 0));
+  const missingLiving = next.actors
+    .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
+    .map((actor) => actor.id);
+  next.initiativeOrder = [...livingOrder, ...missingLiving];
+
+  const acted = new Set(next.actedActorIds);
+  if (next.activeActorId) acted.add(next.activeActorId);
+  next.actedActorIds = [...acted];
+
+  const currentIndex = Math.max(0, next.initiativeOrder.indexOf(next.activeActorId));
+  const rotated = [
+    ...next.initiativeOrder.slice(currentIndex + 1),
+    ...next.initiativeOrder.slice(0, currentIndex + 1),
+  ];
+  const nextActorId = rotated.find((actorId) => !acted.has(actorId));
+  if (!nextActorId) return endRound(next);
+
+  next.activeActorId = nextActorId;
+  next.phase = next.encounterMode === "scene" ? "scene" : "declare";
+  next.pendingAction = undefined;
+  next.turnPaused = false;
+  const actor = next.actors.find((entry) => entry.id === nextActorId);
+  next = appendLog(next, "TURN_ADVANCED", `行动序列推进：轮到 ${actor?.name ?? nextActorId}。`, true);
+  return appendFeedback(next, {
+    kind: "round",
+    actorId: nextActorId,
+    title: `轮到 ${actor?.name ?? "下一位"}`,
+    detail: `第 ${next.round} 轮`,
+  });
 }
 
 // ============================================================================
@@ -2122,6 +2313,19 @@ function appendLog(
     createdAt: Date.now(),
   };
   return { ...state, logs: [entry, ...state.logs] };
+}
+
+function appendFeedback(
+  state: CombatState,
+  event: Omit<CombatFeedbackEvent, "id" | "createdAt">,
+): CombatState {
+  const createdAt = Date.now();
+  const feedback: CombatFeedbackEvent = {
+    ...event,
+    id: `${event.kind}-${createdAt}-${Math.random().toString(16).slice(2)}`,
+    createdAt,
+  };
+  return { ...state, feedback: [feedback, ...(state.feedback ?? [])].slice(0, 24) };
 }
 
 function moveDice(dice: QiDie[], diceIds: string[], zone: QiZone): QiDie[] {

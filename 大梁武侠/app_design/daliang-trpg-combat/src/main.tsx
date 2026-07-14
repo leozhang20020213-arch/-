@@ -14,6 +14,7 @@ import "./styles/overrides.css";
 import "./styles/support-pages.css";
 import "./styles/accessibility.css";
 import "./styles/windows-desktop.css";
+import "./styles/rebuild.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

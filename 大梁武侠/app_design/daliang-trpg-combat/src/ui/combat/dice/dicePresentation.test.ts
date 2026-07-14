@@ -78,7 +78,7 @@ describe("qi pool presentation", () => {
 });
 
 describe("qi die activation", () => {
-  it("keeps yin/yang one-click assignment and requires an explicit raw decision", () => {
+  it("assigns fixed natures directly and requires an explicit raw decision", () => {
     assert.equal(resolveQiDieActivation(makeDie({ nature: "yin" }), false, true), "assign-yin");
     assert.equal(resolveQiDieActivation(makeDie({ nature: "yang" }), false, true), "assign-yang");
     assert.equal(resolveQiDieActivation(makeDie({ nature: "raw" }), false, true), "choose-raw-slot");

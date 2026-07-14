@@ -15,7 +15,7 @@ const fixedRoll = () => 4;
 
 function playerDeclaration(round = 1): CombatState {
   let state = enterScene(createSeedState(), fixedRoll);
-  state = { ...state, round };
+  state = { ...state, round, activeActorId: PLAYER_ID };
   return declareAction(
     state,
     PLAYER_ID,
@@ -30,7 +30,7 @@ function playerDeclaration(round = 1): CombatState {
 }
 
 function enemyDeclaration(): CombatState {
-  const state = enterScene(createSeedState(), fixedRoll);
+  const state = { ...enterScene(createSeedState(), fixedRoll), activeActorId: ENEMY_ID };
   return declareAction(
     state,
     ENEMY_ID,
@@ -69,20 +69,26 @@ describe("test auto DM", () => {
     assert.equal(outcome.state.pendingAction, undefined);
     assert.equal(outcome.state.round, 1);
 
-    const nextRound = advanceAutoDm(outcome.state, PLAYER_ID);
-    assert.equal(nextRound.decision, "end_round");
-    assert.equal(nextRound.state.phase, "declare");
-    assert.equal(nextRound.state.round, 2);
-    assert.notEqual(nextRound.state.activeActorId, PLAYER_ID);
+    const nextActor = advanceAutoDm(outcome.state, PLAYER_ID);
+    assert.equal(nextActor.decision, "end_round");
+    assert.equal(nextActor.state.phase, "scene");
+    assert.equal(nextActor.state.round, 1);
+    assert.notEqual(nextActor.state.activeActorId, PLAYER_ID);
+    assert.deepEqual(nextActor.state.actedActorIds, [PLAYER_ID]);
 
-    const enemyTurn = advanceAutoDm(nextRound.state, PLAYER_ID);
-    assert.equal(enemyTurn.decision, "enemy_declare");
-    assert.equal(enemyTurn.state.phase, "intercept_window");
-    assert.equal(enemyTurn.state.pendingAction?.targetId, PLAYER_ID);
+    const automaticTurn = advanceAutoDm(nextActor.state, PLAYER_ID);
+    assert.equal(automaticTurn.decision, "enemy_declare");
+    assert.equal(automaticTurn.state.phase, "intercept_window");
+    assert.ok(automaticTurn.state.pendingAction);
 
-    const waiting = advanceAutoDm(enemyTurn.state, PLAYER_ID);
-    assert.equal(waiting.decision, "waiting_player");
-    assert.strictEqual(waiting.state, enemyTurn.state);
+    // The porter's objective action is a quick scene entry with no response
+    // attachment; auto-DM must not create a fake player prompt for it.
+    const formedObjective = advanceAutoDm(automaticTurn.state, PLAYER_ID);
+    assert.equal(formedObjective.decision, "skip_intercept");
+    assert.equal(formedObjective.state.phase, "react_window");
+    const readyForOutcome = advanceAutoDm(formedObjective.state, PLAYER_ID);
+    assert.equal(readyForOutcome.decision, "skip_react");
+    assert.equal(readyForOutcome.state.phase, "outcome");
   });
 
   it("uses a legal enemy intercept after the default first-round grace period", () => {
@@ -121,7 +127,7 @@ describe("test auto DM", () => {
     assert.equal(skipped.state.phase, "outcome");
   });
 
-  it("never handles a response window on behalf of a player target", () => {
+  it("pauses for every authored player response window", () => {
     const interceptWindow = enemyDeclaration();
     const waitingIntercept = advanceAutoDm(interceptWindow, PLAYER_ID);
 
@@ -130,15 +136,37 @@ describe("test auto DM", () => {
     assert.equal(waitingIntercept.state.phase, "intercept_window");
 
     const reactWindow = formMove(interceptWindow);
-    const waitingReact = advanceAutoDm(reactWindow, PLAYER_ID);
+    const authoredReactWindow: CombatState = {
+      ...reactWindow,
+      actors: reactWindow.actors.map((actor) => actor.id === ENEMY_ID
+        ? { ...actor, moves: actor.moves.map((move) => move.id === "WG002" ? { ...move, hasReact: true } : move) }
+        : actor),
+    };
+    const waitingReact = advanceAutoDm(authoredReactWindow, PLAYER_ID);
 
     assert.equal(waitingReact.decision, "waiting_player");
-    assert.strictEqual(waitingReact.state, reactWindow);
+    assert.strictEqual(waitingReact.state, authoredReactWindow);
     assert.equal(waitingReact.state.phase, "react_window");
     assert.equal(
       waitingReact.state.actors.find((actor) => actor.id === PLAYER_ID)?.responseQuotaUsed,
       0,
     );
+  });
+
+  it("does not pause on a player response window after the response quota is spent", () => {
+    const interceptWindow = enemyDeclaration();
+    const exhausted: CombatState = {
+      ...interceptWindow,
+      actors: interceptWindow.actors.map((actor) => actor.id === PLAYER_ID
+        ? { ...actor, responseQuotaUsed: actor.maxResponseQuota }
+        : actor),
+    };
+
+    const result = advanceAutoDm(exhausted, PLAYER_ID);
+
+    assert.equal(result.decision, "skip_intercept");
+    assert.equal(result.state.phase, "react_window");
+    assert.match(result.message, /没有合法截击或响应额度/);
   });
 
   it("does not throw or jump phases for stale and repeated calls", () => {

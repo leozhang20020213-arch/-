@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { createSeedState } from "../data/seed";
+import { createSeedState as createBaseSeedState } from "../data/seed";
 import {
+  advanceTurn,
   applyOutcome,
   applyStatusEffect,
   calculateSlotValues,
@@ -34,6 +35,19 @@ import { validateLanMessage, validateStatusRecord } from "../rules/schema";
 import type { StatusEffect, SlotValues, Move, Actor, CombatState } from "./types";
 
 const fixedRoll = () => 4;
+
+// Most engine cases below exercise 沈青's authored moves rather than initiative
+// ordering. Keep those fixtures explicitly on his turn; initiative itself has a
+// dedicated test suite and unified-round cases below use the unmodified seed.
+function createSeedState(): CombatState {
+  const state = createBaseSeedState();
+  return {
+    ...state,
+    actors: state.actors.map((actor) => actor.id === "pc-wei"
+      ? { ...actor, tableAttrs: { ...actor.tableAttrs, 身势: 3 } }
+      : actor),
+  };
+}
 
 describe("combat engine", () => {
   // ============================================================
@@ -104,6 +118,7 @@ describe("combat engine", () => {
 
   it("forms, reacts, and applies outcome", () => {
     let state = enterScene(createSeedState(), fixedRoll);
+    state = { ...state, activeActorId: "enemy-short-blade" };
     // 短兵客 declares WG002 (回潮压刃, baseDamage:5) against 沈青
     // sb-d1(raw)=4, sb-d2(yang)=4, sb-d3(yang)=4 → 阴值=4, 阳值=8
     state = declareAction(state, "enemy-short-blade", "pc-shen-qing", "WG002", ["sb-d1", "sb-d2", "sb-d3"], {
@@ -133,6 +148,7 @@ describe("combat engine", () => {
 
   it("uses an explicit player response slot allocation for raw qi triggers", () => {
     let state = enterScene(createSeedState(), fixedRoll);
+    state = { ...state, activeActorId: "enemy-short-blade" };
     state = declareAction(
       state,
       "enemy-short-blade",
@@ -151,7 +167,7 @@ describe("combat engine", () => {
     );
     assert.equal(state.pendingAction?.preventedDamage, 5);
 
-    let invalid = enterScene(createSeedState(), fixedRoll);
+    let invalid = { ...enterScene(createSeedState(), fixedRoll), activeActorId: "enemy-short-blade" };
     invalid = declareAction(
       invalid,
       "enemy-short-blade",
@@ -562,7 +578,7 @@ describe("combat engine", () => {
     );
   });
 
-  it("active tiaoxi rerolls dice values", () => {
+  it("active tiaoxi preserves dice values and consumes the main action", () => {
     let state = enterScene(createSeedState(), fixedRoll);
     // Get dice into QI_REST — WG001 is formal, needs both yin and yang slots
     state = declareAction(state, "pc-shen-qing", "enemy-short-blade", "WG001", ["pc-d1", "pc-d2"], {
@@ -574,16 +590,49 @@ describe("combat engine", () => {
     const beforeDie = state.dice.find((d) => d.id === "pc-d1");
     assert.equal(beforeDie?.zone, "QI_REST");
     assert.equal(beforeDie?.value, 4);
-    // Active tiaoxi (active=true) — uses a different roll function
+    // Active 调息 ignores the legacy roll callback and keeps the established face.
     const rerollFn = () => 5;
     state = endRound(state);
     state = regulateBreath(state, "pc-shen-qing", ["pc-d1"], true, rerollFn, "pc-d3");
     const afterDie = state.dice.find((d) => d.id === "pc-d1");
     assert.equal(afterDie?.zone, "QI_SEA");
-    // Active tiaoxi rerolls the value
-    assert.equal(afterDie?.value, 5);
+    assert.equal(afterDie?.value, 4);
     assert.equal(state.dice.find((d) => d.id === "pc-d3")?.zone, "QI_REST");
     assert.equal(state.phase, "round_end");
+  });
+
+  it("keeps one unified actor queue and runs round maintenance only after everyone acts", () => {
+    let state = enterScene(createBaseSeedState(), fixedRoll);
+    const order = [...state.initiativeOrder];
+    assert.equal(state.activeActorId, order[0]);
+
+    for (let index = 0; index < order.length; index += 1) {
+      state = { ...state, phase: "round_end" };
+      state = advanceTurn(state);
+      if (index < order.length - 1) {
+        assert.equal(state.round, 1);
+        assert.equal(state.activeActorId, order[index + 1]);
+        assert.deepEqual(state.actedActorIds, order.slice(0, index + 1));
+      }
+    }
+
+    assert.equal(state.round, 2);
+    assert.equal(state.activeActorId, order[0]);
+    assert.deepEqual(state.actedActorIds, []);
+    assert.equal(state.actors.every((actor) => actor.responseQuotaUsed === 0), true);
+  });
+
+  it("rejects out-of-turn declarations at the authoritative engine boundary", () => {
+    const state = enterScene(createBaseSeedState(), fixedRoll);
+    assert.notEqual(state.activeActorId, "pc-shen-qing");
+    assert.throws(() => declareAction(
+      state,
+      "pc-shen-qing",
+      "enemy-short-blade",
+      "WG001",
+      ["pc-d1", "pc-d2"],
+      { yinSlotDiceIds: ["pc-d1"], yangSlotDiceIds: ["pc-d2"] },
+    ), /不是当前行动者/);
   });
 
   it("removes temporary qi after action and response spending", () => {
@@ -611,6 +660,7 @@ describe("combat engine", () => {
     let responseState = enterScene(createSeedState(), fixedRoll);
     responseState = {
       ...responseState,
+      activeActorId: "enemy-short-blade",
       dice: responseState.dice.map((die) => die.id === "pc-d1"
         ? { ...die, temporary: true, zone: "TEMP_QI" as const }
         : die),

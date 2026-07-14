@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   applyOutcome,
+  advanceTurn,
   canDeclareAction,
   changeMomentum,
   commitDiceRollResults,
+  confirmInitiative,
   declareAction,
   dmSetDistance,
   dmOverride,
-  endRound,
   enterScene,
   equipItem,
   expireSource,
   formMove,
   getBasicActionAvailability,
+  prepareCombatRound,
   regulateBreath,
   resolveInterceptSuccess,
   resolveReact,
@@ -183,7 +185,7 @@ export function App() {
   const [rollRequest, setRollRequest] = useState<DiceRollRequest | null>(null);
   const [prompt, setPrompt] = useState<PromptState | null>(null);
   const [selectedCombatantId, setSelectedCombatantId] = useState<string | undefined>();
-  const [actedActorIds, setActedActorIds] = useState<Set<string>>(new Set());
+  const actedActorIds = useMemo(() => new Set(state.actedActorIds), [state.actedActorIds]);
   const [selectedBasicAction, setSelectedBasicAction] = useState<BasicActionType | null>(null);
   const [autoDmStatus, setAutoDmStatus] = useState("");
   const [selectedSceneAction, setSelectedSceneAction] = useState<SceneActionType>("observe");
@@ -204,6 +206,12 @@ export function App() {
   useEffect(() => saveCombatState(state), [state]);
   useEffect(() => saveAppSession(session), [session]);
   useEffect(() => setSceneDmStatus(""), [session.playMode]);
+
+  useEffect(() => {
+    if (rollRequest || session.identity !== "player" || !session.autoDmEnabled || session.route !== "playerScene") return;
+    const poolDice = state.dice.filter((die) => die.zone === "QI_POOL" && !die.temporary);
+    if (poolDice.length > 0) setRollRequest({ dice: poolDice, mode: "enterScene" });
+  }, [rollRequest, session.autoDmEnabled, session.identity, session.route, state.dice]);
 
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
@@ -262,8 +270,8 @@ export function App() {
   });
 
   useEffect(() => {
-    const isPlayerCombat = session.route === "playerCombat" || session.route === "player";
-    if (!session.autoDmEnabled || session.identity !== "player" || !isPlayerCombat) {
+    const isPlayerDesk = session.route === "playerScene" || session.route === "playerCombat" || session.route === "player";
+    if (!session.autoDmEnabled || session.identity !== "player" || !isPlayerDesk || state.turnPaused) {
       setAutoDmStatus("");
       return;
     }
@@ -278,7 +286,7 @@ export function App() {
     const timer = window.setTimeout(() => {
       setState(step.state);
       setAutoDmStatus(step.message.trim());
-    }, 650);
+    }, 420);
     return () => window.clearTimeout(timer);
   }, [playerActorId, session.autoDmEnabled, session.identity, session.route, state]);
 
@@ -355,7 +363,6 @@ export function App() {
         setState(clearCombatState());
         setSession(clearAppSession());
         clearActionDraft();
-        setActedActorIds(new Set());
       },
     });
   }
@@ -363,7 +370,6 @@ export function App() {
   function startNewSoloStory() {
     setState(clearCombatState());
     clearActionDraft();
-    setActedActorIds(new Set());
     setSelectedSceneAction("observe");
     setSelectedSceneTarget("");
     setSceneApproach("");
@@ -558,15 +564,8 @@ export function App() {
       setPrompt({ title: "尚未取得交锋条件", message: "需要先查明足够线索或抵近仓门。自动 DM 会在裁定中明确显示解锁条件。" });
       return;
     }
-    const poolDice = state.dice.filter(
-      (die) => die.zone === "QI_POOL" && !die.temporary &&
-        (session.identity === "dm" || session.autoDmEnabled || die.ownerId === playerActorId),
-    );
-    if (poolDice.length === 0) {
-      go(nextRoute, { gameMode: "combat" });
-      return;
-    }
-    setRollRequest({ dice: poolDice, mode: "enterScene", nextRoute });
+    patch((current) => confirmInitiative(prepareCombatRound(current)));
+    go(nextRoute, { gameMode: "combat" });
   }
 
   function commitRollRequest(results: DiceRollResult[]) {
@@ -575,7 +574,11 @@ export function App() {
       const prepared = rollRequest.mode === "enterScene" && (session.identity === "dm" || session.autoDmEnabled)
         ? enterScene(current, () => 1)
         : current;
-      return commitDiceRollResults(prepared, results);
+      const committed = commitDiceRollResults(prepared, results);
+      // The embedded 3D roll supplies the authoritative faces. Rebuild the
+      // scene initiative after those faces arrive; the temporary placeholder
+      // values used to open the scene must never decide who already acted.
+      return rollRequest.mode === "enterScene" ? confirmInitiative(committed) : committed;
     });
     if (rollRequest.nextRoute) go(rollRequest.nextRoute, { gameMode: "combat" });
     setRollRequest(null);
@@ -613,8 +616,14 @@ export function App() {
     const narrationProvider = session.aiNarrationEnabled
       ? createHttpNarrationProvider(session.aiNarrationEndpoint)
       : undefined;
-    const next = await resolveSceneActionWithNarration(state, request, { narrationProvider });
-    setState(next);
+    const resolved = await resolveSceneActionWithNarration(state, request, { narrationProvider });
+    const next = { ...resolved, phase: "round_end" as const };
+    if (!state.scene.combatUnlocked && next.scene.combatUnlocked) {
+      setState(confirmInitiative(prepareCombatRound(next)));
+      go("playerCombat", { gameMode: "combat" });
+    } else {
+      setState(next);
+    }
     setSelectedSceneTarget("");
     setSceneApproach("");
     setSceneDmStatus(narrationProvider ? "裁定完成；AI 不可用时已自动使用本地规则叙述。" : "裁定完成；本地规则核心已写入状态与日志。 ");
@@ -821,6 +830,9 @@ export function App() {
             actorId={playerActorId}
             onEnterCombat={() => enterCombatWithSceneRoll("playerCombat")}
             onStartScene={requestSceneRoll}
+            onIntercept={interceptPending}
+            onReact={reactPending}
+            onSkipResponse={skipPendingResponse}
           />
         ) : null}
         {(session.route === "playerCombat" || session.route === "player") ? (
@@ -854,7 +866,7 @@ export function App() {
             onReact={reactPending}
             onSkipResponse={skipPendingResponse}
             onOutcome={() => patch((current) => applyOutcome(current))}
-            onEndRound={() => patch((current) => endRound(current))}
+            onEndRound={() => patch((current) => advanceTurn(current))}
             onMomentum={(actorId, momentum) => patch((current) => changeMomentum(current, actorId, momentum))}
             onExpireSource={() => patch((current) => expireSource(current, "短兵客·雨步"))}
             onOverride={() => patch((current) => dmOverride(current, dmNote, true))}
@@ -1336,13 +1348,28 @@ function PlayerSceneDesk(props: DeskProps & {
   actorId: string;
   onStartScene: () => void;
   onEnterCombat: () => void;
+  onIntercept: (
+    responseId?: string,
+    diceIds?: string[],
+    slots?: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) => void;
+  onReact: (
+    responseId?: string,
+    diceIds?: string[],
+    slots?: { yinSlotDiceIds: string[]; yangSlotDiceIds: string[] },
+  ) => void;
+  onSkipResponse: () => void;
 }) {
   const actor = props.state.actors.find((item) => item.id === props.actorId) ?? props.state.actors[0];
-  const targets = props.state.scene.elements.filter((element) => element.public && element.interactionIds.includes(props.selectedSceneAction));
-  const selectedTarget = targets.find((target) => target.id === props.selectedSceneTarget) ?? targets[0];
-  const preview = previewSceneAction(props.state, props.selectedSceneAction, selectedTarget?.id);
-  const resolution = props.state.scene.lastResolution;
-  const isSolo = props.session.playMode === "solo";
+  const enemies = props.state.actors.filter((item) => item.side !== "player");
+  const selectedMove = props.selectedBasicAction ? undefined : actor.moves.find((move) => move.id === props.selectedMoveId);
+  const targets = targetCandidatesFor(props.state, actor, selectedMove);
+  const targetableActorIds = selectedMove ? targets.map((target) => target.id) : [];
+  const selectedEnemy = enemies.find((enemy) => enemy.id === props.selectedCombatantId);
+  const ownsResponseWindow = Boolean(
+    props.state.pendingAction?.targetId === actor.id
+    && (props.state.phase === "intercept_window" || props.state.phase === "react_window"),
+  );
 
   return (
     <CombatShell
@@ -1359,95 +1386,59 @@ function PlayerSceneDesk(props: DeskProps & {
           actedActorIds={props.actedActorIds}
         />
       }
-      left={
-        <aside className="scene-side-column">
-          <section className="panel scene-actor-summary">
-            <p className="eyebrow">我的行走</p>
-            <h2>{actor.name}</h2>
-            <div className="scene-vitals"><span>气血 {actor.hp}/{actor.maxHp}</span><span>势 {actor.momentum}</span></div>
-          </section>
-          <section className="panel scene-facts">
-            <h3>许可与资源</h3>
-            {[...props.state.scene.permissions, ...props.state.scene.resources].length ? (
-              [...props.state.scene.permissions, ...props.state.scene.resources].map((fact) => (
-                <article className={fact.consumed ? "scene-fact consumed" : "scene-fact"} key={fact.id}>
-                  <strong>{fact.name}</strong><small>{fact.description}</small>
-                </article>
-              ))
-            ) : <p className="empty-copy">尚未取得场景许可或事实资源。</p>}
-          </section>
-          <section className="panel scene-tracks-vertical">
-            <h3>公开轨道</h3>
-            {props.state.tracks.map((track) => (
-              <div className="track" key={track.id}>
-                <span>{track.name}</span><meter min={0} max={track.max} value={track.value} /><small>{track.value}/{track.max}</small>
-              </div>
-            ))}
-          </section>
-        </aside>
-      }
+      left={<LeftCombatPanel actor={actor} state={props.state} />}
+      leftCollapsible
+      leftInitiallyCollapsed
+      leftCollapsedLabel="江湖卷宗"
       center={
-        <main className="scene-main-column">
-          <section className="scene-stage">
-            <div className="scene-stage-heading">
-              <div><p className="eyebrow">第 {props.state.scene.act} 幕 · {props.state.scene.timeWindow}</p><h2>{props.state.scene.location}</h2></div>
-              <span className={props.state.scene.combatUnlocked ? "combat-gate ready" : "combat-gate"}>{props.state.scene.combatUnlocked ? "交锋入口已取得" : "交锋入口未明"}</span>
+        <CenterCombatPanel
+          stage={
+            <div className="scene-confrontation-stage">
+              <header className="scene-context-ribbon">
+                <div><small>第{props.state.scene.act}幕 · {props.state.scene.timeWindow}</small><strong>{props.state.scene.location}</strong></div>
+                <div className="scene-token-row" aria-label="场景对象">
+                  {props.state.scene.elements.filter((element) => element.public).map((element) => (
+                    <button key={element.id} type="button" title={element.description} onDoubleClick={() => props.setSelectedSceneTarget(element.id)}><i>{element.kind === "person" ? "人" : element.kind === "object" ? "物" : "景"}</i>{element.name}</button>
+                  ))}
+                </div>
+                {props.state.tracks.map((track) => <span className="scene-track-token" key={track.id} title={`${track.description}\n${track.triggerOutcome ?? ""}`}>{track.name}<b>{track.value}/{track.max}</b></span>)}
+              </header>
+              <CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} targetableActorIds={targetableActorIds} onSelect={(id) => { props.setSelectedCombatantId(id); if (targetableActorIds.includes(id)) props.setSelectedTargetId(id); }} selectedMove={selectedMove} />
             </div>
-            <p className="scene-narration">{props.state.scene.narration}</p>
-            <div className="scene-boundary"><strong>场景目标</strong><span>{props.state.sceneGoal}</span><strong>边界</strong><span>{props.state.scene.boundary}</span></div>
-            <div className="scene-elements">
-              {props.state.scene.elements.map((element) => (
-                <article className={`scene-element kind-${element.kind}`} key={element.id}>
-                  <span>{element.kind === "person" ? "人" : element.kind === "object" ? "物" : "景"}</span>
-                  <div><strong>{element.name}</strong><small>{element.description}</small></div>
-                </article>
-              ))}
-            </div>
-          </section>
-          <section className="scene-action-workbench">
-            <div className="scene-action-cards" role="tablist" aria-label="情景行动">
-              {SCENE_ACTIONS.map((action) => (
-                <button className={props.selectedSceneAction === action.id ? "scene-action-card selected" : "scene-action-card"} type="button" role="tab" aria-selected={props.selectedSceneAction === action.id} key={action.id} onClick={() => { props.setSelectedSceneAction(action.id); props.setSelectedSceneTarget(""); }}>
-                  <strong>{action.name}</strong><small>{action.shortDescription}</small><em>{action.risk}风险</em>
-                </button>
-              ))}
-            </div>
-            <div className="scene-action-form">
-              <label>行动目标<select value={selectedTarget?.id ?? ""} onChange={(event) => props.setSelectedSceneTarget(event.target.value)}>{targets.map((target) => <option key={target.id} value={target.id}>{target.name}</option>)}</select></label>
-              <label className="scene-approach">办法、法门或使用的物品<input value={props.sceneApproach} placeholder="例如：借镖局信物稳住脚夫，再沿门边水痕靠近" onChange={(event) => props.setSceneApproach(event.target.value)} /></label>
-              <div className="scene-preview">{preview.map((note) => <span key={note}>{note}</span>)}</div>
-              <button className="primary-action" type="button" disabled={props.readOnly || !selectedTarget || props.hasPendingSceneRequest} title={props.hasPendingSceneRequest ? "已有行动正在等待真人 DM 裁定" : undefined} onClick={() => void props.submitSceneAction()}>{isSolo ? "提交给自动 DM 裁定" : props.hasPendingSceneRequest ? "等待真人 DM 裁定" : "提交给真人 DM"}</button>
-            </div>
-          </section>
-        </main>
+          }
+          actionDeck={<ActionPanel {...props} actor={actor} targets={targets} />}
+          qiZone={
+            <QiDiceDock
+              state={props.state}
+              actorDice={props.state.dice.filter((die) => die.ownerId === actor.id)}
+              selectedMove={selectedMove}
+              hasSelectedTarget={Boolean(props.selectedTargetId)}
+              yinSlotIds={props.slotDice.yin}
+              yangSlotIds={props.slotDice.yang}
+              onAssignDie={props.assignDieToSlot}
+              onRemoveDie={props.removeDieFromSlot}
+              onRollToSea={!props.readOnly ? props.onStartScene : undefined}
+              declarationEnabled={Boolean(!props.readOnly && !props.selectedBasicAction && selectedMove && props.selectedTargetId && actor.id === props.state.activeActorId)}
+              inactiveReason={!selectedMove ? "选择一张情景或武学卡。" : !props.selectedTargetId ? "双击场上人物确定目标。" : undefined}
+              onConfirm={() => {
+                if (!selectedMove || !props.selectedTargetId) return;
+                props.declareFor(actor.id, props.selectedTargetId, selectedMove.id);
+              }}
+            />
+          }
+        />
       }
       right={
-        <aside className="scene-resolution-column">
-          <section className="panel auto-dm-panel">
-            <div className="auto-dm-title"><span>DM</span><div><p className="eyebrow">{isSolo ? "本地规则核心" : "房间主持通道"}</p><h2>{isSolo ? "自动主持" : "真人 DM 裁定"}</h2></div></div>
-            <p className="automation-state">{props.sceneDmStatus || (isSolo ? "等待玩家行动；所有裁定都将列出规则依据与状态变化。" : "提交后由真人 DM 批准、修改或驳回；玩家端不会接触隐藏信息。")}</p>
-            {resolution ? (
-              <article className={`scene-resolution ${resolution.ruling}`}>
-                <strong>{resolution.ruling === "approved" ? "行动成立" : resolution.ruling === "modified" ? "调整后成立" : "行动驳回"}</strong>
-                <p>{resolution.narration}</p>
-                <dl><dt>规则依据</dt><dd>{resolution.ruleBasis}</dd><dt>状态变化</dt><dd>{resolution.changes.length ? resolution.changes.join("；") : "无"}</dd><dt>下一步</dt><dd>{resolution.nextPrompt}</dd></dl>
-              </article>
-            ) : null}
-          </section>
-          <section className="panel scene-next-step">
-            <h3>推进状态</h3>
-            <p>情景回合 {props.state.scene.turn}</p>
-            <button className="primary-action" type="button" disabled={!isSolo || !props.state.scene.combatUnlocked || props.readOnly} title={!isSolo ? "房间交锋由真人 DM 统一开启" : !props.state.scene.combatUnlocked ? "尚未取得交锋条件" : undefined} onClick={props.onEnterCombat}>{isSolo ? "进入交锋并投掷气骰" : "等待 DM 开启交锋"}</button>
-            {!isSolo ? <small>真人 DM 将按场景边界统一切换交锋并整体投骰。</small> : !props.state.scene.combatUnlocked ? <small>搜集 3 点解密，或先取得“抵近仓门”许可。</small> : <small>进入后自动 DM 接管敌方选招、目标、配骰与落果。</small>}
-          </section>
-        </aside>
+        <RightCombatPanel actions={
+          ownsResponseWindow ? <PlayerResponseWorkbench state={props.state} actor={actor} readOnly={props.readOnly} onSubmit={props.state.phase === "intercept_window" ? props.onIntercept : props.onReact} onSkip={props.onSkipResponse} />
+            : selectedEnemy ? <EnemyPublicDrawer actor={selectedEnemy} mode="player" onClose={() => props.setSelectedCombatantId(undefined)} />
+              : <section className="panel scene-inspector"><span className="context-kicker">情景交锋</span><h2>{props.state.sceneGoal}</h2><p>{props.state.scene.narration}</p><div className="scene-fact-chips">{[...props.state.scene.permissions, ...props.state.scene.resources].filter((fact) => !fact.consumed).map((fact) => <span key={fact.id} title={fact.description}>{fact.name}</span>)}</div></section>
+        } />
       }
+      rightCollapsed={!ownsResponseWindow && !selectedEnemy}
+      rightCollapsedLabel="情景情报"
       bottom={
-        <div className="scene-status-bar">
-          <span>{props.session.playMode === "solo" ? "单人故事 · 自动 DM 主持" : "房间玩家 · 等待真人 DM"}</span>
-          <span>当前地点：{props.state.scene.location}</span>
-          <span>{props.state.scene.completed ? "场景已收束" : "场景进行中"}</span>
-        </div>
+        <PhaseActionBar state={props.state} isDM={false} readOnly={props.readOnly} canCurrentUserRespond={props.state.pendingAction?.targetId === actor.id} responseHandledInWorkbench automationMessage={props.session.autoDmEnabled ? props.autoDmStatus : undefined} onEnterDeclaration={props.onStartScene} onIntercept={props.onIntercept} onReact={props.onReact} onSkipResponse={props.onSkipResponse} />
       }
       drawer={props.activeDrawer ? <DrawerLayer {...props} actor={actor} role="player" /> : null}
     />
@@ -1705,7 +1696,7 @@ function DmSceneDesk(props: DeskProps & {
       right={
         <aside className="dm-scene-tools">
           <section className="panel"><p className="eyebrow">隐藏层</p><h2>未公开对象</h2>{hiddenElements.length ? hiddenElements.map((element) => <article className="hidden-scene-item" key={element.id}><strong>{element.name}</strong><small>{element.description}</small><button type="button" onClick={() => revealElement(element.id)}>公开并记日志</button></article>) : <p className="empty-copy">当前无隐藏对象。</p>}</section>
-          <section className="panel"><h2>主持裁定与广播</h2><label>私有依据 / 广播内容<textarea value={props.dmNote} onChange={(event) => props.setDmNote(event.target.value)} /></label><div className="flow-buttons"><button type="button" onClick={() => props.setDmNote(props.state.scene.lastResolution?.nextPrompt || "建议：先确认玩家目标是否合法，再根据危机增长条件给出代价。")}>请求自动 DM 建议</button><button type="button" onClick={props.onOverride}>广播并写入日志</button><button className="primary-action" type="button" onClick={props.onEnterCombat}>进入交锋并整体投骰</button></div><small>自动 DM 建议不会自动提交；所有手动覆盖均保留主持备注。</small></section>
+          <section className="panel"><h2>主持裁定与广播</h2><label>私有依据 / 广播内容<textarea value={props.dmNote} onChange={(event) => props.setDmNote(event.target.value)} /></label><div className="flow-buttons"><button type="button" onClick={() => props.setDmNote(props.state.scene.lastResolution?.nextPrompt || "建议：先确认玩家目标是否合法，再根据危机增长条件给出代价。")}>请求自动 DM 建议</button><button type="button" onClick={props.onOverride}>广播并写入日志</button><button className="primary-action" type="button" onClick={props.onEnterCombat}>切换战斗表现</button></div><small>沿用当前轮次与气海，不重新投骰。自动 DM 建议不会自动提交；所有手动覆盖均保留主持备注。</small></section>
         </aside>
       }
       bottom={
@@ -1717,6 +1708,82 @@ function DmSceneDesk(props: DeskProps & {
 }
 
 function DmCombatDesk(props: DeskProps & {
+  dmNote: string;
+  setDmNote: (value: string) => void;
+  onStartScene: () => void;
+  onIntercept: () => void;
+  onReact: () => void;
+  onSkipResponse: () => void;
+  onOutcome: () => void;
+  onEndRound: () => void;
+  onMomentum: (actorId: string, momentum: Actor["momentum"]) => void;
+  onExpireSource: () => void;
+  onOverride: () => void;
+}) {
+  const activeActor = props.state.actors.find((actor) => actor.id === props.state.activeActorId) ?? props.state.actors[0];
+  const selectedMove = activeActor.moves.find((move) => move.id === props.selectedMoveId);
+  const targets = targetCandidatesFor(props.state, activeActor, selectedMove);
+  const targetableActorIds = selectedMove ? targets.map((target) => target.id) : [];
+  const selectedActor = props.state.actors.find((actor) => actor.id === props.selectedCombatantId);
+  const availableDice = props.state.dice.filter((die) => die.ownerId === activeActor.id && (die.zone === "QI_SEA" || die.zone === "TEMP_QI"));
+  const pending = props.state.pendingAction;
+  const pendingActor = props.state.actors.find((actor) => actor.id === pending?.actorId);
+  const pendingTarget = props.state.actors.find((actor) => actor.id === pending?.targetId);
+  const pendingMove = pendingActor?.moves.find((move) => move.id === pending?.moveId);
+
+  function recordDmState(label: string, updater: (current: CombatState) => CombatState) {
+    props.patch((current) => {
+      const changed = updater(current);
+      return {
+        ...changed,
+        logs: [{ id: `DM-${Date.now()}`, type: "DM_OVERRIDE", round: current.round, message: `${label}｜${props.dmNote || "主持台操作"}`, public: false, createdAt: Date.now() }, ...changed.logs],
+      };
+    });
+  }
+
+  function assignDmDie(die: QiDie) {
+    if (die.nature === "yin") props.assignDieToSlot(die.id, "yin");
+    else if (die.nature === "yang") props.assignDieToSlot(die.id, "yang");
+    else props.assignDieToSlot(die.id, props.slotDice.yin.length <= props.slotDice.yang.length ? "yin" : "yang");
+  }
+
+  return (
+    <CombatShell
+      top={<TopCombatBar session={props.session} state={props.state} activeDrawer={props.activeDrawer} setActiveDrawer={props.setActiveDrawer} debugView={props.debugView} setDebugView={props.setDebugView} onHome={() => props.go("home")} onReset={props.resetAll} actedActorIds={props.actedActorIds} />}
+      left={
+        <aside className="dm-host-ledger">
+          <header><small>真人 DM · 私有卷宗</small><h2>{props.state.sceneName}</h2><span>{props.state.scene.timeWindow}</span></header>
+          <section><h3>场景边界</h3><p>{props.state.scene.boundary}</p><h3>收束条件</h3><p>{props.state.scene.completed ? props.state.scene.ending : props.state.sceneGoal}</p></section>
+          <section className="dm-host-tracks"><h3>危机与解密</h3>{props.state.tracks.map((track) => <article key={track.id} title={`${track.description}\n${track.triggerOutcome ?? ""}`}><div><span>{track.name}</span><b>{track.value}/{track.max}</b></div><meter min={0} max={track.max} value={track.value} /><div className="mini-stepper"><button type="button" onDoubleClick={() => recordDmState(`${track.name}-1`, (current) => ({ ...current, tracks: current.tracks.map((item) => item.id === track.id ? { ...item, value: Math.max(0, item.value - 1) } : item) }))}>−</button><button type="button" onDoubleClick={() => recordDmState(`${track.name}+1`, (current) => ({ ...current, tracks: current.tracks.map((item) => item.id === track.id ? { ...item, value: Math.min(item.max, item.value + 1) } : item) }))}>＋</button></div></article>)}</section>
+          <section className="dm-private-cast"><h3>隐藏意图</h3>{props.state.actors.filter((actor) => actor.side !== "player").map((actor) => <button type="button" key={actor.id} onClick={() => props.setSelectedCombatantId(actor.id)}><strong>{actor.name}</strong><span>{actor.hiddenGoal || actor.behaviorHint || "按策略档案行动"}</span></button>)}</section>
+        </aside>
+      }
+      center={
+        <main className="dm-shared-monitor">
+          <header><div><small>玩家共享画面监看</small><strong>{props.state.encounterMode === "scene" ? "情景交锋" : "战斗交锋"}</strong></div><span className={props.state.turnPaused ? "paused" : "live"}>{props.state.turnPaused ? "已暂停" : "同步中"}</span></header>
+          <div className="dm-monitor-stage"><CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} targetableActorIds={targetableActorIds} onSelect={(id) => { props.setSelectedCombatantId(id); if (targetableActorIds.includes(id)) props.setSelectedTargetId(id); }} selectedMove={selectedMove} /></div>
+          <section className="dm-action-stack">
+            <span>当前时点</span><strong>{phaseLabel(props.state.phase)}</strong>
+            {pending ? <p>{pendingActor?.name}「{pendingMove?.name}」→ {pendingTarget?.name} · 锁气{pending.diceIds.length}</p> : <p>{activeActor.name} 正在行动，尚无宣言。</p>}
+            <div>{props.state.phase === "intercept_window" ? <><button type="button" onClick={props.onIntercept}>代为截击</button><button type="button" onClick={props.onSkipResponse}>关闭截击窗</button></> : null}{props.state.phase === "react_window" ? <><button type="button" onClick={props.onReact}>代为应招</button><button type="button" onClick={props.onSkipResponse}>放弃应招</button></> : null}{props.state.phase === "outcome" ? <button className="dm-outcome-confirm" type="button" onClick={props.onOutcome}>落果确认印</button> : null}{props.state.phase === "round_end" ? <button type="button" onClick={props.onEndRound}>推进序列</button> : null}</div>
+          </section>
+        </main>
+      }
+      right={
+        <aside className="dm-command-column">
+          <section className="dm-command-head"><div><small>当前行动者</small><h2>{activeActor.name}</h2><span>{activeActor.side === "player" ? "玩家角色" : "自动角色"} · {activeActor.momentum}</span></div><button type="button" onClick={() => recordDmState(props.state.turnPaused ? "恢复行动序列" : "暂停行动序列", (current) => ({ ...current, turnPaused: !current.turnPaused }))}>{props.state.turnPaused ? "恢复" : "暂停"}</button></section>
+          <section className="dm-takeover"><header><h3>手动接管</h3><small>双击招式、目标与气骰</small></header><div className="dm-move-rack">{activeActor.moves.map((move) => <button type="button" className={selectedMove?.id === move.id ? "selected" : ""} key={move.id} title={`${move.targetRange}\n${move.baseEffect}`} onDoubleClick={() => props.setSelectedMoveId(move.id)}><b>{move.name}</b><span>{move.minDice}骰 · {move.qiNatureThreshold}</span></button>)}</div><div className="dm-dice-rack">{availableDice.map((die) => <button type="button" className={props.slotDice.yin.includes(die.id) ? "yin" : props.slotDice.yang.includes(die.id) ? "yang" : ""} key={die.id} title={`${die.sourceName}\n双击自动入合法槽`} onDoubleClick={() => assignDmDie(die)}>{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"}<b>{die.value}</b></button>)}</div><div className="dm-slot-summary"><span>阴槽 {props.slotDice.yin.length}</span><span>阳槽 {props.slotDice.yang.length}</span><span>{props.selectedTargetId ? `目标 ${props.state.actors.find((actor) => actor.id === props.selectedTargetId)?.name}` : "双击场上目标"}</span></div><button className="dm-takeover-confirm" type="button" disabled={!selectedMove || !props.selectedTargetId || props.slotDice.yin.length + props.slotDice.yang.length < (selectedMove?.minDice ?? 99)} onClick={() => selectedMove && props.selectedTargetId && props.declareFor(activeActor.id, props.selectedTargetId, selectedMove.id)}>确认接管宣言</button></section>
+          <section className="dm-ruling-box"><h3>裁定、建议与广播</h3><textarea value={props.dmNote} onChange={(event) => props.setDmNote(event.target.value)} placeholder="填写简短理由或广播内容" /><div><button type="button" onClick={() => props.setDmNote(`建议：${activeActor.name}优先${activeActor.aiProfile?.objective || activeActor.behaviorHint || "维持当前目标"}；建议不会自动提交。`)}>自动DM建议</button><button type="button" onClick={props.onOverride}>广播确认印</button></div></section>
+          {selectedActor ? <section className="dm-selected-inspector"><button type="button" aria-label="关闭检查器" onClick={() => props.setSelectedCombatantId(undefined)}>×</button><strong>{selectedActor.name}</strong><span>气血 {selectedActor.hp}/{selectedActor.maxHp} · 势 {selectedActor.momentum}</span><p>{selectedActor.hiddenGoal || selectedActor.publicNote}</p></section> : null}
+        </aside>
+      }
+      bottom={<nav className="dm-hidden-tray" aria-label="主持隐藏牌匣"><span>隐藏牌匣</span><button type="button" onClick={() => props.setActiveDrawer("dmEnemies")}>NPC / 敌人</button><button type="button" onClick={() => props.setActiveDrawer("dmHidden")}>线索 / 事件</button><button type="button" onClick={() => props.setActiveDrawer("dmScene")}>动景 / 触发器</button><button type="button" onClick={() => props.setActiveDrawer("dmLog")}>主持日志</button></nav>}
+      drawer={props.activeDrawer ? <DrawerLayer {...props} actor={activeActor} role="dm" /> : null}
+    />
+  );
+}
+
+function LegacyDmCombatDesk(props: DeskProps & {
   dmNote: string;
   setDmNote: (value: string) => void;
   onStartScene: () => void;
@@ -2114,21 +2181,10 @@ function SixRootsSummary({ actor }: { actor: Actor }) {
 
 function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
   const [inspectedMoveId, setInspectedMoveId] = useState<string | null>(null);
-  const selectedMove = props.selectedBasicAction
-    ? undefined
-    : props.actor.moves.find((move) => move.id === props.selectedMoveId);
+  const selectedMove = props.selectedBasicAction ? undefined : props.actor.moves.find((move) => move.id === props.selectedMoveId);
   const inspectedMove = props.actor.moves.find((move) => move.id === inspectedMoveId);
-  const moveAvailability = selectedMove
-    ? canDeclareAction(props.state, props.actor.id, selectedMove.id, {
-        yinSlotDiceIds: props.slotDice.yin,
-        yangSlotDiceIds: props.slotDice.yang,
-      })
-    : { allowed: false, reasons: ["未选择行动"] };
-
-  // Basic action availability
   const regulateBreathAvail = getBasicActionAvailability(props.state, props.actor.id, "regulateBreath");
   const fanzhaoAvail = getBasicActionAvailability(props.state, props.actor.id, "fanzhao");
-
   const isBreathSelected = props.selectedBasicAction === "regulateBreath";
   const isFanzhaoSelected = props.selectedBasicAction === "fanzhao";
   const guideCandidates = props.state.dice.filter((die) =>
@@ -2137,42 +2193,12 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
     die.ownerId === props.actor.id && die.zone === "QI_REST" && !die.temporary);
   const selectedGuideIds = props.selectedDice.filter((id) => guideCandidates.some((die) => die.id === id));
   const selectedRecoveryIds = props.selectedDice.filter((id) => recoveryCandidates.some((die) => die.id === id));
-  const breathConfigured = selectedGuideIds.length === 1 && selectedRecoveryIds.length > 0;
-  const selectedActionReady = Boolean(props.selectedBasicAction || selectedMove);
-  const targetReady = Boolean(props.selectedBasicAction || props.selectedTargetId);
-  const slottedDiceCount = props.slotDice.yin.length + props.slotDice.yang.length;
-  const diceReady = isBreathSelected
-    ? breathConfigured
-    : isFanzhaoSelected
-      ? true
-      : Boolean(
-          selectedMove
-          && slottedDiceCount >= selectedMove.minDice
-          && (selectedMove.timing !== "正式出手" || (props.slotDice.yin.length > 0 && props.slotDice.yang.length > 0)),
-        );
-  const workflowStep = !selectedActionReady ? 1 : !targetReady ? 2 : !diceReady ? 3 : 4;
-
-  // Dynamic confirm button
-  const confirmLabel = isBreathSelected ? "确认调息"
-    : isFanzhaoSelected ? "确认返照"
-    : "确认宣言并锁气";
-
-  const confirmDisabled = props.readOnly ? true
-    : isBreathSelected ? !regulateBreathAvail.usable || !breathConfigured
-    : isFanzhaoSelected ? !fanzhaoAvail.usable
-    : !moveAvailability.allowed;
-
-  const confirmHint = isBreathSelected
-    ? (props.readOnly
-      ? "旁观模式不能确认动作"
-      : !regulateBreathAvail.usable
-        ? regulateBreathAvail.detailReasons.join("、")
-        : "请选择且仅选择1枚息引，并至少选择1枚息库骰取回")
-    : isFanzhaoSelected
-    ? (fanzhaoAvail.usable ? "返照：气海为空时取回最低起投气骰" : fanzhaoAvail.detailReasons.join("、"))
-    : moveAvailability.allowed
-    ? (selectedMove?.baseEffect ?? "")
-    : moveAvailability.reasons.join("、");
+  const breathLimit = 1 + props.actor.innerArts
+    .filter((art) => art.currentLevel > 0)
+    .reduce((sum, art) => sum + Math.max(0, art.regulateBreathBonus ?? 0), 0);
+  const breathConfigured = selectedGuideIds.length === 1
+    && selectedRecoveryIds.length > 0
+    && selectedRecoveryIds.length <= breathLimit;
 
   useEffect(() => {
     if (!inspectedMove) return;
@@ -2187,196 +2213,96 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
     setInspectedMoveId(null);
   }, [props.state.phase, props.state.activeActorId]);
 
-  function handleConfirm() {
-    if (isBreathSelected) {
-      props.executeBasicAction(props.actor.id, "regulateBreath", selectedGuideIds[0], selectedRecoveryIds);
-    } else if (isFanzhaoSelected) {
-      props.executeBasicAction(props.actor.id, "fanzhao");
-    } else {
-      props.declareFor(props.actor.id, props.selectedTargetId, props.selectedMoveId);
-    }
+  function selectHandMove(move: Move, double = false) {
+    props.setSelectedMoveId(move.id);
+    props.setSelectedBasicAction(null);
+    if (double && props.targets.length === 1) props.setSelectedTargetId(props.targets[0].id);
+  }
+
+  function shortDistance(move: Move) {
+    return move.targetRange.match(/贴身|近身|短距|中距|远距/)?.[0] ?? "情景";
   }
 
   return (
-    <section className={`panel combat-action-deck-panel${props.selectedBasicAction ? " is-basic-action" : ""}`}>
-      <div className="panel-title">
-        <img src={iconMap.response} alt="" />
-        <h2>招式与宣言</h2>
-      </div>
-
-      <ol className="declaration-steps" aria-label="宣言步骤">
-        {([
-          [1, "选牌"],
-          [2, "目标"],
-          [3, "配骰"],
-          [4, "宣言"],
-        ] as const).map(([step, label]) => (
-          <li
-            className={`${workflowStep === step ? "current" : ""}${workflowStep > Number(step) ? " complete" : ""}`}
-            key={step}
-            aria-current={workflowStep === step ? "step" : undefined}
-          >
-            <span>{step}</span>{label}
-          </li>
-        ))}
-      </ol>
-
-      {/* Target selection only appears after a move card is chosen. */}
-      {!props.selectedBasicAction && selectedMove && (
-        <div className="form-grid">
-          <label>
-            目标
-            <select value={props.selectedTargetId} onChange={(event) => props.setSelectedTargetId(event.target.value)}>
-              <option value="">请选择合法目标</option>
-              {props.targets.map((target) => (
-                <option key={target.id} value={target.id}>{target.name}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
-
-      {/* Current selection summary */}
-      <div className="action-panel__selection">
-        {props.selectedBasicAction ? (
-          <button className="basic-action-back" type="button" onClick={() => props.setSelectedBasicAction(null)}>
-            ← 返回招式列表
-          </button>
-        ) : null}
-        {isBreathSelected && (
-          <div className="action-summary">
-            <p><strong>当前选择：调息</strong></p>
-            <p className="hint">出手便行 · 消耗主行动：支付1枚息引（临时骰消失），所选息库常规骰重掷入气海。</p>
-            <div className="breath-config" aria-label="调息气骰配置">
-              <div>
-                <strong>① 选择1枚息引</strong>
-                <div className="breath-dice-options">
-                  {guideCandidates.map((die) => (
-                    <button
-                      key={die.id}
-                      type="button"
-                      className={selectedGuideIds.includes(die.id) ? "is-selected" : ""}
-                      onClick={() => {
-                        selectedGuideIds.filter((id) => id !== die.id).forEach(props.toggleDie);
-                        props.toggleDie(die.id);
-                      }}
-                    >{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"} D{die.sides}·{die.value ?? "?"}</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <strong>② 选择取回骰（可多选）</strong>
-                <div className="breath-dice-options">
-                  {recoveryCandidates.map((die) => (
-                    <button
-                      key={die.id}
-                      type="button"
-                      className={selectedRecoveryIds.includes(die.id) ? "is-selected" : ""}
-                      onClick={() => props.toggleDie(die.id)}
-                    >{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"} D{die.sides}·{die.value ?? "?"}</button>
-                  ))}
-                </div>
-              </div>
+    <section className={`combat-action-deck-panel hand-deck${selectedMove ? " has-selected-card" : ""}`} aria-label="招式手牌">
+      {props.selectedBasicAction ? (
+        <div className="basic-action-tray" role="dialog" aria-label={isBreathSelected ? "调息配置" : "返照确认"}>
+          <button className="basic-action-tray__close" type="button" aria-label="返回手牌" onClick={() => props.setSelectedBasicAction(null)}>×</button>
+          <header><strong>{isBreathSelected ? "调息" : "返照"}</strong><span>消耗一次主行动 · 不重掷</span></header>
+          {isBreathSelected ? (
+            <div className="breath-config compact" aria-label="调息气骰配置">
+              <div><small>息引 · 选1</small><div className="breath-dice-options">{guideCandidates.map((die) => (
+                <button key={die.id} type="button" className={selectedGuideIds.includes(die.id) ? "is-selected" : ""} onClick={() => {
+                  selectedGuideIds.filter((id) => id !== die.id).forEach(props.toggleDie);
+                  if (!selectedGuideIds.includes(die.id)) props.toggleDie(die.id);
+                }}>{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"}{die.value}</button>
+              ))}</div></div>
+              <div><small>息库 · 最多{breathLimit}</small><div className="breath-dice-options">{recoveryCandidates.map((die) => (
+                <button key={die.id} type="button" disabled={!selectedRecoveryIds.includes(die.id) && selectedRecoveryIds.length >= breathLimit} className={selectedRecoveryIds.includes(die.id) ? "is-selected" : ""} onClick={() => props.toggleDie(die.id)}>{die.nature === "yin" ? "阴" : die.nature === "yang" ? "阳" : "原"}{die.value}</button>
+              ))}</div></div>
             </div>
-            <p className="hint" style={{ color: regulateBreathAvail.usable ? "var(--shield-green)" : "var(--hp-red)" }}>
-              {breathConfigured ? `已配置：息引1枚，取回${selectedRecoveryIds.length}枚` : regulateBreathAvail.reasonTags.join("、")}
-            </p>
-          </div>
-        )}
-        {isFanzhaoSelected && (
-          <div className="action-summary">
-            <p><strong>当前选择：返照</strong></p>
-            <p className="hint">类型：基础动作 · 目标：自身 · 距离：无</p>
-            <p className="hint">效果：气海为空时取回最低起投气骰</p>
-            <p className="hint" style={{ color: fanzhaoAvail.usable ? "var(--shield-green)" : "var(--hp-red)" }}>
-              {fanzhaoAvail.reasonTags.join("、")}
-            </p>
-          </div>
-        )}
-        {!props.selectedBasicAction && selectedMove && (
-          <p className="hint">{selectedMove.baseEffect}</p>
-        )}
-      </div>
+          ) : <p>{fanzhaoAvail.usable ? "取回息库中最低阶本命骰，保持原点数。" : fanzhaoAvail.detailReasons.join("、")}</p>}
+          <button className="seal-confirm" type="button" disabled={props.readOnly || (isBreathSelected ? !regulateBreathAvail.usable || !breathConfigured : !fanzhaoAvail.usable)} onClick={() => {
+            if (isBreathSelected) props.executeBasicAction(props.actor.id, "regulateBreath", selectedGuideIds[0], selectedRecoveryIds);
+            else props.executeBasicAction(props.actor.id, "fanzhao");
+          }}>{isBreathSelected ? "确认调息" : "确认返照"}</button>
+        </div>
+      ) : null}
 
-      {/* Action cards — compact, gameplay-relevant fields only */}
-      {!props.selectedBasicAction ? <div className={`action-card-grid${selectedMove ? " has-selection" : ""}`}>
-        {/* Normal moves */}
+      <div className="hand-deck__label"><span>{props.actor.name}</span><strong>{selectedMove ? selectedMove.name : "招式手牌"}</strong><small>{selectedMove ? selectedMove.baseEffect : "单击选牌 · 双击推进 · 右键详情"}</small></div>
+      <div className="action-card-grid" role="listbox" aria-label="可用招式">
         {props.actor.moves.map((move) => {
-          const selected = !props.selectedBasicAction && props.selectedMoveId === move.id;
+          const selected = props.selectedMoveId === move.id && !props.selectedBasicAction;
           const moveAvail = canDeclareAction(props.state, props.actor.id, move.id, {
             yinSlotDiceIds: props.slotDice.yin,
             yangSlotDiceIds: props.slotDice.yang,
           });
-          const selectionReasons = moveAvail.reasons.filter(
-            (reason) => !reason.includes("阴槽") && !reason.includes("阳槽"),
-          );
+          const selectionReasons = moveAvail.reasons.filter((reason) => !reason.includes("阴槽") && !reason.includes("阳槽"));
           const canPrepare = selectionReasons.length === 0;
-          const gradeClass = move.designGrade ? `grade-${move.designGrade}` : "";
           return (
             <button
-              className={`action-card ${selected ? "selected" : ""} ${!canPrepare ? "warn" : ""}`}
+              className={`action-card hand-card category-${move.category}${move.hasIntercept ? " has-intercept" : ""}${move.hasReact ? " has-react" : ""}${selected ? " selected" : ""}${!canPrepare ? " disabled-card" : ""}`}
               type="button"
               key={move.id}
-              data-playable={canPrepare ? "true" : "false"}
-              title={[
-                `${move.name} · ${move.timing} · ${move.formPosition}`,
-                `对象/距离：${move.targetRange}`,
-                `装备许可：${move.equipPermission}`,
-                `势条件：${move.allowedShi?.join("、") || "无明示门槛"}`,
-                `气性/投入：${move.qiNatureThreshold} · 最低${move.minDice}枚`,
-                `基础效果：${move.baseEffect}`,
-                ...(move.triggers ?? []).map((trigger) => `${trigger.condition}：${trigger.effect}`),
-                `资源去向：${move.resourceDestination}`,
-              ].join("\n")}
-              onClick={() => {
-                setInspectedMoveId(move.id);
-              }}
+              role="option"
+              aria-selected={selected}
+              data-playable={canPrepare}
+              data-tooltip={canPrepare ? `${move.timing} · ${move.targetRange}\n${move.baseEffect}\n右键查看完整规则` : selectionReasons.slice(0, 3).join("\n")}
+              onClick={() => selectHandMove(move)}
+              onDoubleClick={() => selectHandMove(move, true)}
+              onContextMenu={(event) => { event.preventDefault(); setInspectedMoveId(move.id); }}
             >
-              <span className="card-cost" aria-label={`最低投入${move.minDice}枚气骰`}>{move.minDice}</span>
-              <span className="card-name">{move.name}</span>
-              <span className="card-badges">
-                {move.formPosition !== "无" && <span className="card-badge form">{move.formPosition}</span>}
-                {move.designGrade && <span className={`card-badge ${gradeClass}`}>{move.designGrade}</span>}
-              </span>
+              <span className="card-cost" aria-label={`最低投入${move.minDice}枚`}>{move.minDice}</span>
+              {move.hasIntercept || move.hasReact ? <span className="card-response-marks" aria-label={`${move.hasIntercept ? "可截击" : ""}${move.hasIntercept && move.hasReact ? "、" : ""}${move.hasReact ? "可应招" : ""}`}>{move.hasIntercept ? <i className="intercept-mark">截</i> : null}{move.hasReact ? <i className="react-mark">应</i> : null}</span> : null}
+              <span className="card-art" aria-hidden="true"><i>{move.category === "法门" ? "法" : move.category === "便行" ? "行" : "武"}</i></span>
+              <span className="card-name">{move.name}</span><span className="card-type">{move.category} · {move.formPosition}</span>
               <span className="card-effect">{move.baseEffect}</span>
-              <span className="card-reqs">{move.timing} · {move.qiNatureThreshold}</span>
-              <span className={`card-status ${canPrepare ? "ok" : "no"}`}>
-                {canPrepare ? "点击查看" : "条件不足"}
-              </span>
+              <span className="card-reqs"><b>{shortDistance(move)}</b><b>{move.qiNatureThreshold}</b></span>
+              {!canPrepare ? <span className="card-seal">{selectionReasons[0] ?? "不可用"}</span> : null}
             </button>
           );
         })}
-
-        {/* 调息 card */}
         <button
-          className={`action-card ${isBreathSelected ? "selected" : ""} ${!regulateBreathAvail.usable ? "warn" : ""}`}
+          className={`action-card hand-card category-便行${!regulateBreathAvail.usable ? " disabled-card" : ""}`}
           type="button"
           disabled={props.readOnly}
-          onClick={() => { props.setSelectedBasicAction("regulateBreath"); }}
+          data-tooltip={regulateBreathAvail.usable ? `支付1枚息引\n取回最多${breathLimit}枚\n保持原点数` : regulateBreathAvail.detailReasons.slice(0, 3).join("\n")}
+          onClick={() => props.setSelectedBasicAction("regulateBreath")}
         >
-          <span className="card-name">调息</span>
-          <span className="card-badges"><span className="card-badge form">基础</span></span>
-          <span className="card-reqs">目标：自身 · 从息库回气海</span>
-          <span className={`card-status ${regulateBreathAvail.usable ? "ok" : "no"}`}>
-            {regulateBreathAvail.usable ? "✓ 可用" : regulateBreathAvail.reasonTags.join("、")}
-          </span>
+          <span className="card-cost">1</span><span className="card-art"><i>息</i></span><span className="card-name">调息</span><span className="card-type">特殊便行</span><span className="card-effect">息引换气，不重掷</span><span className="card-reqs"><b>自身</b><b>耗行动</b></span>
+          {!regulateBreathAvail.usable ? <span className="card-seal">{regulateBreathAvail.reasonTags[0]}</span> : null}
         </button>
-
-        {/* 返照 card */}
         <button
-          className={`action-card ${isFanzhaoSelected ? "selected" : ""} ${!fanzhaoAvail.usable ? "warn" : ""}`}
+          className={`action-card hand-card category-便行${!fanzhaoAvail.usable ? " disabled-card" : ""}`}
           type="button"
           disabled={props.readOnly}
-          onClick={() => { props.setSelectedBasicAction("fanzhao"); }}
+          data-tooltip={fanzhaoAvail.usable ? "断气时取回最低阶本命骰\n保持原点数" : fanzhaoAvail.detailReasons.slice(0, 3).join("\n")}
+          onClick={() => props.setSelectedBasicAction("fanzhao")}
         >
-          <span className="card-name">返照</span>
-          <span className="card-badges"><span className="card-badge form">特殊</span></span>
-          <span className="card-reqs">目标：自身 · 气海空时取回最低起投骰</span>
-          <span className={`card-status ${fanzhaoAvail.usable ? "ok" : "no"}`}>
-            {fanzhaoAvail.usable ? "✓ 可用" : fanzhaoAvail.reasonTags.join("、")}
-          </span>
+          <span className="card-cost">1</span><span className="card-art"><i>照</i></span><span className="card-name">返照</span><span className="card-type">断气便行</span><span className="card-effect">最低本命骰返海</span><span className="card-reqs"><b>自身</b><b>耗行动</b></span>
+          {!fanzhaoAvail.usable ? <span className="card-seal">{fanzhaoAvail.reasonTags[0]}</span> : null}
         </button>
-      </div> : null}
+      </div>
 
       {inspectedMove && (() => {
         const inspectedAvailability = canDeclareAction(props.state, props.actor.id, inspectedMove.id, {
@@ -2428,47 +2354,15 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
                 <p className={canChoose ? "is-ready" : "is-blocked"}>
                   {canChoose ? "条件已满足，可加入本次宣言。" : prepareReasons.join("、") || "当前身份不能选择招式。"}
                 </p>
-                <button type="button" onClick={() => setInspectedMoveId(null)}>继续查看手牌</button>
                 <button className="primary-action" type="button" disabled={!canChoose} onClick={() => {
-                  props.setSelectedMoveId(inspectedMove.id);
-                  props.setSelectedBasicAction(null);
+                  selectHandMove(inspectedMove);
                   setInspectedMoveId(null);
-                }}>选择此招式</button>
+                }}>置为当前手牌</button>
               </footer>
             </article>
           </div>
         );
       })()}
-
-      {props.selectedBasicAction ? (
-        <>
-          <button className="primary-action" type="button" disabled={confirmDisabled} onClick={handleConfirm}>
-            {confirmLabel}
-          </button>
-          {confirmDisabled ? <p className="hint">{confirmHint}</p> : null}
-        </>
-      ) : (
-        <div className="action-panel__handoff">
-          <span>下一步</span>
-          <strong>
-            {props.state.phase === "intercept_window"
-              ? "宣言已锁定；在底部命令条处理截击或放弃响应"
-              : props.state.phase === "react_window"
-                ? "招式已成形；在底部命令条处理应招或进入结算"
-                : props.state.phase === "outcome"
-                  ? "结果已生成；在底部命令条确认落果与资源去向"
-                  : props.state.phase === "round_end"
-                    ? "本轮已结束；在底部命令条确认势变化并开启下一轮"
-                    : workflowStep === 1
-                      ? "先选择一张招式牌或基础动作牌"
-                      : workflowStep === 2
-                        ? "行动牌已选；点击交锋台人物或目标栏选择对象"
-                        : workflowStep === 3
-                          ? "目标已定；到气骰工作台配置阴、阳槽"
-                          : "投入满足条件；检查规则预览后确认宣言"}
-          </strong>
-        </div>
-      )}
     </section>
   );
 }
@@ -2485,21 +2379,29 @@ function CombatStage({ state, selectedId, selectedTargetId, targetableActorIds, 
   const pending = state.pendingAction;
   const pendingActor = pending ? state.actors.find((actor) => actor.id === pending.actorId) : undefined;
   const pendingMove = pendingActor?.moves.find((move) => move.id === pending?.moveId);
+  const feedback = state.feedback?.[0];
   return (
-    <TacticalCombatStage
-      data={stageData}
-      state={state}
-      selectedId={selectedId}
-      selectedTargetId={selectedTargetId}
-      targetableActorIds={targetableActorIds}
-      onSelectCombatant={onSelect}
-      selectedMove={selectedMove}
-      targetLines={pending ? [{
-        sourceActorId: pending.actorId,
-        targetActorId: pending.targetId,
-        move: pendingMove,
-      }] : undefined}
-    />
+    <div className={`combat-stage-stack${feedback?.kind === "damage" ? " has-impact" : ""}`}>
+      <TacticalCombatStage
+        data={stageData}
+        state={state}
+        selectedId={selectedId}
+        selectedTargetId={selectedTargetId}
+        targetableActorIds={targetableActorIds}
+        onSelectCombatant={onSelect}
+        selectedMove={selectedMove}
+        targetLines={pending ? [{
+          sourceActorId: pending.actorId,
+          targetActorId: pending.targetId,
+          move: pendingMove,
+        }] : undefined}
+      />
+      {feedback ? (
+        <div className={`combat-feedback feedback-${feedback.kind}`} key={feedback.id} role="status">
+          <strong>{feedback.title}</strong>{feedback.detail ? <span>{feedback.detail}</span> : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -2976,7 +2878,7 @@ function DrawerContent(props: DeskProps & { actor: Actor; role: "player" | "dm" 
         : props.state.phase === "outcome"
           ? { label: "结算落果", run: applyOutcome }
           : props.state.phase === "round_end"
-            ? { label: "结束本轮", run: endRound }
+            ? { label: "推进至下一角色", run: advanceTurn }
             : undefined;
     return (
       <div className="drawer-content">
