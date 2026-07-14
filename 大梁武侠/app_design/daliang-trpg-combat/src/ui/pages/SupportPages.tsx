@@ -204,8 +204,11 @@ export function PacksPage({ state, session, onBack }: PacksPageProps) {
         <p>{state.sceneGoal}</p>
         <dl className="support-detail-list">
           <div><dt>团包标识</dt><dd>{session.room.campaignId || "未声明"}</dd></div>
-          <div><dt>版本</dt><dd>未声明（当前数据未提供版本元数据）</dd></div>
+          <div><dt>版本</dt><dd>桥陵雨夜 v1 · 存档结构 v4</dd></div>
           <div><dt>当前场景</dt><dd>{state.sceneName}</dd></div>
+          <div><dt>场景数量</dt><dd>1 个完整样例场景（调查→交锋→收束）</dd></div>
+          <div><dt>数据完整性</dt><dd>{counts.actors > 0 && counts.moves > 0 && counts.dice > 0 && counts.tracks > 0 ? "校验通过" : "缺少关键数据"}</dd></div>
+          <div><dt>兼容状态</dt><dd>Windows x64 · 当前规则引擎兼容</dd></div>
           <div><dt>房间</dt><dd>{session.room.roomName} · {session.roomCode}</dd></div>
           <div><dt>运行方式</dt><dd>{session.room.mode === "local" ? "本地模式" : session.room.mode}</dd></div>
           <div><dt>保存策略</dt><dd>本地自动保存 · {savedAt}</dd></div>
@@ -242,7 +245,7 @@ export interface SettingsPageProps {
 export function SettingsPage({ session, setSession, onBack, onReset }: SettingsPageProps) {
   const [confirmingReset, setConfirmingReset] = useState(false);
   const isDM = session.identity === "dm";
-  const canUseAutoDm = session.room.mode === "local" && (session.identity === "dm" || session.identity === "player");
+  const canUseAutoDm = session.playMode === "solo" && session.identity === "player";
 
   function setDeveloperMode(enabled: boolean) {
     if (!isDM) return;
@@ -278,9 +281,49 @@ export function SettingsPage({ session, setSession, onBack, onReset }: SettingsP
         <button type="button" onClick={onBack}>返回</button>
       </header>
 
+      <section className="panel support-settings-section" aria-labelledby="player-settings-title">
+        <div>
+          <h2 id="player-settings-title">玩家</h2>
+          <p className="hint">这里仅保存本机公开席位信息，不会显示或修改 DM 隐藏内容。</p>
+        </div>
+        <label className="support-setting-row">
+          <span><strong>本机玩家名称</strong><small>用于单人存档与局域网席位显示。</small></span>
+          <input
+            value={session.playerName}
+            placeholder="输入玩家名称"
+            onChange={(event) => setSession((current) => ({ ...current, playerName: event.target.value }))}
+          />
+        </label>
+      </section>
+
+      <section className="panel support-settings-section" aria-labelledby="test-settings-title">
+        <div>
+          <h2 id="test-settings-title">自动 DM</h2>
+          <p className="hint">本地规则核心主持建场、NPC反应、危机、解密、交锋与收束；玩家始终自行决定自己的招式、配骰与响应。</p>
+        </div>
+        <label className="check-row support-setting-row">
+          <input
+            type="checkbox"
+            checked={session.autoDmEnabled}
+            disabled={!canUseAutoDm}
+            title={!canUseAutoDm ? "仅单人玩家故事可启用；真人房间中自动 DM 只提供主持建议" : undefined}
+            onChange={(event) => setAutoDm(event.target.checked)}
+          />
+          <span><strong>启用自动 DM</strong><small>{canUseAutoDm ? "单人模式默认启用；断网和未配置 AI 时仍可完整游玩。" : "仅用于单人玩家故事；真人房间中自动 DM 只向主持提供建议，不直接提交。"}</small></span>
+        </label>
+        <label className="check-row support-setting-row">
+          <input type="checkbox" checked={session.aiNarrationEnabled} onChange={(event) => setSession((current) => ({ ...current, aiNarrationEnabled: event.target.checked }))} />
+          <span><strong>可选 AI 叙述润色</strong><small>AI 只能润色本地规则已经批准的叙述，不能修改状态。</small></span>
+        </label>
+        <label className="support-setting-row">
+          <span><strong>受约束叙述端点</strong><small>留空或请求失败会在 2.5 秒内退回本地规则叙述。</small></span>
+          <input value={session.aiNarrationEndpoint} placeholder="https://…（可留空）" disabled={!session.aiNarrationEnabled} onChange={(event) => setSession((current) => ({ ...current, aiNarrationEndpoint: event.target.value }))} />
+        </label>
+      </section>
+
       <section className="panel support-settings-section" aria-labelledby="host-settings-title">
         <div>
-          <h2 id="host-settings-title">主持设置</h2>
+          <h2 id="host-settings-title">真人 DM</h2>
           {!isDM && <p className="hint">当前为只读状态；请由房间 DM 调整。</p>}
         </div>
         <label className="check-row support-setting-row">
@@ -303,30 +346,24 @@ export function SettingsPage({ session, setSession, onBack, onReset }: SettingsP
         </label>
       </section>
 
-      <section className="panel support-settings-section" aria-labelledby="test-settings-title">
-        <div>
-          <h2 id="test-settings-title">单人流程测试</h2>
-          <p className="hint">自动 DM 只处理敌方响应、落果和轮末推进；不会替玩家选招、配骰，也不会公开隐藏资料。</p>
-        </div>
-        <label className="check-row support-setting-row">
-          <input
-            type="checkbox"
-            checked={session.autoDmEnabled}
-            disabled={!canUseAutoDm}
-            onChange={(event) => setAutoDm(event.target.checked)}
-          />
-          <span><strong>测试自动 DM</strong><small>仅限本地房间。玩家仍完整操作自己的宣言、截击与应招。</small></span>
-        </label>
+      <section className="panel support-settings-section" aria-labelledby="display-settings-title">
+        <div><h2 id="display-settings-title">显示</h2><p className="hint">窗口化、最大化与 F11 全屏由 Windows 桌面外壳管理。</p></div>
+        <label className="check-row support-setting-row"><input type="checkbox" checked disabled title="Windows 桌面版固定启用" /><span><strong>高 DPI 清晰渲染</strong><small>Windows 桌面版固定启用；跟随 100%、125% 和 150% 缩放。</small></span></label>
+      </section>
+
+      <section className="panel support-settings-section" aria-labelledby="sound-settings-title">
+        <div><h2 id="sound-settings-title">声音</h2><p className="hint">当前团包没有提供音频资源。</p></div>
+        <button type="button" disabled title="当前团包未包含可调节的音频轨道">音量控制（团包未提供音频）</button>
       </section>
 
       <section className="panel support-settings-section" aria-labelledby="local-settings-title">
         <div>
-          <h2 id="local-settings-title">本地保存</h2>
-          <p className="hint">战斗状态与会话设置变更后会自动写入本地浏览器存储。</p>
+          <h2 id="local-settings-title">保存</h2>
+          <p className="hint">状态变更后自动写入 Windows 应用数据目录中的隔离渲染器存储。</p>
         </div>
         <label className="check-row support-setting-row">
-          <input type="checkbox" checked readOnly aria-readonly="true" />
-          <span><strong>自动保存已启用</strong><small>当前版本固定启用，暂无云端同步。</small></span>
+          <input type="checkbox" checked disabled title="Windows 桌面版固定启用" />
+          <span><strong>自动保存已启用</strong><small>Windows 桌面版固定启用；当前版本不进行云端同步。</small></span>
         </label>
       </section>
 

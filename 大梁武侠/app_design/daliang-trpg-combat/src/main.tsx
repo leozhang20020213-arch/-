@@ -13,6 +13,7 @@ import "./styles/debug-panel.css";
 import "./styles/overrides.css";
 import "./styles/support-pages.css";
 import "./styles/accessibility.css";
+import "./styles/windows-desktop.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

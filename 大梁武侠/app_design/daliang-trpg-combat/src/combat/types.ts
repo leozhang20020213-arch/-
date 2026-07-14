@@ -293,10 +293,72 @@ export interface PendingAction {
 export interface SceneTrack {
   id: string;
   name: string;
+  kind?: "crisis" | "insight";
   value: number;
   max: number;
   hidden?: boolean;
   description: string;
+  growthConditions?: string[];
+  triggerOutcome?: string;
+  reductionConditions?: string[];
+  insightLayers?: Array<{ level: number; summary: string; dmContent?: string }>;
+}
+
+export type SceneActionType = "observe" | "negotiate" | "investigate" | "move" | "take" | "use-item";
+
+export interface SceneFact {
+  id: string;
+  name: string;
+  description: string;
+  public: boolean;
+  consumed?: boolean;
+}
+
+export interface ActiveSceneElement {
+  id: string;
+  name: string;
+  kind: "environment" | "person" | "object";
+  description: string;
+  public: boolean;
+  interactionIds: SceneActionType[];
+}
+
+export interface SceneActionRequest {
+  id: string;
+  actorId: string;
+  actionType: SceneActionType;
+  targetId?: string;
+  approach: string;
+  sourceId?: string;
+  createdAt: number;
+}
+
+export interface SceneActionResolution {
+  requestId: string;
+  ruling: "approved" | "modified" | "rejected";
+  narration: string;
+  ruleBasis: string;
+  changes: string[];
+  nextPrompt: string;
+  resolvedAt: number;
+}
+
+export interface SceneRuntimeState {
+  id: string;
+  act: number;
+  location: string;
+  timeWindow: string;
+  boundary: string;
+  narration: string;
+  turn: number;
+  permissions: SceneFact[];
+  resources: SceneFact[];
+  elements: ActiveSceneElement[];
+  pendingRequest?: SceneActionRequest;
+  lastResolution?: SceneActionResolution;
+  combatUnlocked: boolean;
+  completed: boolean;
+  ending?: string;
 }
 
 export interface CombatLogEntry {
@@ -318,6 +380,7 @@ export interface CombatState {
   actors: Actor[];
   dice: QiDie[];
   tracks: SceneTrack[];
+  scene: SceneRuntimeState;
   distances: DistanceRelation[];
   pendingAction?: PendingAction;
   logs: CombatLogEntry[];
@@ -327,6 +390,7 @@ export interface CombatState {
 // === App Session ===
 export type AppRoute =
   | "home"
+  | "characterSelect"
   | "createRoom"
   | "room"
   | "joinRoom"
@@ -349,10 +413,20 @@ export interface AppSession {
   developerMode: boolean;
   /** Local-only helper that advances enemy responses and DM settlement for solo testing. */
   autoDmEnabled: boolean;
+  playMode: "solo" | "room";
+  aiNarrationEnabled: boolean;
+  aiNarrationEndpoint: string;
   roomCode: string;
   playerName: string;
   selectedActorId?: string;
-  seats: Array<{ id: string; label: string; playerName?: string; actorId?: string; ready: boolean }>;
+  seats: Array<{
+    id: string;
+    label: string;
+    playerName?: string;
+    actorId?: string;
+    ready: boolean;
+    connectionStatus?: "offline" | "connecting" | "connected" | "disconnected";
+  }>;
   room: {
     roomName: string;
     hostName: string;

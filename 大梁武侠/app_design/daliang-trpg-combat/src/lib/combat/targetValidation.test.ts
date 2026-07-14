@@ -27,6 +27,12 @@ describe("short-range target validation", () => {
   });
 });
 
+describe("self and scene target validation", () => {
+  it("allows a self-targeting move without a distance relation", () => {
+    assert.deepEqual(isDistanceValidForMove(undefined, "自己；近身或相邻距离"), { valid: true });
+  });
+});
+
 describe("target state source actor", () => {
   it("can validate an explicit source actor for multi-target stage lines", () => {
     const state = createSeedState();

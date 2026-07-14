@@ -731,6 +731,293 @@
   cursor: pointer;
 }
 
+/* ===========================================================================
+   Relational combat stage — R8
+
+   The rulebook tracks target lines and distance relations, not map positions.
+   Combatants therefore live in two stable rosters while the centre is reserved
+   exclusively for the current action. These rules intentionally override the
+   older absolute-position token board above until that legacy CSS is removed.
+   ========================================================================== */
+
+.tactical-battlefield {
+  display: grid;
+  grid-template-columns: minmax(150px, 25%) minmax(230px, 1fr) minmax(150px, 25%);
+  gap: 8px;
+  padding: 6px;
+  isolation: isolate;
+}
+
+.battlefield-roster,
+.engagement-focus {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(107, 75, 45, 0.22);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(14, 12, 8, 0.76);
+}
+
+.battlefield-roster {
+  display: grid;
+  grid-template-rows: 27px minmax(0, 1fr);
+}
+
+.battlefield-roster--allied {
+  border-color: rgba(86, 126, 158, 0.25);
+  background: linear-gradient(90deg, rgba(40, 70, 94, 0.22), rgba(14, 12, 8, 0.8));
+}
+
+.battlefield-roster--opposing {
+  border-color: rgba(162, 74, 62, 0.25);
+  background: linear-gradient(270deg, rgba(108, 42, 35, 0.2), rgba(14, 12, 8, 0.8));
+}
+
+.battlefield-roster__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 0 7px;
+  border-bottom: 1px solid rgba(247, 231, 187, 0.08);
+  color: var(--text-on-dark-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.battlefield-roster__header strong {
+  color: var(--text-on-dark-primary);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.battlefield-roster__header span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.battlefield-roster__list {
+  display: grid;
+  grid-auto-rows: minmax(29px, 1fr);
+  gap: 3px;
+  min-height: 0;
+  padding: 4px;
+}
+
+.battlefield-roster__empty {
+  align-self: center;
+  color: var(--text-on-dark-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.battlefield-roster .combatant-node {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 29px;
+  height: 100%;
+  max-height: 42px;
+  transform: none;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(22, 18, 13, 0.9);
+}
+
+.battlefield-roster .combatant-node:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.battlefield-roster .combatant-node.defeated:hover,
+.battlefield-roster .combatant-node.untargetable:hover {
+  transform: none;
+}
+
+.battlefield-roster .combatant-row1 {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
+  grid-template-rows: 1fr;
+  gap: 3px;
+}
+
+.battlefield-roster .combatant-avatar {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+}
+
+.battlefield-roster .combatant-avatar-placeholder {
+  font-size: 10px;
+}
+
+.battlefield-roster .combatant-name {
+  font-size: 11px;
+}
+
+.battlefield-roster .combatant-momentum,
+.battlefield-roster .combatant-hp-text {
+  font-size: 9px;
+}
+
+.battlefield-roster .combatant-momentum {
+  padding: 1px 3px;
+}
+
+.battlefield-roster .current-tag,
+.battlefield-roster .target-tag {
+  padding: 0 2px;
+  font-size: 8px;
+}
+
+.combatant-state-rail {
+  display: grid;
+  grid-template-columns: minmax(20px, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.battlefield-roster .combatant-hp-bar {
+  height: 3px;
+}
+
+.combatant-status-summary {
+  max-width: 48px;
+  overflow: hidden;
+  color: #d9b37a;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battlefield-roster .combatant-node.current-actor,
+.battlefield-roster .combatant-node.targeted,
+.battlefield-roster .combatant-node.current-actor.targeted {
+  transform: none;
+}
+
+.battlefield-roster .combatant-node.current-actor {
+  border-color: rgba(226, 174, 84, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(226, 174, 84, 0.2), 0 0 10px rgba(212, 132, 58, 0.12);
+}
+
+.battlefield-roster .combatant-node.targeted {
+  border-color: rgba(206, 79, 62, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(206, 79, 62, 0.22), 0 0 10px rgba(194, 58, 46, 0.14);
+}
+
+.battlefield-roster .target-corners {
+  display: none;
+}
+
+.engagement-focus {
+  display: grid;
+  grid-template-rows: 31px minmax(0, 1fr);
+  background:
+    radial-gradient(ellipse at center, rgba(152, 99, 47, 0.13), transparent 68%),
+    rgba(8, 7, 5, 0.82);
+}
+
+.engagement-focus__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 9px;
+  border-bottom: 1px solid rgba(212, 132, 58, 0.16);
+}
+
+.engagement-focus__header span {
+  padding: 2px 6px;
+  border: 1px solid rgba(212, 132, 58, 0.28);
+  border-radius: 999px;
+  color: #d6a65e;
+  font-size: 10px;
+}
+
+.engagement-focus__header strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f1dfbb;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engagement-focus__canvas {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.engagement-focus .distance-svg-layer,
+.engagement-focus .target-line-label-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.engagement-focus .target-line-label-layer {
+  z-index: 2;
+}
+
+.engagement-focus [data-target-line-label="true"] {
+  width: min(280px, 82%);
+  max-width: 82% !important;
+  padding: 5px 7px !important;
+}
+
+.engagement-focus__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  padding: 12px;
+  text-align: center;
+}
+
+.engagement-focus__empty span {
+  color: #9d7a4c;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.engagement-focus__empty strong {
+  color: #ead8b5;
+  font-size: 13px;
+}
+
+.engagement-focus__empty small {
+  max-width: 28ch;
+  color: var(--text-on-dark-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+@media (max-width: 1480px) {
+  .tactical-battlefield {
+    grid-template-columns: minmax(132px, 24%) minmax(220px, 1fr) minmax(132px, 24%);
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .battlefield-roster__header span,
+  .battlefield-roster .combatant-momentum {
+    display: none;
+  }
+
+  .battlefield-roster .combatant-row1 {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+  }
+}
+
 .clock-hidden-count:hover { background: rgba(143, 79, 30, 0.08); }
 
 .distance-svg-layer :is(line, rect, polygon, circle) {
@@ -755,5 +1042,109 @@
 
   .scene-objective-mini {
     padding-block: 2px;
+  }
+}
+
+/* ===========================================================================
+   Card-table composition — opponents above, player crew above the hand
+   ========================================================================== */
+
+.tactical-battlefield.card-table-battlefield {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(48px, 0.9fr) minmax(62px, 1.15fr) minmax(45px, 0.8fr);
+  gap: 4px;
+  padding: 5px 7px;
+}
+
+.card-table-battlefield .battlefield-roster {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.card-table-battlefield .battlefield-roster--opposing {
+  background: linear-gradient(180deg, rgba(91, 31, 26, 0.26), rgba(14, 12, 8, 0.84));
+}
+
+.card-table-battlefield .battlefield-roster--allied {
+  background: linear-gradient(0deg, rgba(39, 69, 92, 0.28), rgba(14, 12, 8, 0.84));
+}
+
+.card-table-battlefield .battlefield-roster__header {
+  display: grid;
+  place-content: center;
+  gap: 1px;
+  padding: 3px;
+  border-right: 1px solid rgba(247, 231, 187, 0.08);
+  border-bottom: 0;
+  text-align: center;
+}
+
+.card-table-battlefield .battlefield-roster__header strong {
+  font-size: 11px;
+}
+
+.card-table-battlefield .battlefield-roster__header span {
+  display: none;
+}
+
+.card-table-battlefield .battlefield-roster__list {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 6px;
+  overflow: hidden;
+}
+
+.card-table-battlefield .battlefield-roster .combatant-node {
+  flex: 1 1 0;
+  width: auto;
+  max-width: 190px;
+  max-height: none;
+  min-height: 0;
+}
+
+.card-table-battlefield .battlefield-roster--allied .combatant-node.current-actor {
+  flex-grow: 1.35;
+  max-width: 230px;
+  background: linear-gradient(180deg, rgba(69, 67, 48, 0.96), rgba(26, 24, 18, 0.96));
+}
+
+.card-table-battlefield .engagement-focus {
+  grid-template-rows: 25px minmax(0, 1fr);
+  margin-inline: clamp(35px, 8%, 100px);
+}
+
+.card-table-battlefield .engagement-focus__header {
+  padding-inline: 8px;
+}
+
+.card-table-battlefield .engagement-focus [data-target-line-label="true"] {
+  width: min(340px, 68%);
+}
+
+@media (max-width: 1480px), (max-height: 820px) {
+  .tactical-battlefield.card-table-battlefield {
+    grid-template-rows: minmax(48px, 0.95fr) minmax(58px, 1.1fr) minmax(43px, 0.75fr);
+    gap: 3px;
+    padding: 4px 6px;
+  }
+
+  .card-table-battlefield .battlefield-roster {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .card-table-battlefield .battlefield-roster__list {
+    gap: 3px;
+    padding: 3px 5px;
+  }
+
+  .card-table-battlefield .battlefield-roster .combatant-node {
+    max-width: 170px;
+  }
+
+  .card-table-battlefield .engagement-focus {
+    margin-inline: 26px;
   }
 }

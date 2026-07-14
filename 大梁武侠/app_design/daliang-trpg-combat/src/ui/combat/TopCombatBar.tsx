@@ -3,6 +3,7 @@ import type { AppSession, CombatState } from "../../combat/types";
 import type { DrawerId } from "../layouts/MainToolbar";
 import { identityLabel } from "../utils/labels";
 import { deriveTurnState, type TurnOrderEntry } from "../../lib/combat/turnOrder";
+import { WindowControls } from "../components/WindowControls";
 
 export interface TopCombatBarProps {
   session: AppSession;
@@ -20,28 +21,29 @@ export interface TopCombatBarProps {
 interface NavBtn {
   id: DrawerId;
   label: string;
+  icon: string;
 }
 
 const PLAYER_NAV: NavBtn[] = [
-  { id: "character", label: "人物" },
-  { id: "inventory", label: "背包" },
-  { id: "moves", label: "招式" },
-  { id: "statuses", label: "状态" },
-  { id: "logs", label: "日志" },
-  { id: "library", label: "资料" },
-  { id: "settings", label: "设置" },
+  { id: "character", label: "人物", icon: "侠" },
+  { id: "inventory", label: "背包", icon: "囊" },
+  { id: "moves", label: "招式", icon: "式" },
+  { id: "statuses", label: "状态", icon: "态" },
+  { id: "logs", label: "日志", icon: "录" },
+  { id: "library", label: "资料", icon: "典" },
+  { id: "settings", label: "设置", icon: "设" },
 ];
 
 const DM_NAV: NavBtn[] = [
-  { id: "character", label: "玩家" },
-  { id: "dmEnemies", label: "敌人" },
-  { id: "dmDistance", label: "距离" },
-  { id: "dmHidden", label: "隐藏" },
-  { id: "dmRuling", label: "裁定" },
-  { id: "dmScene", label: "场景" },
-  { id: "dmLog", label: "日志" },
-  { id: "library", label: "资料" },
-  { id: "settings", label: "设置" },
+  { id: "character", label: "玩家", icon: "侠" },
+  { id: "dmEnemies", label: "敌人", icon: "敌" },
+  { id: "dmDistance", label: "距离", icon: "距" },
+  { id: "dmHidden", label: "隐藏", icon: "隐" },
+  { id: "dmRuling", label: "裁定", icon: "裁" },
+  { id: "dmScene", label: "场景", icon: "景" },
+  { id: "dmLog", label: "日志", icon: "录" },
+  { id: "library", label: "资料", icon: "典" },
+  { id: "settings", label: "设置", icon: "设" },
 ];
 
 const MOMENTUM_CLASS: Record<string, string> = {
@@ -146,9 +148,12 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
               key={btn.id}
               className={`combat-topbar__nav-btn${activeDrawer === btn.id ? " active" : ""}`}
               type="button"
+              aria-label={btn.label}
+              title={btn.label}
               onClick={() => setActiveDrawer(activeDrawer === btn.id ? null : btn.id)}
             >
-              {btn.label}
+              <span className="combat-nav-icon" aria-hidden="true">{btn.icon}</span>
+              <span className="combat-nav-label">{btn.label}</span>
             </button>
           ))}
         </nav>
@@ -175,9 +180,7 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
           ↩
         </button>
 
-        <button className="combat-topbar__win-btn" title="清空本地存档" aria-label="清空本地存档" onClick={onReset} type="button">
-          ⟲
-        </button>
+        <WindowControls />
       </div>
     </header>
   );

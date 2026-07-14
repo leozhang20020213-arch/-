@@ -101,14 +101,32 @@ export function isDistanceValidForMove(
   actualBand: DistanceBand | undefined,
   targetRangeText: string,
 ): { valid: boolean; reason?: string } {
-  if (!actualBand) {
-    return { valid: false, reason: "目标距离未知" };
-  }
   if (!targetRangeText) {
     return { valid: true };
   }
 
   const range = targetRangeText.trim();
+
+  // Self and scene-object targeting does not require an actor-to-actor
+  // distance edge. Resolve those rulebook forms before checking a band.
+  if (
+    range.includes("道路") ||
+    range.includes("房间") ||
+    range.includes("尸身") ||
+    range.includes("机关") ||
+    range.includes("痕迹") ||
+    range.includes("自身") ||
+    range.includes("自己") ||
+    range.includes("可及") ||
+    range.includes("同一")
+  ) {
+    return { valid: true };
+  }
+
+  if (!actualBand) {
+    return { valid: false, reason: "目标距离未知" };
+  }
+
   const actualKey = bandToKey(actualBand);
   const actualDisplay = actualBand;
 
@@ -140,20 +158,6 @@ export function isDistanceValidForMove(
       valid: false,
       reason: `距离不符：当前${actualDisplay}，招式需要${mentioned.flatMap(({ labels }) => labels).join("、")}`,
     };
-  }
-
-  // Scene-based targeting — always valid
-  if (
-    range.includes("道路") ||
-    range.includes("房间") ||
-    range.includes("尸身") ||
-    range.includes("机关") ||
-    range.includes("痕迹") ||
-    range.includes("自己") ||
-    range.includes("可及") ||
-    range.includes("同一")
-  ) {
-    return { valid: true };
   }
 
   // Can't parse — let DM decide

@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import type { AppSession } from "../../combat/types";
 import { identityLabel } from "../utils/labels";
+import { WindowControls } from "../components/WindowControls";
 
 export interface TitleBarProps {
   session: AppSession;
@@ -66,9 +67,7 @@ export const TitleBar: FC<TitleBarProps> = ({
           💾
         </button>
 
-        <button className="window-btn" title="清空本地存档" aria-label="清空本地存档" onClick={onReset} type="button">
-          ⟲
-        </button>
+        <WindowControls />
       </div>
     </header>
   );

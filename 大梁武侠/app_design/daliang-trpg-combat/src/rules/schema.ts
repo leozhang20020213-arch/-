@@ -64,6 +64,7 @@ export const LAN_MESSAGE_TYPES = [
   "room_created",
   "room_joined",
   "seat_assigned",
+  "scene_action_requested",
   "public_state_synced",
   "combat_event_committed",
   "dm_broadcast",
@@ -74,7 +75,8 @@ export const LAN_PAYLOAD_FIELDS = {
   room_created: ["room", "seats", "publicState"],
   room_joined: ["playerName", "actorId"],
   seat_assigned: ["seatId", "playerName", "actorId", "ready"],
-  public_state_synced: ["publicState"],
+  scene_action_requested: ["request"],
+  public_state_synced: ["publicState", "gameMode"],
   combat_event_committed: ["event"],
   dm_broadcast: ["message", "level"],
   client_error: ["message"],
@@ -82,6 +84,7 @@ export const LAN_PAYLOAD_FIELDS = {
 
 export const ROOM_SETTING_FIELDS = ["roomName", "hostName", "campaignId", "mode", "allowSpectators", "maxPlayers"] as const;
 export const ROOM_SEAT_FIELDS = ["id", "label", "playerName", "actorId", "ready"] as const;
+export const SCENE_ACTION_REQUEST_FIELDS = ["id", "actorId", "actionType", "targetId", "approach", "sourceId", "createdAt"] as const;
 export const COMBAT_LOG_FIELDS = ["id", "type", "round", "message", "public", "createdAt"] as const;
 
 export const STATUS_FIELDS = [
@@ -419,8 +422,25 @@ function validateLanPayload(type: (typeof LAN_MESSAGE_TYPES)[number], payload: u
     if ("ready" in payload && typeof payload.ready !== "boolean") errors.push("seat_assigned.payload.ready must be boolean");
   }
 
+  if (type === "scene_action_requested") {
+    if (!isRecord(payload.request)) {
+      errors.push("scene_action_requested.payload.request is required");
+    } else {
+      errors.push(...unknownKeys(payload.request, SCENE_ACTION_REQUEST_FIELDS, "scene_action_requested.payload.request"));
+      if (typeof payload.request.id !== "string" || payload.request.id.length === 0) errors.push("scene_action_requested.payload.request.id is required");
+      if (typeof payload.request.actorId !== "string" || payload.request.actorId.length === 0) errors.push("scene_action_requested.payload.request.actorId is required");
+      if (!includes(["observe", "negotiate", "investigate", "move", "take", "use-item"] as const, String(payload.request.actionType))) errors.push("scene_action_requested.payload.request.actionType is invalid");
+      if ("targetId" in payload.request && typeof payload.request.targetId !== "string") errors.push("scene_action_requested.payload.request.targetId must be a string");
+      if (typeof payload.request.approach !== "string" || payload.request.approach.length === 0) errors.push("scene_action_requested.payload.request.approach is required");
+      if (typeof payload.request.createdAt !== "number" || !Number.isFinite(payload.request.createdAt)) errors.push("scene_action_requested.payload.request.createdAt must be finite");
+    }
+  }
+
   if (type === "public_state_synced" && !("publicState" in payload)) {
     errors.push("public_state_synced.payload.publicState is required");
+  }
+  if (type === "public_state_synced" && "gameMode" in payload && !includes(["scene", "combat"] as const, String(payload.gameMode))) {
+    errors.push("public_state_synced.payload.gameMode is invalid");
   }
 
   if (type === "combat_event_committed") {

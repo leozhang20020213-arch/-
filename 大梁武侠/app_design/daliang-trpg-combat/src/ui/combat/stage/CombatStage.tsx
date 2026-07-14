@@ -2,6 +2,7 @@ import { useState, type FC } from "react";
 import type { StageData } from "../../../types/combat";
 import type { CombatState, Move } from "../../../combat/types";
 import { deriveTargetState, targetLineTooltip } from "../../../lib/combat/targetValidation";
+import { toDisplayPhase } from "../../../lib/combat/combatPhaseMachine";
 import { CombatantNode } from "./CombatantNode";
 import { TargetLine, TargetLineLabel } from "./TargetLine";
 import { SceneObjectiveMini } from "./SceneObjectiveMini";
@@ -167,6 +168,7 @@ export const CombatStage: FC<CombatStageProps> = ({
         isTargeted={isTarget}
         isDefeated={isDefeated}
         canBeTargeted={canTarget}
+        targetingActive={Boolean(selectedMove)}
         onSelect={handleSelect}
       />
     );
@@ -176,7 +178,34 @@ export const CombatStage: FC<CombatStageProps> = ({
   const enemyCount = enemyCombatants.length;
   const allyCount = allyCombatants.length;
   const neutralCount = neutralCombatants.length;
-  const hasOthers = allyCount > 0 || neutralCount > 0;
+  const alliedRoster = [...playerCombatants, ...allyCombatants];
+  const opposingRoster = [...enemyCombatants, ...neutralCombatants];
+  const activeActor = data.combatants.find((combatant) => combatant.id === state.activeActorId);
+  const displayPhase = toDisplayPhase(state.phase);
+  const focusLines = resolvedTargetLines.map((line, index) => ({
+    ...line,
+    displayY: ((index + 1) / (resolvedTargetLines.length + 1)) * 100,
+  }));
+
+  function renderRoster(
+    roster: typeof data.combatants,
+    label: string,
+    detail: string,
+    side: "allied" | "opposing",
+  ) {
+    return (
+      <aside className={`battlefield-roster battlefield-roster--${side}`} aria-label={`${label}人物列`}>
+        <header className="battlefield-roster__header">
+          <strong>{label}</strong>
+          <span>{detail}</span>
+        </header>
+        <div className="battlefield-roster__list">
+          {roster.map(renderCombatant)}
+          {roster.length === 0 && <span className="battlefield-roster__empty">无人入场</span>}
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <div className="tactical-stage">
@@ -190,129 +219,74 @@ export const CombatStage: FC<CombatStageProps> = ({
         </div>
       </div>
 
-      {/* ---- Battlefield area (nodes + SVG lines + side zones) ---- */}
-      <div className="tactical-battlefield">
+      {/* Card-table battlefield: opponents above, current relation in the centre,
+          the player's crew immediately above the hand below this stage. */}
+      <div className="tactical-battlefield card-table-battlefield">
         {/* Atmospheric background */}
         <div className="battlefield-bg">
           <div className="rain-overlay" />
           <div className="ground-texture" />
         </div>
 
-        {/* Side zone backgrounds — visual containers for each faction */}
-        <div className="side-zones-layer">
-          {/* Player zone (left) */}
-          <div className={`side-zone-bg player-zone-bg${playerCount > 0 ? " has-actors" : ""}`}>
-            <div className="side-zone-label-top">
-              <span className="side-zone-title">我方</span>
-              <span className="side-zone-count">{playerCount}人</span>
-            </div>
-          </div>
+        {renderRoster(opposingRoster, "敌方", `${enemyCount}名敌人${neutralCount ? ` · ${neutralCount}名其他` : ""}`, "opposing")}
 
-          {/* Enemy zone (right) */}
-          <div className={`side-zone-bg enemy-zone-bg${enemyCount > 0 ? " has-actors" : ""}`}>
-            <div className="side-zone-label-top enemy-label-top">
-              <span className="side-zone-count">{enemyCount}人</span>
-              <span className="side-zone-title">敌方</span>
-            </div>
-          </div>
+        <section className="engagement-focus" aria-label="当前目标线与交锋时点">
+          <header className="engagement-focus__header">
+            <span>{displayPhase}</span>
+            <strong>{activeActor ? `${activeActor.name}行动` : "等待行动者"}</strong>
+          </header>
 
-          {/* Ally zone (bottom-left, only when present) */}
-          {allyCount > 0 && (
-            <div className="side-zone-bg ally-zone-bg has-actors">
-              <div className="side-zone-label-top">
-                <span className="side-zone-title">友方</span>
-                <span className="side-zone-count">{allyCount}人</span>
+          <div className="engagement-focus__canvas">
+            {focusLines.length > 0 ? (
+              <>
+                <svg className="distance-svg-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  {focusLines.map((line) => (
+                    <TargetLine
+                      key={line.key}
+                      x1={4}
+                      y1={line.displayY}
+                      x2={96}
+                      y2={line.displayY}
+                      band={line.targetState.distanceBand}
+                      isValid={line.targetState.isRangeValid}
+                      invalidReason={line.targetState.invalidReason}
+                      tooltip={line.tooltip}
+                      fromName={line.source.name}
+                      toName={line.target.name}
+                    />
+                  ))}
+                </svg>
+                <div className="target-line-label-layer">
+                  {focusLines.map((line) => (
+                    <TargetLineLabel
+                      key={line.key}
+                      x1={4}
+                      y1={line.displayY}
+                      x2={96}
+                      y2={line.displayY}
+                      band={line.targetState.distanceBand}
+                      distanceLabel={line.targetState.actualDistanceBand}
+                      isValid={line.targetState.isRangeValid}
+                      invalidReason={line.targetState.invalidReason}
+                      tooltip={line.tooltip}
+                      fromName={line.source.name}
+                      toName={line.target.name}
+                      moveName={line.move?.name}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="engagement-focus__empty">
+                <span>{selectedMove ? "招式已选" : "当前无目标线"}</span>
+                <strong>{selectedMove?.name ?? "从下方行动牌开始"}</strong>
+                <small>选择目标后，这里只显示本次动作、距离与合法性。</small>
               </div>
-            </div>
-          )}
-
-          {/* Neutral zone (bottom-center, only when present) */}
-          {neutralCount > 0 && (
-            <div className="side-zone-bg neutral-zone-bg has-actors">
-              <div className="side-zone-label-top">
-                <span className="side-zone-title">其他</span>
-                <span className="side-zone-count">{neutralCount}人</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* SVG target line layer */}
-        <svg
-          className="distance-svg-layer"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          {resolvedTargetLines.map((line) => (
-            <TargetLine
-              key={line.key}
-              x1={line.source.x}
-              y1={line.source.y}
-              x2={line.target.x}
-              y2={line.target.y}
-              band={line.targetState.distanceBand}
-              isValid={line.targetState.isRangeValid}
-              invalidReason={line.targetState.invalidReason}
-              tooltip={line.tooltip}
-              fromName={line.source.name}
-              toName={line.target.name}
-            />
-          ))}
-        </svg>
-
-        {/* HTML labels stay legible when the SVG geometry is stretched. */}
-        <div
-          className="target-line-label-layer"
-          style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
-        >
-          {resolvedTargetLines.map((line) => (
-            <TargetLineLabel
-              key={line.key}
-              x1={line.source.x}
-              y1={line.source.y}
-              x2={line.target.x}
-              y2={line.target.y}
-              band={line.targetState.distanceBand}
-              distanceLabel={line.targetState.actualDistanceBand}
-              isValid={line.targetState.isRangeValid}
-              invalidReason={line.targetState.invalidReason}
-              tooltip={line.tooltip}
-              fromName={line.source.name}
-              toName={line.target.name}
-              moveName={line.move?.name}
-            />
-          ))}
-        </div>
-
-        {/* Combatant nodes layer — absolutely positioned in viewBox space */}
-        <div className="combatant-layer">
-          {/* Player cards */}
-          {playerCombatants.map(renderCombatant)}
-
-          {/* Enemy cards */}
-          {enemyCombatants.map(renderCombatant)}
-
-          {/* Ally cards */}
-          {allyCombatants.map(renderCombatant)}
-
-          {/* Neutral cards */}
-          {neutralCombatants.map(renderCombatant)}
-
-          {/* Empty state hints */}
-          {data.combatants.length === 0 && (
-            <div className="battlefield-empty">
-              <span>暂无角色入场</span>
-            </div>
-          )}
-        </div>
-
-        {/* Center-field distance / interaction hint */}
-        {hasOthers && (
-          <div className="battlefield-extra-zones-hint">
-            {allyCount > 0 && <span>友方 {allyCount}人</span>}
-            {neutralCount > 0 && <span>其他 {neutralCount}</span>}
+            )}
           </div>
-        )}
+        </section>
+
+        {renderRoster(alliedRoster, "我方", `${playerCount}名玩家${allyCount ? ` · ${allyCount}名友方` : ""}`, "allied")}
       </div>
 
       {/* ---- Scene objectives ---- */}

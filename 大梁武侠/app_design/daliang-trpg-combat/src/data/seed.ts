@@ -3,6 +3,7 @@ import type {
   CombatState,
   QiDie,
   SceneTrack,
+  SceneRuntimeState,
   Move,
   ResponseAttachment,
   QuickAction,
@@ -670,17 +671,52 @@ const actorArcher: Actor = {
 
 const trackClue: SceneTrack = {
   id: "track-clue", name: "解密值", value: 0, max: 8,
+  kind: "insight",
   description: "调查失镖真相。达到8时查明全部线索。",
+  insightLayers: [
+    { level: 1, summary: "仓门和地面留有刻意清理过的水痕。", dmContent: "水痕来自转运镖箱的窄轮车。" },
+    { level: 2, summary: "染血封条不是在仓内被撕开。", dmContent: "封条在桥下船边被替换。" },
+    { level: 3, summary: "失镖案有熟悉镖局交接规矩的内应。", dmContent: "内应向水会递出了仓单副本。" },
+    { level: 4, summary: "真正的买主藏在巡检到场后的接应链中。" },
+  ],
 };
 
 const trackPatrol: SceneTrack = {
   id: "track-patrol", name: "巡检注意", value: 2, max: 10, hidden: true,
+  kind: "crisis",
   description: "巡检发现异常会搜查。达到10时官府介入，镖局名声受损。",
+  growthConditions: ["发出明显响动", "亮出兵刃", "在仓外留下目击者"],
+  triggerOutcome: "达到10时巡检队封锁旧堤仓，镖局名声受损。",
+  reductionConditions: ["转移注意", "取得巡检通行许可", "及时收束场景"],
 };
 
 const trackEscape: SceneTrack = {
   id: "track-escape", name: "危机值", value: 0, max: 8,
+  kind: "crisis",
   description: "火势/追兵/船期。达到8时敌人借机撤离或局势失控。",
+  growthConditions: ["拖延行动", "搜查失败", "敌人完成搬箱"],
+  triggerOutcome: "达到8时敌人带箱撤离，玩家只能转入雨夜追逐。",
+  reductionConditions: ["控制仓门", "夺回镖箱", "压制望风探子"],
+};
+
+const initialScene: SceneRuntimeState = {
+  id: "scene-old-dike-warehouse",
+  act: 2,
+  location: "桥陵镇·旧堤仓",
+  timeWindow: "子时前一刻至巡检换岗",
+  boundary: "仓门、堤岸与桥下泊船；离开此区域将进入新场景。",
+  narration: "雨脚斜打仓檐。半掩的仓门后有拖拽重物的闷响，堤岸上的火把正在向桥头靠近。",
+  turn: 1,
+  permissions: [],
+  resources: [],
+  elements: [
+    { id: "warehouse-door", name: "半掩仓门", kind: "environment", description: "门缝里有新鲜水痕和断裂麻绳。", public: true, interactionIds: ["observe", "investigate", "move"] },
+    { id: "blood-seal", name: "染血封条", kind: "object", description: "镖箱封条的一角压在湿泥里。", public: true, interactionIds: ["observe", "investigate", "take"] },
+    { id: "porter-shadow", name: "搬箱黑影", kind: "person", description: "仓内有人正把沉重木箱拖向后门。", public: true, interactionIds: ["observe", "negotiate", "move"] },
+    { id: "hidden-archer", name: "暗处弓手", kind: "person", description: "高处伏兵，尚未被玩家发现。", public: false, interactionIds: ["observe"] },
+  ],
+  combatUnlocked: false,
+  completed: false,
 };
 
 // ============================================================
@@ -754,6 +790,7 @@ export function createSeedState(): CombatState {
     actors: structuredClone([actorShenQing, actorWei, actorShortBlade, actorPorter, actorLookout, actorArcher] as Actor[]),
     dice: structuredClone([...shenQingDice, ...shortBladeDice, ...porterDice, ...weiDice, ...lookoutDice, ...archerDice]),
     tracks: structuredClone([trackClue, trackPatrol, trackEscape]),
+    scene: structuredClone(initialScene),
     distances: structuredClone(distances),
     pendingAction: undefined,
     logs: [],

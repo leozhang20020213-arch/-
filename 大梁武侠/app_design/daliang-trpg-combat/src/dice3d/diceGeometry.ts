@@ -91,7 +91,7 @@ function createD10Spec(): DiceMeshSpec {
 }
 
 function fromGeometry(sourceGeometry: THREE.BufferGeometry, sides: number): DiceMeshSpec {
-  const geometry = sourceGeometry.toNonIndexed();
+  const geometry = sourceGeometry.index ? sourceGeometry.toNonIndexed() : sourceGeometry.clone();
   geometry.computeVertexNormals();
   const positions = geometry.getAttribute("position");
   const faceData: Array<{ normal: THREE.Vector3; center: THREE.Vector3 }> = [];

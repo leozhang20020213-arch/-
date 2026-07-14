@@ -31,6 +31,13 @@
   border-bottom: 1px solid rgba(212, 132, 58, 0.18);
   color: var(--ink-light);
   user-select: none;
+  -webkit-app-region: drag;
+}
+
+.title-bar button,
+.title-bar input,
+.title-bar select {
+  -webkit-app-region: no-drag;
 }
 
 .title-bar__left {
@@ -81,6 +88,36 @@
   gap: 6px;
   flex: 0 0 30%;
   justify-content: flex-end;
+}
+
+.window-controls {
+  display: inline-flex;
+  align-items: stretch;
+  align-self: stretch;
+  margin-left: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.window-control {
+  width: 42px;
+  min-width: 42px;
+  height: 100%;
+  min-height: 32px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-on-dark-secondary);
+  font: 600 16px/1 system-ui, sans-serif;
+}
+
+.window-control:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-on-dark-primary);
+}
+
+.window-control--close:hover {
+  background: #a72d2d;
+  color: #fff;
 }
 
 .title-bar__right .identity-badge {

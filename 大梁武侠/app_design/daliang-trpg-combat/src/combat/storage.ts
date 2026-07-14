@@ -19,12 +19,15 @@ export function createDefaultSession(): AppSession {
     gameMode: "scene",
     developerMode: false,
     autoDmEnabled: false,
+    playMode: "solo",
+    aiNarrationEnabled: false,
+    aiNarrationEndpoint: "",
     roomCode: "LOCAL-BRIDGE-RAIN",
     playerName: "沈青玩家",
     selectedActorId: "pc-shen-qing",
     seats: [
-      { id: "seat-dm", label: "DM", playerName: "试跑DM", ready: true },
-      { id: "seat-1", label: "玩家1", playerName: "沈青玩家", actorId: "pc-shen-qing", ready: true },
+      { id: "seat-dm", label: "DM", playerName: "试跑DM", ready: true, connectionStatus: "offline" },
+      { id: "seat-1", label: "玩家1", playerName: "沈青玩家", actorId: "pc-shen-qing", ready: true, connectionStatus: "offline" },
       { id: "seat-2", label: "玩家2", ready: false },
       { id: "seat-3", label: "玩家3", ready: false },
     ],
@@ -106,7 +109,7 @@ export function clearAppSession(): AppSession {
   return createDefaultSession();
 }
 
-function normalizeCombatState(value: Partial<CombatState>): CombatState {
+export function normalizeCombatState(value: Partial<CombatState>): CombatState {
   const seed = createSeedState();
   const actors = (value.actors ?? seed.actors).map((actor, index) => {
     const seedActor = seed.actors[index] ?? seed.actors[0];
@@ -175,15 +178,17 @@ function normalizeCombatState(value: Partial<CombatState>): CombatState {
       seed.dice,
     ),
     tracks: normalizeTracks((Array.isArray(valueRec.tracks) ? valueRec.tracks : seed.tracks) as CombatState["tracks"]),
+    scene: value.scene ? { ...seed.scene, ...value.scene } : seed.scene,
     distances: (Array.isArray(valueRec.distances) ? valueRec.distances : seed.distances) as CombatState["distances"],
     logs: (Array.isArray(valueRec.logs) ? valueRec.logs : seed.logs) as CombatState["logs"],
   };
 }
 
-function normalizeAppSession(value: Partial<AppSession>): AppSession {
+export function normalizeAppSession(value: Partial<AppSession>): AppSession {
   const seed = createDefaultSession();
   const routeMap: Record<string, AppSession["route"]> = {
     home: "home",
+    characterSelect: "characterSelect",
     room: "createRoom",
     player: "playerCombat",
     dm: "dmCombat",
@@ -207,6 +212,9 @@ function normalizeAppSession(value: Partial<AppSession>): AppSession {
     gameMode: value.gameMode ?? (value.route === "player" || value.route === "dm" ? "combat" : "scene"),
     developerMode: value.developerMode ?? false,
     autoDmEnabled: value.autoDmEnabled ?? false,
+    playMode: value.playMode ?? "solo",
+    aiNarrationEnabled: value.aiNarrationEnabled ?? false,
+    aiNarrationEndpoint: value.aiNarrationEndpoint ?? "",
     roomCode: value.roomCode ?? seed.roomCode,
     seats: value.seats ?? seed.seats,
     room: { ...seed.room, ...value.room },
@@ -214,7 +222,11 @@ function normalizeAppSession(value: Partial<AppSession>): AppSession {
 }
 
 function normalizeTracks(tracks: CombatState["tracks"]): CombatState["tracks"] {
-  return tracks.map((track) => (track.id === "track-escape" || track.name === "逃离危机" ? { ...track, name: "危机值" } : track));
+  return tracks.map((track) => {
+    const renamed = track.id === "track-escape" || track.name === "逃离危机" ? { ...track, name: "危机值" } : track;
+    if (renamed.kind) return renamed;
+    return { ...renamed, kind: renamed.name.includes("解密") ? "insight" as const : "crisis" as const };
+  });
 }
 
 function normalizeDice(

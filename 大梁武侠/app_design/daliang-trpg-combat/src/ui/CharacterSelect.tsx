@@ -1,6 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
 import type { Actor, AppSession, CombatState, InnerArt, InventoryItem, Move, QuickAction, ResponseAttachment, ShiState, SixRoots, SixRootName, StatusEffect, TableAttrs } from "../combat/types";
-import { enterScene } from "../combat/combatEngine";
 
 /* ===================================================================
    CharacterSelect — PoE-Style Dark Atmospheric Character Selection
@@ -406,10 +405,9 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
 
   // Enter with existing character
   const handleEnterScene = useCallback((actor: Actor) => {
-    setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player" }));
-    go("playerScene", { identity: "player", gameMode: "scene" });
-    patch((c) => enterScene(c));
-  }, [setSession, go, patch]);
+    setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player", playMode: "solo", autoDmEnabled: true }));
+    go("playerScene", { identity: "player", gameMode: "scene", playMode: "solo", autoDmEnabled: true });
+  }, [setSession, go]);
 
   // Finalize creation
   const handleCreateConfirm = useCallback(() => {
@@ -421,11 +419,10 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
     const actor = buildActor(name, creatorIdentity, creatorRoots, neigong, moves);
 
     patch((c) => {
-      const withActor = { ...c, actors: [...c.actors, actor] };
-      return enterScene(withActor);
+      return { ...c, actors: [...c.actors, actor] };
     });
-    setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player" }));
-    go("playerScene", { identity: "player", gameMode: "scene" });
+    setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player", playMode: "solo", autoDmEnabled: true }));
+    go("playerScene", { identity: "player", gameMode: "scene", playMode: "solo", autoDmEnabled: true });
   }, [creatorIdentity, creatorNeigongId, creatorSelectedMoves, creatorRoots, creatorName, patch, setSession, go]);
 
   // Creator helpers
@@ -583,6 +580,16 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
           const neigong = actor.innerArts[0];
           const rootsStr = ROOT_NAMES.map((r) => `${r}${actor.sixRoots[r]}`).join(" ");
           const movesStr = actor.moves.slice(0, 3).map((m) => m.name).join(" · ");
+          const roleTags = [...new Set(actor.moves.map((move) => move.subCategory).filter(Boolean))].slice(0, 2);
+          const roleLabel = roleTags.length > 0 ? roleTags.join(" / ") : "江湖行者";
+          const difficultyLabel = !neigong
+            ? "待配置"
+            : actor.moves.some((move) => move.minDice >= 4)
+              ? "进阶"
+              : "入门";
+          const attrsStr = (["气血", "护体", "爆发", "回气", "观照", "身势"] as const)
+            .map((name) => `${name}${actor.tableAttrs[name]}`)
+            .join(" ");
           const equipStr = actor.inventory
             .filter((item) => item.equipped || item.category === "medicine")
             .slice(0, 3)
@@ -598,12 +605,18 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
                   <span className="cs-info-tagline">"{actor.publicNote.slice(0, 16)}"</span>
                 </div>
                 <div className="cs-info-roots">{rootsStr}</div>
+                <div className="cs-info-meta">
+                  <span><b>定位</b>{roleLabel}</span>
+                  <span><b>上手</b>{difficultyLabel}</span>
+                </div>
               </div>
               <div className="cs-info-center">
                 <span className="cs-info-label">内功</span>
                 <span className="cs-info-value">{neigong?.name ?? "无"}</span>
                 <span className="cs-info-label">武艺</span>
                 <span className="cs-info-value">{movesStr}</span>
+                <span className="cs-info-label">表属性</span>
+                <span className="cs-info-value cs-info-attrs">{attrsStr}</span>
               </div>
               <div className="cs-info-right">
                 <span className="cs-info-equip">{equipStr}</span>
@@ -1059,6 +1072,8 @@ const csStyles = `
 .cs-root {
   position: relative;
   flex: 1;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1344,6 +1359,15 @@ const csStyles = `
   font-weight: 600;
   letter-spacing: 0.03em;
 }
+.cs-info-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  color: #8a7a6a;
+  font-size: 11px;
+}
+.cs-info-meta span { display: inline-flex; gap: 5px; }
+.cs-info-meta b { color: #c3974f; font-weight: 700; }
 .cs-info-center {
   flex: 2;
   display: grid;
@@ -1357,6 +1381,11 @@ const csStyles = `
 }
 .cs-info-value {
   color: #a09488;
+}
+.cs-info-attrs {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cs-info-right {
   flex: 2;
@@ -1401,6 +1430,7 @@ const csStyles = `
   align-items: center;
   justify-content: center;
   padding: 24px;
+  min-height: 0;
 }
 .cs-creator-bg {
   position: absolute;
@@ -1413,8 +1443,9 @@ const csStyles = `
   z-index: 1;
   width: 100%;
   max-width: 820px;
-  min-height: 520px;
-  max-height: 90vh;
+  height: min(680px, calc(100% - 8px));
+  min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(107,75,45,0.35);
@@ -1955,7 +1986,17 @@ const csStyles = `
     grid-template-columns: repeat(2, 1fr);
   }
   .cs-creator-card {
-    max-height: 95vh;
+    height: calc(100% - 4px);
+    max-height: 100%;
   }
+}
+
+@media (max-height: 820px) {
+  .cs-creator-overlay { padding: 12px; }
+  .cs-creator-card { height: calc(100% - 2px); }
+  .cs-creator-header { padding: 10px 16px; }
+  .cs-creator-body { padding: 14px 18px; }
+  .cs-creator-footer { padding: 9px 18px; }
+  .cs-step-content { gap: 10px; }
 }
 `;

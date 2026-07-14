@@ -85,11 +85,10 @@ export function createDiceBodyMaterial(affinity: DiceAffinity): THREE.MeshStanda
   const normalMap = loadExternalTexture(urls.normal, false);
   const metalnessMap = urls.metalness ? loadExternalTexture(urls.metalness, false) : undefined;
 
-  return new THREE.MeshStandardMaterial({
+  const parameters: THREE.MeshStandardMaterialParameters = {
     color: theme.body,
     map,
     roughnessMap,
-    metalnessMap,
     normalMap,
     normalScale: new THREE.Vector2(theme.normalStrength, theme.normalStrength),
     roughness: theme.roughness,
@@ -98,7 +97,9 @@ export function createDiceBodyMaterial(affinity: DiceAffinity): THREE.MeshStanda
     emissiveIntensity: affinity === "yang" ? 0.035 : 0.055,
     envMapIntensity: theme.envMapIntensity,
     flatShading: true,
-  });
+  };
+  if (metalnessMap) parameters.metalnessMap = metalnessMap;
+  return new THREE.MeshStandardMaterial(parameters);
 }
 
 function getMaterialUrls(affinity: DiceAffinity) {

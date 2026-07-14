@@ -14,6 +14,7 @@ import type {
   ShiState,
   ShiCondition,
 } from "./types";
+import { deriveTargetState } from "../lib/combat/targetValidation";
 
 export type RollFn = (sides: number) => number;
 
@@ -736,6 +737,11 @@ export function declareAction(
   const actor = requireActor(next, actorId);
   const target = requireActor(next, targetId);
   const move = requireMove(actor, moveId);
+
+  const targetState = deriveTargetState(next, target.id, move, actor.id);
+  if (!targetState.isRangeValid) {
+    throw new Error(targetState.invalidReason ?? "目标不在招式允许距离内");
+  }
 
   // Validate phase
   if (next.phase !== "scene" && next.phase !== "declare") {
@@ -2060,6 +2066,14 @@ export function visibleForPlayer(
       };
     }),
     tracks: state.tracks.filter((track) => !track.hidden),
+    scene: {
+      ...state.scene,
+      elements: state.scene.elements.filter((element) => element.public),
+      permissions: state.scene.permissions.filter((fact) => fact.public),
+      resources: state.scene.resources.filter((fact) => fact.public),
+      pendingRequest: undefined,
+      lastResolution: state.scene.lastResolution,
+    },
     dice: state.dice.filter((die) => die.ownerId === viewerActorId),
     distances: (state.distances ?? []).filter((distance) => distance.public),
     logs: state.logs.filter((log) => log.public),

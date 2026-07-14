@@ -2,8 +2,6 @@ import { useMemo, type FC } from "react";
 import type { Actor, CombatState } from "../../combat/types";
 import { getSceneClocks } from "../../combat/sceneClock";
 import { GamePanel } from "../components/GamePanel";
-import { CombatBriefCard } from "../components/CombatBriefCard";
-import { UnitCard } from "../components/UnitCard";
 import { SceneClockCompact } from "./SceneClockCompact";
 
 export interface LeftCombatPanelProps {
@@ -33,21 +31,35 @@ export const LeftCombatPanel: FC<LeftCombatPanelProps> = ({
     return isDM ? allClocks : allClocks.filter((c) => !c.hidden);
   }, [state.tracks, isDM]);
 
+  function renderCrewRow(member: Actor, current = false) {
+    const publicStatus = member.statuses[0]?.name ?? "无状态";
+    return (
+      <article className={`crew-summary-row${current ? " is-self" : ""}`} key={member.id}>
+        <div className="crew-summary-row__identity">
+          <span className="crew-summary-row__avatar">{member.name.charAt(0)}</span>
+          <strong>{member.name}</strong>
+          <span className="crew-summary-row__momentum">{member.momentum}</span>
+          <b>{member.hp}/{member.maxHp}</b>
+        </div>
+        <meter min={0} max={member.maxHp} value={member.hp} />
+        <small>
+          {current
+            ? `护${member.tableAttrs.护体} · 爆${member.tableAttrs.爆发} · 回${member.tableAttrs.回气} · 身${member.tableAttrs.身势}`
+            : publicStatus}
+        </small>
+      </article>
+    );
+  }
+
   return (
     <div className="combat-left-panel">
-      {/* My combat brief card */}
-      <GamePanel title="我的战斗简卡" variant="parchment">
-        <CombatBriefCard actor={actor} />
+      {/* One compact crew ledger replaces the old stack of repeated full cards. */}
+      <GamePanel title="队伍简况" variant="parchment" className="crew-summary-panel">
+        <div className="crew-summary-list">
+          {renderCrewRow(actor, true)}
+          {teammates.map((teammate) => renderCrewRow(teammate))}
+        </div>
       </GamePanel>
-
-      {/* Teammates (if any) */}
-      {teammates.length > 0 && (
-        <GamePanel title="队友" variant="parchment">
-          {teammates.map((tm) => (
-            <UnitCard key={tm.id} actor={tm} mode="teammate" />
-          ))}
-        </GamePanel>
-      )}
 
       {/* Scene clocks — unified progress tracks */}
       <GamePanel title="场景进度" variant="parchment">

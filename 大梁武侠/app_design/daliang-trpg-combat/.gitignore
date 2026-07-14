@@ -1,6 +1,9 @@
 node_modules/
 dist/
+release/
+.playwright-cli/
 .vite/
+*.tsbuildinfo
 *.local
 .DS_Store
 thumbs.db

@@ -9,6 +9,10 @@ export interface CombatShellProps {
   center: ReactNode;
   /** Right panel (380px) */
   right: ReactNode;
+  /** Collapse an unused context panel to a narrow status rail. */
+  rightCollapsed?: boolean;
+  /** Short text shown in the collapsed context rail. */
+  rightCollapsedLabel?: string;
   /** Bottom phase bar */
   bottom: ReactNode;
   /** Drawer overlay layer */
@@ -32,6 +36,8 @@ export const CombatShell: FC<CombatShellProps> = ({
   left,
   center,
   right,
+  rightCollapsed = false,
+  rightCollapsedLabel = "目标情报",
   bottom,
   drawer,
   modal,
@@ -40,10 +46,17 @@ export const CombatShell: FC<CombatShellProps> = ({
     <div className="combat-shell">
       {top}
 
-      <div className="combat-main">
+      <div className={`combat-main${rightCollapsed ? " right-collapsed" : ""}`}>
         <div className="combat-left">{left}</div>
         <div className="combat-center">{center}</div>
-        <div className="combat-right">{right}</div>
+        <div className={`combat-right${rightCollapsed ? " is-collapsed" : ""}`}>
+          {rightCollapsed ? (
+            <aside className="combat-context-rail" aria-label={`${rightCollapsedLabel}尚未展开`}>
+              <span>{rightCollapsedLabel}</span>
+              <small>点击人物查看</small>
+            </aside>
+          ) : right}
+        </div>
       </div>
 
       <div className="combat-bottom">{bottom}</div>

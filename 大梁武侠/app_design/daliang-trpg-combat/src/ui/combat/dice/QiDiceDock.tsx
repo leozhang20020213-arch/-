@@ -30,6 +30,8 @@ export interface QiDiceDockProps {
   distanceWarning?: string;
   /** False for spectators and basic actions, which do not use declaration slots. */
   declarationEnabled?: boolean;
+  /** Context shown while the declaration workbench is intentionally gated. */
+  inactiveReason?: string;
 }
 
 /**
@@ -64,6 +66,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
   onRollToSea,
   distanceWarning,
   declarationEnabled = true,
+  inactiveReason,
 }) => {
   const [dragError, setDragError] = useState<string | null>(null);
   const [rawSlotChoiceDieId, setRawSlotChoiceDieId] = useState<string | null>(null);
@@ -121,6 +124,8 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
     yangCount: yangSlotIds.length,
     requiresBothSlots: requiresBoth,
   });
+  const confirmationAllowed = confirmCheck.allowed && !distanceWarning;
+  const confirmationBlocker = distanceWarning ?? confirmCheck.reasons.join("、");
 
   // ---- Handlers ----
 
@@ -242,7 +247,7 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
         ) : (
           <div className="qi-basic-action-mode" role="status">
             <strong>气骰总览</strong>
-            <span>当前为只读或基础动作模式，无需配置阴阳槽。</span>
+            <span>{inactiveReason ?? "当前为只读或基础动作模式，无需配置阴阳槽。"}</span>
           </div>
         )}
       </div>
@@ -280,12 +285,14 @@ export const QiDiceDock: FC<QiDiceDockProps> = ({
       {declarationEnabled ? (
         <>
           <button
-            className={`qi-confirm-btn${confirmCheck.allowed ? "" : " disabled"}`}
+            className={`qi-confirm-btn${confirmationAllowed ? "" : " disabled"}`}
             type="button"
-            disabled={!confirmCheck.allowed}
+            disabled={!confirmationAllowed}
             onClick={onConfirm}
+            title={confirmationAllowed ? "确认本次招式、目标与阴阳配骰" : confirmationBlocker}
           >
-            确认宣言并锁气
+            <span>确认宣言并锁气</span>
+            {!confirmationAllowed && <small>{confirmationBlocker}</small>}
           </button>
           {!confirmCheck.allowed && confirmCheck.reasons.length > 0 && (
             <p className="qi-confirm-hint">

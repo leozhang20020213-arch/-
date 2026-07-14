@@ -59,6 +59,17 @@ describe("combat engine", () => {
     assert.equal(next.dice.filter((die) => die.zone === "QI_LOCK").length, 2);
   });
 
+  it("rejects a declaration when the selected actor is outside the move distance", () => {
+    const state = enterScene(createSeedState(), fixedRoll);
+    assert.throws(
+      () => declareAction(state, "pc-shen-qing", "enemy-porter", "WG001", ["pc-d1", "pc-d2"], {
+        yinSlotDiceIds: ["pc-d1"],
+        yangSlotDiceIds: ["pc-d2"],
+      }),
+      /距离不符：当前中距，招式需要近身/,
+    );
+  });
+
   it("keeps yin and yang slot ownership while preserving diceIds compatibility", () => {
     const state = enterScene(createSeedState(), fixedRoll);
     const next = declareAction(
@@ -392,6 +403,18 @@ describe("combat engine", () => {
       validateLanMessage({ type: "room_joined", roomCode: "LAN-AB12", senderId: "player", payload: { playerName: "p", hiddenGoal: "bad" } }).ok,
       false,
     );
+    assert.equal(validateLanMessage({
+      type: "scene_action_requested",
+      roomCode: "LAN-AB12",
+      senderId: "player",
+      payload: { request: { id: "r1", actorId: "pc-shen-qing", actionType: "observe", targetId: "warehouse-door", approach: "查看水痕", createdAt: 1 } },
+    }).ok, true);
+    assert.equal(validateLanMessage({
+      type: "scene_action_requested",
+      roomCode: "LAN-AB12",
+      senderId: "player",
+      payload: { request: { id: "r1", actorId: "pc-shen-qing", actionType: "hack", approach: "非法入口", createdAt: 1 } },
+    }).ok, false);
     assert.equal(validateLanMessage({ type: "unknown", roomCode: "LAN-AB12", senderId: "dm", payload: {} }).ok, false);
     assert.equal(validateStatusRecord({ name: "status", public: true, illegal: true }).ok, false);
   });

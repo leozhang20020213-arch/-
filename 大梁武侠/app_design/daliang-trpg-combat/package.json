@@ -1,10 +1,17 @@
 {
   "name": "daliang-trpg-combat",
   "version": "0.1.0",
+  "description": "大梁江湖 TRPG Windows 桌面游戏",
+  "author": "大梁江湖 TRPG 项目",
   "private": true,
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "desktop:dev": "concurrently -k -s first \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "desktop": "npm run build && electron .",
+    "desktop:pack": "npm run build && electron-builder --win --x64 --dir",
+    "desktop:dist": "npm run build && electron-builder --win --x64",
     "dev:legacy": "npm run dev",
     "dev:lan:ui": "vite --host 0.0.0.0",
     "dev:lan": "tsx server/lanHost.ts",
@@ -12,7 +19,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "tsx --test src/combat/combatEngine.test.ts",
     "test:lib": "tsx --test src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts src/lib/combat/autoDm.test.ts src/lib/combat/targetValidation.test.ts src/lib/combat/turnOrder.test.ts",
-    "test:all": "tsx --test src/combat/combatEngine.test.ts src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts src/lib/combat/autoDm.test.ts src/lib/combat/targetValidation.test.ts src/lib/combat/turnOrder.test.ts src/ui/combat/stage/CombatStage.test.tsx src/ui/combat/dice/dicePresentation.test.ts src/ui/combat/dice/DiceComponents.test.tsx"
+    "test:all": "tsx --test src/combat/combatEngine.test.ts src/combat/storage.test.ts src/dice3d/DicePlacementResolver.test.ts src/lib/combat/qiAssignment.test.ts src/lib/combat/combatPhaseMachine.test.ts src/lib/combat/autoDm.test.ts src/lib/combat/targetValidation.test.ts src/lib/combat/turnOrder.test.ts src/lib/scene/autoSceneDm.test.ts src/lib/room/roomRules.test.ts src/ui/combat/stage/CombatStage.test.tsx src/ui/combat/dice/dicePresentation.test.ts src/ui/combat/dice/DiceComponents.test.tsx"
   },
   "dependencies": {
     "@types/react": "^19.0.0",
@@ -31,6 +38,44 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.0",
-    "tsx": "^4.20.0"
+    "concurrently": "^10.0.3",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
+    "tsx": "^4.20.0",
+    "wait-on": "^9.0.10",
+    "cross-env": "^10.1.0"
+  },
+  "build": {
+    "appId": "cn.daliangjianghu.trpg",
+    "productName": "大梁江湖TRPG",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "electronDist": "node_modules/electron/dist",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/assets/icons/png512/005_world_世界.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "大梁江湖TRPG"
+    }
   }
 }

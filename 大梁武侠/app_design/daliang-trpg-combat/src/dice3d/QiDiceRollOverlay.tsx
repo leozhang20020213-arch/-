@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import type { QiDie } from "../combat/types";
 import {
   affinityFromNature,
@@ -10,7 +10,7 @@ import {
 } from "./diceTypes";
 import { createDiceDefinition } from "./DiceGeometryFactory";
 import { createDiceMesh, type DiceMeshHandle } from "./DiceMesh";
-import { getInitialDicePosition } from "./DicePlacementResolver";
+import { packDicePositions } from "./DicePlacementResolver";
 import { createRollAnimationPlan, sampleRollAnimation } from "./DiceRollController";
 
 import studioHDRI from "../assets/materials/polyhaven/studio_small_03_1k.hdr?url";
@@ -108,8 +108,9 @@ export function QiDiceRollOverlay({
     const width = Math.max(320, container.clientWidth || 640);
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1410);
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 4.4, 7.6);
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+    camera.position.set(0, 8.8, 0.65);
+    camera.up.set(0, 0, -1);
     camera.lookAt(0, 0, 0);
 
     let renderer: THREE.WebGLRenderer;
@@ -130,7 +131,7 @@ export function QiDiceRollOverlay({
     container.appendChild(renderer.domElement);
 
     let environmentTexture: THREE.DataTexture | null = null;
-    const hdriLoader = new RGBELoader();
+    const hdriLoader = new HDRLoader();
     hdriLoader.load(
       studioHDRI,
       (texture) => {
@@ -149,17 +150,16 @@ export function QiDiceRollOverlay({
     dirLight.position.set(4, 8, 5);
     scene.add(dirLight);
 
-    const tableGeometry = new THREE.CircleGeometry(3.6, 64);
+    const tableGeometry = new THREE.BoxGeometry(8.4, 0.16, 6.8);
     const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3028, roughness: 0.72 });
     const table = new THREE.Mesh(tableGeometry, tableMaterial);
-    table.rotation.x = -Math.PI / 2;
-    table.position.y = -0.62;
+    table.position.y = -0.18;
     table.receiveShadow = true;
     scene.add(table);
 
     const meshHandles: DiceMeshHandle[] = [];
     const definitions: ReturnType<typeof createDiceDefinition>[] = [];
-    dice.forEach((die, index) => {
+    dice.forEach((die) => {
       const state: Dice3DState = {
         id: die.id,
         type: dieTypeFromSides(die.sides),
@@ -174,35 +174,33 @@ export function QiDiceRollOverlay({
       };
       definitions.push(createDiceDefinition(state.type));
       const meshHandle = createDiceMesh(state);
-      const position = getInitialDicePosition(index, dice.length);
-      meshHandle.mesh.position.set(position.x, 0, position.z);
       meshHandle.mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       scene.add(meshHandle.mesh);
       meshHandles.push(meshHandle);
     });
 
-    const rollPlans = meshHandles.map((handle, index) =>
-      createRollAnimationPlan(definitions[index], handle.mesh.quaternion.clone(), targetResults[index].value));
-    const startPositions = meshHandles.map((handle) => handle.mesh.position.clone());
     const natureRank = { yin: 0, yang: 1, raw: 2 } as const;
     const sortedDice = dice
-      .map((die, index) => ({ die, result: targetResults[index] }))
+      .map((die, index) => ({ die, definition: definitions[index], result: targetResults[index] }))
       .sort((a, b) => a.die.sides - b.die.sides
         || natureRank[a.die.nature] - natureRank[b.die.nature]
         || b.result.value - a.result.value);
-    const targetById = new Map<string, THREE.Vector3>();
-    const columns = Math.min(6, Math.max(1, dice.length));
-    const rows = Math.ceil(dice.length / columns);
-    sortedDice.forEach(({ die }, sortedIndex) => {
-      const row = Math.floor(sortedIndex / columns);
-      const column = sortedIndex % columns;
-      const itemsInRow = Math.min(columns, dice.length - row * columns);
-      targetById.set(die.id, new THREE.Vector3(
-        (column - (itemsInRow - 1) / 2) * 0.92,
-        0,
-        (row - (rows - 1) / 2) * 1.02,
-      ));
+    const packing = packDicePositions(
+      sortedDice.map(({ die, definition }) => ({ id: die.id, radius: definition.radius })),
+      { width: 7.35, depth: 5.65, gap: 0.24, maxColumns: 6 },
+    );
+    const targetById = packing.positions;
+    const startPositions = dice.map((die, index) => {
+      const target = targetById.get(die.id) ?? new THREE.Vector3();
+      const angle = (index / Math.max(1, dice.length)) * Math.PI * 2;
+      return target.clone().add(new THREE.Vector3(Math.cos(angle) * 0.18, 0, Math.sin(angle) * 0.18));
     });
+    meshHandles.forEach((handle, index) => {
+      handle.mesh.scale.setScalar(packing.scale);
+      handle.mesh.position.copy(startPositions[index]);
+    });
+    const rollPlans = meshHandles.map((handle, index) =>
+      createRollAnimationPlan(definitions[index], handle.mesh.quaternion.clone(), targetResults[index].value));
 
     const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
@@ -234,7 +232,12 @@ export function QiDiceRollOverlay({
         if (rolling) {
           const sample = sampleRollAnimation(rollPlans[index], elapsed);
           handle.mesh.quaternion.copy(sample.quaternion);
-          handle.mesh.position.y = sample.lift;
+          const target = targetById.get(dice[index].id) ?? startPositions[index];
+          const progress = Math.min(1, elapsed / rollDuration);
+          const orbit = Math.sin(progress * Math.PI * 2 + index * 0.73) * 0.08;
+          handle.mesh.position.lerpVectors(startPositions[index], target, progress * 0.72);
+          handle.mesh.position.x += orbit;
+          handle.mesh.position.y = sample.lift + Math.sin(Math.PI * progress) * 0.32;
           return;
         }
         const finalSample = sampleRollAnimation(rollPlans[index], rollDuration);

@@ -1913,18 +1913,31 @@ meter::-webkit-meter-optimum-value {
 }
 
 .dice-roll-overlay .mini-dice-list {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
   gap: 6px;
-  padding: 4px 2px 8px;
-  overflow-x: auto;
+  max-height: 74px;
+  padding: 3px 2px;
+  overflow-y: auto;
 }
 
 .dice-roll-overlay .identity-pill {
-  flex: 0 0 auto;
+  justify-content: center;
+  min-width: 0;
   min-height: 30px;
-  padding: 0 10px;
+  padding: 0 6px;
   font-size: 11px;
+}
+
+@media (max-height: 820px) {
+  .dice-roll-overlay {
+    gap: 9px;
+    padding: 18px 22px;
+  }
+
+  .dice-canvas {
+    height: 300px;
+  }
 }
 
 /* --------------------------------------------------------------------------

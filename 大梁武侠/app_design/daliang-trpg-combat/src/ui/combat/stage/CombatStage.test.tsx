@@ -27,12 +27,14 @@ describe("CombatStage target controls", () => {
       <CombatStage
         data={data}
         state={state}
+        selectedMove={state.actors.find((actor) => actor.id === state.activeActorId)!.moves[0]}
         targetableActorIds={[friendlyTarget.id]}
       />,
     );
 
     assert.doesNotMatch(openingButtonTag(html, friendlyTarget.name), /\sdisabled(?:=|\s|>)/);
-    assert.match(openingButtonTag(html, enemy.name), /\sdisabled=""/);
+    assert.match(openingButtonTag(html, enemy.name), /untargetable/);
+    assert.doesNotMatch(openingButtonTag(html, enemy.name), /\sdisabled(?:=|\s|>)/);
   });
 
   it("renders multiple action-to-target lines with complete visible HTML labels", () => {

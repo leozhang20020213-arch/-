@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import type { QiDie } from "../combat/types";
 import type { QiZone } from "../combat/types";
 import {
@@ -190,7 +190,7 @@ export function QiDiceTray({
     rendererRef.current = renderer;
 
     // HDRI environment map
-    new RGBELoader().load(studioHDRI, (texture) => {
+    new HDRLoader().load(studioHDRI, (texture) => {
       texture.mapping = THREE.EquirectangularReflectionMapping;
       scene.environment = texture;
       scene.background = new THREE.Color(0x050505);
