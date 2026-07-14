@@ -1,10 +1,16 @@
-import type { FC, ReactNode } from "react";
+import { useState, type FC, type ReactNode } from "react";
 
 export interface CombatShellProps {
   /** Top combat bar */
   top: ReactNode;
   /** Left panel (320px) */
   left: ReactNode;
+  /** Allow the secondary combat ledger to fold into a narrow desk-edge tab. */
+  leftCollapsible?: boolean;
+  /** Start with the secondary ledger folded so the combat stage owns the desk. */
+  leftInitiallyCollapsed?: boolean;
+  /** Short text shown on the folded ledger tab. */
+  leftCollapsedLabel?: string;
   /** Center panel (flex 1) */
   center: ReactNode;
   /** Right panel (380px) */
@@ -34,6 +40,9 @@ export interface CombatShellProps {
 export const CombatShell: FC<CombatShellProps> = ({
   top,
   left,
+  leftCollapsible = false,
+  leftInitiallyCollapsed = false,
+  leftCollapsedLabel = "战况卷宗",
   center,
   right,
   rightCollapsed = false,
@@ -42,12 +51,45 @@ export const CombatShell: FC<CombatShellProps> = ({
   drawer,
   modal,
 }) => {
+  const [leftExpanded, setLeftExpanded] = useState(!leftInitiallyCollapsed);
+  const leftCollapsed = leftCollapsible && !leftExpanded;
+
   return (
     <div className="combat-shell">
       {top}
 
-      <div className={`combat-main${rightCollapsed ? " right-collapsed" : ""}`}>
-        <div className="combat-left">{left}</div>
+      <div className={`combat-main${leftCollapsed ? " left-collapsed" : ""}${rightCollapsed ? " right-collapsed" : ""}`}>
+        <div className={`combat-left${leftCollapsed ? " is-collapsed" : ""}`}>
+          {leftCollapsed ? (
+            <button
+              className="combat-ledger-rail"
+              type="button"
+              aria-label={`展开${leftCollapsedLabel}`}
+              aria-expanded="false"
+              onClick={() => setLeftExpanded(true)}
+            >
+              <span>{leftCollapsedLabel}</span>
+              <small>队伍 · 进度 · 动态</small>
+            </button>
+          ) : (
+            <>
+              {leftCollapsible && (
+                <div className="combat-ledger-heading">
+                  <strong>{leftCollapsedLabel}</strong>
+                  <button
+                    type="button"
+                    aria-label={`收起${leftCollapsedLabel}`}
+                    aria-expanded="true"
+                    onClick={() => setLeftExpanded(false)}
+                  >
+                    收起
+                  </button>
+                </div>
+              )}
+              {left}
+            </>
+          )}
+        </div>
         <div className="combat-center">{center}</div>
         <div className={`combat-right${rightCollapsed ? " is-collapsed" : ""}`}>
           {rightCollapsed ? (

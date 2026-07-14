@@ -1498,6 +1498,9 @@ function PlayerCombatDesk(props: DeskProps & {
         />
       }
       left={<LeftCombatPanel actor={actor} state={props.state} />}
+      leftCollapsible
+      leftInitiallyCollapsed
+      leftCollapsedLabel="战况卷宗"
       center={
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} targetableActorIds={targetableActorIds} onSelect={(id) => { props.setSelectedCombatantId(id); if (targetableActorIds.includes(id)) props.setSelectedTargetId(id); }} selectedMove={selectedMove} />}
@@ -1754,6 +1757,9 @@ function DmCombatDesk(props: DeskProps & {
         />
       }
       left={<LeftCombatPanel actor={activeActor} state={props.state} isDM />}
+      leftCollapsible
+      leftInitiallyCollapsed
+      leftCollapsedLabel="主持战况"
       center={
         <CenterCombatPanel
           stage={<CombatStage state={props.state} selectedId={props.selectedCombatantId} selectedTargetId={props.selectedTargetId} targetableActorIds={targetableActorIds} onSelect={(id) => { props.setSelectedCombatantId(id); if (targetableActorIds.includes(id)) props.setSelectedTargetId(id); }} selectedMove={selectedMove} />}
@@ -2220,7 +2226,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
         <div className="form-grid">
           <label>
             目标
-            <select value={props.selectedTargetId} onChange={(event) => { const id = event.target.value; props.setSelectedTargetId(id); props.setSelectedCombatantId(id); }}>
+            <select value={props.selectedTargetId} onChange={(event) => props.setSelectedTargetId(event.target.value)}>
               <option value="">请选择合法目标</option>
               {props.targets.map((target) => (
                 <option key={target.id} value={target.id}>{target.name}</option>

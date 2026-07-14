@@ -247,3 +247,65 @@ button:active:not(:disabled) { transform: translateY(1px); }
   .scene-boundary { display:none; }.scene-action-workbench { padding:6px; }.scene-action-form { margin-top:5px; }
   .home-masthead img { width:52px; height:52px; }.home-masthead h2 { font-size:28px; }.role-entry > p:not(.eyebrow) { line-height:1.45; }.role-entry-grid { gap:14px; }
 }
+
+/* Combat focus pass: secondary ledgers fold to desk-edge tabs, leaving the
+   abstract stage, bottom hand, and qi workbench as the only permanent focus. */
+.combat-main.left-collapsed {
+  grid-template-columns:48px minmax(0,1fr) var(--cs-right-w);
+}
+.combat-main.left-collapsed.right-collapsed {
+  grid-template-columns:48px minmax(0,1fr) 48px;
+}
+
+.combat-ledger-heading + .combat-left-panel { padding-top:1px; }
+.combat-left-panel .game-panel { border-color:rgba(155,119,70,.28); box-shadow:0 8px 20px rgba(0,0,0,.14); }
+.combat-left-panel .game-panel:last-child { background:linear-gradient(180deg,rgba(39,35,28,.98),rgba(24,24,20,.98)); }
+.combat-left-panel .game-panel:last-child .game-panel__header h3 { color:#e1cfad; }
+.combat-left-panel .game-panel:last-child .game-panel__body,
+.combat-left-panel .game-panel:last-child .game-panel__body div { color:#b8ab96 !important; }
+
+.combat-action-deck-panel .action-card-grid.has-selection .action-card:not(.selected) {
+  opacity:.5;
+  filter:saturate(.58) brightness(.94);
+  box-shadow:0 3px 8px rgba(37,22,13,.15);
+}
+.combat-action-deck-panel .action-card-grid.has-selection .action-card.selected {
+  z-index:5;
+  opacity:1;
+  filter:none;
+  border-color:#bd8c3f;
+  box-shadow:0 12px 26px rgba(72,42,16,.36),0 0 0 2px rgba(216,173,92,.24),inset 0 0 0 1px rgba(255,250,232,.78);
+}
+.combat-action-deck-panel .action-card-grid.has-selection .action-card:not(.selected):hover {
+  opacity:.86;
+  filter:saturate(.9) brightness(1.02);
+}
+
+/* Preserve the card-hand silhouette at the Windows minimum instead of
+   degrading it into a flat web-style button row. */
+@media (max-width:1480px), (max-height:820px) {
+  .combat-action-deck-panel .action-card-grid > .action-card:nth-child(1) { transform:rotate(-1.8deg) translateY(3px); }
+  .combat-action-deck-panel .action-card-grid > .action-card:nth-child(2) { transform:rotate(-.9deg) translateY(1px); }
+  .combat-action-deck-panel .action-card-grid > .action-card:nth-child(3) { transform:rotate(-.25deg); }
+  .combat-action-deck-panel .action-card-grid > .action-card:nth-child(4) { transform:rotate(.25deg); }
+  .combat-action-deck-panel .action-card-grid > .action-card:nth-child(5) { transform:rotate(.9deg) translateY(1px); }
+  .combat-action-deck-panel .action-card-grid > .action-card:nth-child(n+6) { transform:rotate(1.8deg) translateY(3px); }
+  .combat-action-deck-panel .action-card-grid > .action-card:hover:not(:disabled) { transform:translateY(-6px) rotate(0) scale(1.025); }
+  .combat-action-deck-panel .action-card-grid > .action-card.selected,
+  .combat-action-deck-panel .action-card-grid.has-selection > .action-card.selected { transform:translateY(-5px) rotate(0); }
+}
+
+@media (max-width:1380px) {
+  .combat-main.left-collapsed { grid-template-columns:44px minmax(0,1fr) 270px; }
+  .combat-main.left-collapsed.right-collapsed { grid-template-columns:44px minmax(0,1fr) 44px; }
+  .combat-action-deck-panel { grid-template-columns:minmax(142px,.52fr) minmax(0,2.48fr); }
+  .combat-action-deck-panel .action-card,
+  .combat-action-deck-panel .action-card-grid.has-selection .action-card,
+  .combat-action-deck-panel .action-card-grid.has-selection .action-card.selected { flex-basis:116px; }
+  .combat-action-deck-panel .action-card-grid.has-selection .action-card.selected { flex-basis:144px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .combat-ledger-rail,
+  .combat-action-deck-panel .action-card { transition:none !important; }
+}
