@@ -690,7 +690,7 @@ describe("combat engine", () => {
     );
   });
 
-  it("reflection retrieves the lowest-rank innate die without reroll", () => {
+  it("reflection rerolls the lowest-rank innate die once without spending the main action", () => {
     let state = enterScene(createSeedState(), fixedRoll);
     state = {
       ...state,
@@ -700,9 +700,18 @@ describe("combat engine", () => {
         ? { ...die, zone: "QI_REST" as const, value: die.id === "pc-d4" ? 4 : 1 }
         : die),
     };
-    state = useReflection(state, "pc-shen-qing");
+    state = useReflection(state, "pc-shen-qing", () => 2);
     assert.equal(state.dice.find((die) => die.id === "pc-d4")?.zone, "QI_SEA");
-    assert.equal(state.dice.find((die) => die.id === "pc-d4")?.value, 4);
+    assert.equal(state.dice.find((die) => die.id === "pc-d4")?.value, 2);
+    assert.equal(state.phase, "declare");
+    assert.equal(state.actors.find((actor) => actor.id === "pc-shen-qing")?.reflectionUsedRound, state.round);
+
+    const attemptedAgain = useReflection({
+      ...state,
+      dice: state.dice.map((die) => die.id === "pc-d4" ? { ...die, zone: "QI_REST" as const } : die),
+    }, "pc-shen-qing", () => 3);
+    assert.match(attemptedAgain.logs[0].message, /本轮已经返照/);
+    assert.equal(attemptedAgain.dice.find((die) => die.id === "pc-d4")?.zone, "QI_REST");
   });
 
   it("passive circulation does not reroll", () => {

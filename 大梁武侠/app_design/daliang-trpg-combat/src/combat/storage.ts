@@ -1,5 +1,6 @@
 import { createInitialCombatState, createSeedState } from "../data/seed";
 import type { AppSession, CombatState, InnerArt, InventoryItem, MoveTiming, SixRoots, StatusEffect } from "./types";
+import { normalizeResponseBudget, normalizeRuntimeSession } from "../domain/session/runtime";
 
 const STORAGE_KEY = "daliang-trpg-combat:v1";
 const SESSION_KEY = "daliang-trpg-session:v1";
@@ -164,6 +165,11 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
       statuses: allStatuses,
       inventory: (rawActor.inventory as InventoryItem[]) ?? seedActor?.inventory ?? [],
       moves: normalizeMoves(rawActor.moves, seedActor?.moves ?? []),
+      responseBudget: normalizeResponseBudget(
+        rawActor.responseBudget,
+        typeof rawActor.responseQuotaUsed === "number" ? rawActor.responseQuotaUsed : seedActor.responseQuotaUsed,
+        typeof rawActor.maxResponseQuota === "number" ? rawActor.maxResponseQuota : seedActor.maxResponseQuota,
+      ),
     };
   });
 
@@ -183,6 +189,16 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
   return {
     ...seed,
     ...value,
+    runtime: normalizeRuntimeSession(valueRec.runtime, {
+      sceneId: value.scene?.id ?? seed.scene.id,
+      encounterMode: value.encounterMode,
+      round: value.round,
+      phase: value.phase,
+      activeActorId: value.activeActorId,
+      initiativeOrder,
+      actedActorIds,
+      turnPaused: value.turnPaused,
+    }),
     actors,
     initiativeOrder,
     actedActorIds,

@@ -17,6 +17,18 @@ import type {
 } from "./types";
 import { deriveTargetState } from "../lib/combat/targetValidation";
 import { computeTurnOrder } from "../lib/combat/turnOrder";
+import {
+  beginCombatEncounter,
+  beginNewScene,
+  canSpendResponseBudget,
+  confirmCombatInitiative,
+  normalizeResponseBudget,
+  resetResponseBudget,
+  setSceneMode,
+  spendResponseBudget,
+  syncActiveSequence,
+  type ResponseBudgetKind,
+} from "../domain/session/runtime";
 
 export type RollFn = (sides: number) => number;
 
@@ -462,6 +474,57 @@ export function calculateSlotValues(state: CombatState): SlotValues {
   return { 阴值, 阳值, 合值, 阴阳差 };
 }
 
+function resetActorResponseBudgets(actor: Actor): Actor {
+  const budget = normalizeResponseBudget(
+    actor.responseBudget,
+    actor.responseQuotaUsed,
+    actor.maxResponseQuota,
+  );
+  return {
+    ...actor,
+    responseQuotaUsed: 0,
+    responseBudget: resetResponseBudget(budget),
+  };
+}
+
+function spendActorResponseBudget(
+  actor: Actor,
+  kind: ResponseBudgetKind,
+): Actor {
+  const budget = normalizeResponseBudget(
+    actor.responseBudget,
+    actor.responseQuotaUsed,
+    actor.maxResponseQuota,
+  );
+  if (!canSpendResponseBudget(budget, kind)) {
+    throw new Error(kind === "proactive"
+      ? `${actor.name} 本轮主动响应额度已用完。`
+      : `${actor.name} 本轮自保应招额度已用完。`);
+  }
+  const nextBudget = spendResponseBudget(budget, kind);
+  return {
+    ...actor,
+    // Legacy UI only represented proactive intervention. Keep it as a mirror
+    // until the embedded response dock lands in phase 3.
+    responseQuotaUsed: kind === "proactive" ? nextBudget.proactiveUsed : actor.responseQuotaUsed,
+    responseBudget: nextBudget,
+  };
+}
+
+function syncRuntimeSequence(state: CombatState): CombatState {
+  return {
+    ...state,
+    runtime: syncActiveSequence(state.runtime, {
+      round: state.round,
+      phase: state.phase === "scene" ? undefined : state.phase,
+      activeActorId: state.activeActorId,
+      initiativeOrder: state.initiativeOrder,
+      actedActorIds: state.actedActorIds,
+      paused: state.turnPaused,
+    }),
+  };
+}
+
 /**
  * Response attachments use their own dice for trigger values. Until the UI
  * gains a full two-slot response editor, fixed-nature dice go to their matching
@@ -624,10 +687,18 @@ export function canDeclareAction(
 
 export function prepareCombatRound(state: CombatState): CombatState {
   let next = cloneState(state);
+  const encounterNumber = next.logs.filter((entry) => entry.type === "COMBAT_ENCOUNTER_STARTED").length + 1;
+  next.runtime = beginCombatEncounter(
+    next.runtime,
+    `${next.scene.id}:combat:${encounterNumber}`,
+  );
   next.phase = "initiative";
   next.encounterMode = "combat";
+  next.round = 1;
+  next.initiativeOrder = [];
+  next.actedActorIds = [];
   next.pendingAction = undefined;
-  next = appendLog(next, "phase_changed", "交锋轮开始：进入先后确认；沿用当前气海、息库与骰值，不重投常规气骰。");
+  next = appendLog(next, "COMBAT_ENCOUNTER_STARTED", "交锋轮开始：建立独立战斗先后与第1轮；沿用当前气海、息库与骰值，不重投常规气骰。");
   return next;
 }
 
@@ -640,7 +711,20 @@ export function confirmInitiative(state: CombatState): CombatState {
   if (firstActor) next.activeActorId = firstActor.actorId;
   next.phase = "declare";
   next.pendingAction = undefined;
-  next.actors = next.actors.map((actor) => ({ ...actor, responseQuotaUsed: 0 }));
+  next.actors = next.actors.map(resetActorResponseBudgets);
+  next.runtime = next.runtime.mode === "COMBAT"
+    ? confirmCombatInitiative(
+        next.runtime,
+        next.initiativeOrder,
+        firstActor?.actorId,
+      )
+    : setSceneMode(next.runtime, "SCENE_STRUCTURED", {
+        round: next.round,
+        activeActorId: firstActor?.actorId,
+        initiativeOrder: next.initiativeOrder,
+        actedActorIds: [],
+        paused: false,
+      });
   next = appendLog(
     next,
     "phase_changed",
@@ -663,8 +747,10 @@ export function confirmInitiative(state: CombatState): CombatState {
  */
 export function enterScene(state: CombatState, roll: RollFn = defaultRoll): CombatState {
   let next = cloneState(state);
+  next.runtime = beginNewScene(next.runtime, next.scene.id, "SCENE_STRUCTURED");
   next.phase = "scene";
   next.encounterMode = "scene";
+  next.round = 1;
   next.actedActorIds = [];
   next.turnPaused = false;
   next.pendingAction = undefined;
@@ -682,8 +768,8 @@ export function enterScene(state: CombatState, roll: RollFn = defaultRoll): Comb
     if (actor.momentum === "崩势" && actor.hp > 0) {
       return { ...actor, momentum: "失势" as ShiState };
     }
-    // Reset response quota
-    return { ...actor, responseQuotaUsed: 0 };
+    // Reset both response budgets on the new scene boundary.
+    return resetActorResponseBudgets(actor);
   });
 
   // Decay statuses with "每轮结束-1层" rule
@@ -693,6 +779,13 @@ export function enterScene(state: CombatState, roll: RollFn = defaultRoll): Comb
   next.initiativeOrder = order.map((entry) => entry.actorId);
   if (order[0]) next.activeActorId = order[0].actorId;
   next.phase = "declare";
+  next.runtime = setSceneMode(next.runtime, "SCENE_STRUCTURED", {
+    round: 1,
+    activeActorId: next.activeActorId,
+    initiativeOrder: next.initiativeOrder,
+    actedActorIds: [],
+    paused: false,
+  });
   next = appendLog(next, "ENTER_SCENE", "DM开始新场景：常规气骰从气池投出并进入气海；情景交锋先后序已建立。");
   return appendFeedback(next, {
     kind: "round",
@@ -865,13 +958,10 @@ export function resolveInterceptSuccess(
     throw new Error(momentumCheck.reason ?? "截击势条件不满足");
   }
 
-  // Validate and increment response quota
-  if (responder.responseQuotaUsed >= responder.maxResponseQuota) {
-    throw new Error(`${responder.name} 本轮响应额度已用完。`);
-  }
+  // 截击和第三方护人读取主动响应额度。
   next.actors = next.actors.map((a) =>
     a.id === responderId
-      ? { ...a, responseQuotaUsed: a.responseQuotaUsed + 1 }
+      ? spendActorResponseBudget(a, "proactive")
       : a,
   );
 
@@ -1076,13 +1166,11 @@ export function resolveReact(
     throw new Error(momentumCheck.reason ?? "应招势条件不满足");
   }
 
-  // Validate and increment response quota
-  if (responder.responseQuotaUsed >= responder.maxResponseQuota) {
-    throw new Error(`${responder.name} 本轮响应额度已用完。`);
-  }
+  // 目标本人使用自保应招额度；第三方承接仍消耗主动响应额度。
+  const budgetKind: ResponseBudgetKind = responderId === action.targetId ? "self_defense" : "proactive";
   next.actors = next.actors.map((a) =>
     a.id === responderId
-      ? { ...a, responseQuotaUsed: a.responseQuotaUsed + 1 }
+      ? spendActorResponseBudget(a, budgetKind)
       : a,
   );
 
@@ -1422,11 +1510,14 @@ export function regulateBreath(
 }
 
 /**
- * useReflection: 返照 — take the lowest-value die from QI_REST and move it to QI_SEA.
- * Only allowed when QI_SEA is empty for that actor (断气条件).
- * Does NOT reroll — keeps the original value.
+ * 返照：断气时取回最低阶本命骰并重投。它是每轮一次的特殊
+ * 随手便行，因此不会消耗角色原本的正式出手机会。
  */
-export function useReflection(state: CombatState, actorId: string): CombatState {
+export function useReflection(
+  state: CombatState,
+  actorId: string,
+  roll: RollFn = defaultRoll,
+): CombatState {
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
 
@@ -1449,6 +1540,14 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
     );
   }
 
+  if (actor.reflectionUsedRound === next.round) {
+    return appendLog(
+      next,
+      "REFLECTION",
+      `${actor.name} 尝试返照失败：本轮已经返照一次。`,
+    );
+  }
+
   // Find the lowest-rank innate die in QI_REST; value and id are stable ties.
   const candidate = next.dice
     .filter(
@@ -1468,20 +1567,25 @@ export function useReflection(state: CombatState, actorId: string): CombatState 
     );
   }
 
-  // Move to QI_SEA WITHOUT reroll (keep original value)
-  next.dice = moveDice(next.dice, [candidate.id], "QI_SEA");
-  next.phase = "round_end";
+  // 返照与调息不同：最低阶本命骰必须重新投掷后进入气海。
+  const rerolledValue = Math.max(1, Math.min(candidate.sides, roll(candidate.sides)));
+  next.dice = next.dice.map((die) => die.id === candidate.id
+    ? { ...die, zone: "QI_SEA" as QiZone, value: rerolledValue }
+    : die);
+  next.actors = next.actors.map((entry) => entry.id === actorId
+    ? { ...entry, reflectionUsedRound: next.round }
+    : entry);
 
   next = appendLog(
     next,
     "REFLECTION",
-    `${actor.name} 返照，取回最低阶先天气骰 ${candidate.sourceName}（D${candidate.sides}·${candidate.value}点），保持原点数，本次主行动结束。`,
+    `${actor.name} 返照，取回最低阶本命气骰 ${candidate.sourceName}（D${candidate.sides}），重投为 ${rerolledValue} 点；本轮返照次数已用，正式出手机会保留。`,
   );
   return appendFeedback(next, {
     kind: "resource",
     actorId,
     title: "返照",
-    detail: `D${candidate.sides}·${candidate.value} 回到气海`,
+    detail: `D${candidate.sides}·${rerolledValue} 回到气海`,
   });
 }
 
@@ -1567,8 +1671,10 @@ export function getBasicActionAvailability(
       detailReasons.push("息库没有可返照的先天气骰");
       reasonTags.push("息库为空");
     }
-    // 返照 consumes the actor's main action; the actedActorIds gate above is
-    // the authoritative once-per-round limit and is reset only at round end.
+    if (actor.reflectionUsedRound === state.round) {
+      detailReasons.push("本轮已经使用过返照");
+      reasonTags.push("本轮已返照");
+    }
   }
 
   const usable = detailReasons.length === 0;
@@ -1889,10 +1995,7 @@ export function endRound(state: CombatState): CombatState {
   next = decayStatuses(next);
 
   // Reset response quotas
-  next.actors = next.actors.map((actor) => ({
-    ...actor,
-    responseQuotaUsed: 0,
-  }));
+  next.actors = next.actors.map(resetActorResponseBudgets);
 
   next.phase = "declare";
   next.round += 1;
@@ -1911,12 +2014,13 @@ export function endRound(state: CombatState): CombatState {
     "ROUND_ENDED",
     `第 ${next.round - 1} 轮结束，进入第 ${next.round} 轮宣言。`,
   );
-  return appendFeedback(next, {
+  next = appendFeedback(next, {
     kind: "round",
     actorId: next.activeActorId,
     title: `第 ${next.round} 轮`,
     detail: "全员响应次数已重置",
   });
+  return syncRuntimeSequence(next);
 }
 
 /**
@@ -1955,12 +2059,13 @@ export function advanceTurn(state: CombatState): CombatState {
   next.turnPaused = false;
   const actor = next.actors.find((entry) => entry.id === nextActorId);
   next = appendLog(next, "TURN_ADVANCED", `行动序列推进：轮到 ${actor?.name ?? nextActorId}。`, true);
-  return appendFeedback(next, {
+  next = appendFeedback(next, {
     kind: "round",
     actorId: nextActorId,
     title: `轮到 ${actor?.name ?? "下一位"}`,
     detail: `第 ${next.round} 轮`,
   });
+  return syncRuntimeSequence(next);
 }
 
 // ============================================================================

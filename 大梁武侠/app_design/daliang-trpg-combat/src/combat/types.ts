@@ -1,3 +1,5 @@
+import type { ResponseBudget, RuntimeSessionState } from "../domain/session/runtime";
+
 // === Qi System (7 zones matching rulebook 气骰七区) ===
 export type QiZone = "QI_POOL" | "QI_SEA" | "QI_LOCK" | "QI_REST" | "TEMP_QI" | "YIN_SLOT" | "YANG_SLOT";
 // 气池 | 气海 | 锁气 | 息库 | 临气区 | 阴槽 | 阳槽
@@ -238,6 +240,10 @@ export interface Actor {
   // 响应额度
   responseQuotaUsed: number;       // 本轮已用响应次数
   maxResponseQuota: number;        // 每轮最大响应次数 (默认1)
+  /** 2026-07-15 双额度模型；旧字段在阶段1仅作为存档兼容镜像。 */
+  responseBudget?: ResponseBudget;
+  /** 返照每轮一次；记录最近使用的 encounter 轮次。 */
+  reflectionUsedRound?: number;
   // 状态与隐藏信息
   statuses: StatusEffect[];
   hiddenStatuses?: StatusEffect[];
@@ -406,6 +412,8 @@ export interface CombatFeedbackEvent {
 }
 
 export interface CombatState {
+  /** 双模式运行壳；旧顶层 round/phase/order 在迁移期保持为 UI 兼容镜像。 */
+  runtime: RuntimeSessionState;
   campaignName: string;
   sceneName: string;
   sceneGoal: string;

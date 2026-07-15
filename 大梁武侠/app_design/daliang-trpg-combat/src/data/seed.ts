@@ -17,6 +17,7 @@ import type {
   FormPosition,
   MoveTiming,
 } from "../combat/types";
+import { createResponseBudget, createRuntimeSession } from "../domain/session/runtime";
 
 // ============================================================
 // MOVES (from rulebook 04_招式库_统一版_修复版.md)
@@ -895,7 +896,13 @@ const distances = [
 // ============================================================
 
 export function createSeedState(): CombatState {
+  const actors = structuredClone([actorShenQing, actorWei, actorShortBlade, actorPorter, actorLookout, actorArcher] as Actor[])
+    .map((actor) => ({
+      ...actor,
+      responseBudget: createResponseBudget(actor.maxResponseQuota, actor.maxResponseQuota),
+    }));
   return {
+    runtime: createRuntimeSession(initialScene.id, "SCENE_FREE"),
     campaignName: "桥陵镇雨夜失镖",
     sceneName: "旧堤仓",
     sceneGoal: "找回失踪的镖箱，查明内鬼",
@@ -906,7 +913,7 @@ export function createSeedState(): CombatState {
     actedActorIds: [],
     encounterMode: "scene",
     turnPaused: false,
-    actors: structuredClone([actorShenQing, actorWei, actorShortBlade, actorPorter, actorLookout, actorArcher] as Actor[]),
+    actors,
     dice: structuredClone([...shenQingDice, ...shortBladeDice, ...porterDice, ...weiDice, ...lookoutDice, ...archerDice]),
     tracks: structuredClone([trackClue, trackPatrol, trackEscape]),
     scene: structuredClone(initialScene),

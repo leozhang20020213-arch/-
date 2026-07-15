@@ -4,6 +4,7 @@
 // ==========================================================================
 
 import type { Actor, CombatState, ShiState } from "../../combat/types";
+import { canSpendResponseBudget, normalizeResponseBudget } from "../../domain/session/runtime";
 
 // ---- Data Types ----
 
@@ -129,11 +130,17 @@ export function computeTurnOrder(
     const hasActed = actedActorIds.has(actor.id);
 
     // Acting earlier in the round does not spend or remove response eligibility.
+    const responseBudget = normalizeResponseBudget(
+      actor.responseBudget,
+      actor.responseQuotaUsed,
+      actor.maxResponseQuota,
+    );
     const canRespond =
       isResponseWindow &&
       !isCurrent &&
       actor.hp > 0 &&
-      actor.responseQuotaUsed < actor.maxResponseQuota;
+      (canSpendResponseBudget(responseBudget, "proactive")
+        || canSpendResponseBudget(responseBudget, "self_defense"));
 
     return {
       actorId: actor.id,

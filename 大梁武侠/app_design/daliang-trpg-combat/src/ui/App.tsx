@@ -2228,7 +2228,10 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
       {props.selectedBasicAction ? (
         <div className="basic-action-tray" role="dialog" aria-label={isBreathSelected ? "调息配置" : "返照确认"}>
           <button className="basic-action-tray__close" type="button" aria-label="返回手牌" onClick={() => props.setSelectedBasicAction(null)}>×</button>
-          <header><strong>{isBreathSelected ? "调息" : "返照"}</strong><span>消耗一次主行动 · 不重掷</span></header>
+          <header>
+            <strong>{isBreathSelected ? "调息" : "返照"}</strong>
+            <span>{isBreathSelected ? "消耗一次主行动 · 保留骰面" : "每轮一次 · 重投 · 保留正式出手"}</span>
+          </header>
           {isBreathSelected ? (
             <div className="breath-config compact" aria-label="调息气骰配置">
               <div><small>息引 · 选1</small><div className="breath-dice-options">{guideCandidates.map((die) => (
@@ -2299,7 +2302,7 @@ function ActionPanel(props: DeskProps & { actor: Actor; targets: Actor[] }) {
           data-tooltip={fanzhaoAvail.usable ? "断气时取回最低阶本命骰\n保持原点数" : fanzhaoAvail.detailReasons.slice(0, 3).join("\n")}
           onClick={() => props.setSelectedBasicAction("fanzhao")}
         >
-          <span className="card-cost">1</span><span className="card-art"><i>照</i></span><span className="card-name">返照</span><span className="card-type">断气便行</span><span className="card-effect">最低本命骰返海</span><span className="card-reqs"><b>自身</b><b>耗行动</b></span>
+          <span className="card-cost">1</span><span className="card-art"><i>照</i></span><span className="card-name">返照</span><span className="card-type">随手便行·特殊</span><span className="card-effect">最低本命骰重投入海</span><span className="card-reqs"><b>断气</b><b>保留出手</b></span>
           {!fanzhaoAvail.usable ? <span className="card-seal">{fanzhaoAvail.reasonTags[0]}</span> : null}
         </button>
       </div>

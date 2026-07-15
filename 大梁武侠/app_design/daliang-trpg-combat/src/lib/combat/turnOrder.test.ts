@@ -146,7 +146,7 @@ describe("initiative rule", () => {
 });
 
 describe("response eligibility", () => {
-  it("keeps an already-acted actor eligible while enforcing actor, hp, and quota gates", () => {
+  it("keeps an already-acted actor eligible while enforcing actor, hp, and both quota gates", () => {
     const seed = createSeedState();
     const current = seed.actors[0];
     const alreadyActed = seed.actors[1];
@@ -160,7 +160,18 @@ describe("response eligibility", () => {
         { ...current, hp: 1, responseQuotaUsed: 0, maxResponseQuota: 1 },
         { ...alreadyActed, hp: 1, responseQuotaUsed: 0, maxResponseQuota: 1 },
         { ...dying, hp: 0, responseQuotaUsed: 0, maxResponseQuota: 1 },
-        { ...exhausted, hp: 1, responseQuotaUsed: 1, maxResponseQuota: 1 },
+        {
+          ...exhausted,
+          hp: 1,
+          responseQuotaUsed: 1,
+          maxResponseQuota: 1,
+          responseBudget: {
+            proactiveUsed: 1,
+            maxProactive: 1,
+            selfDefenseUsed: 1,
+            maxSelfDefense: 1,
+          },
+        },
       ],
     };
     const entries = computeTurnOrder(state, new Set([alreadyActed.id]));

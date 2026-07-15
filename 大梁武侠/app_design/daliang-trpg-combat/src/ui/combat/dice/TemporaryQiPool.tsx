@@ -13,13 +13,14 @@ export interface TemporaryQiPoolProps {
 /**
  * Temporary Qi pool (临气区) — always visible zone for temp dice.
  *
- * Temp dice come from items, effects, 返照, 法门, 状态效果, etc.
+ * Temp dice come from items, effects, 法门, 状态效果, etc. 返照取回的是
+ * 本命常规骰，直接进入气海，不属于临气来源。
  * They are visually distinct (dashed border, "临" marker) and
  * must be used or they expire.
  *
  * Layout:
  *   ┌─────────────────────────────────────────────┐
- *   │ 临气  2枚 · 9点  来源：返照 / 状态效果      │
+ *   │ 临气  2枚 · 9点  来源：药物 / 状态效果      │
  *   │ [D6 阴 4] [D8 阳 5]           [详情▾]       │
  *   └─────────────────────────────────────────────┘
  *
@@ -92,7 +93,7 @@ export const TemporaryQiPool: FC<TemporaryQiPoolProps> = ({
         <div className="temp-qi-empty">
           <span className="temp-qi-empty-text">暂无临时气骰</span>
           <span className="temp-qi-empty-hint">
-            临时气骰可由返照、法门、状态效果等生成
+            临时气骰可由药物、法门、状态效果等生成
           </span>
         </div>
       )}

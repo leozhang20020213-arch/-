@@ -115,7 +115,6 @@ function findLegalResponse(
   actor: Actor,
   responseType: "截击" | "应招",
 ): LegalResponse | undefined {
-  if (actor.responseQuotaUsed >= actor.maxResponseQuota) return undefined;
   let fallback: LegalResponse | undefined;
 
   const diceIds = usableDiceIds(state, actor.id);
