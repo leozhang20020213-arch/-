@@ -1,14 +1,17 @@
-# 双模式、数据库与新手教学迁移方案
+# 2026-07-15 一次性覆盖重构落地记录
 
-## 迁移原则
+本文件保留原路径以承接既有开发引用，但本轮不再执行长期分期迁移。React + Electron 工程已按一次大范围覆盖调整完成情景、战斗、自动角色、DM、抽屉、数据接口、局域网和桌面发布收束。
 
-1. 不建立第二个演示项目；所有迁移发生在现有 React + Electron 应用内。
-2. 先引入新类型、索引和控制器，再替换 UI；旧存档通过显式迁移读取。
-3. 每个阶段保持可运行、可测试、可打包。
-4. 旧桥陵镇团包在《白蘋渡失匣》完成前仍可作为开发 fixture 使用，但不再扩写。
-5. 新数据库 UI 只读索引，不在组件中硬编码卡牌。
+## 落地原则
 
-## 目标分层
+1. 不建立第二个演示项目，不恢复 Godot，不提供网站部署。
+2. 保留可用规则引擎、Three.js 骰子、房间骨架和已有测试，在原工程内覆盖重构。
+3. 三运行态、玩家 / DM 权限、招式定义 / 用法、存档和网络结构均使用显式版本化数据。
+4. 规则权威先于表现；卡牌、骰子和动画只呈现已经确定的事务结果。
+5. 不实现语音、录音或转写；存档与网络只接受确认文本和结构化行动。
+6. 本轮只在全部测试、构建、实机流程和截图通过后创建一次提交。
+
+## 最终会话结构
 
 ```text
 AppSession
@@ -17,15 +20,15 @@ AppSession
 │  ├─ mode: SCENE_FREE | SCENE_STRUCTURED
 │  ├─ scene state / objects / tracks / facts / drafts
 │  └─ optional StructuredSceneSequence
-├─ CombatEncounter? 
+├─ CombatEncounter?
 │  ├─ combat round / initiative / phase / pending outcome
-│  └─ combat-only response quotas and acted state
+│  └─ proactive response / self-defense response budgets
 └─ SharedCharacterState
    ├─ hp / momentum / status / equipment
-   └─ qi pool / sea / lock / slots / rest / temporary
+   └─ pool / sea / temporary / lock / yin / yang / rest
 ```
 
-工作区组件必须同样拆分：
+工作区拆分为：
 
 ```text
 PlayerSceneWorkspace
@@ -34,76 +37,50 @@ DMRuntimeDesk
 DMCreatorStudio
 ```
 
-四者可以复用卡牌、气骰、人物牌、日志等原子组件，但不得用一个巨大组件通过标题和条件分支模拟四种桌面。
+四者复用卡牌、人物牌、骰子、日志和规则事务，但不再通过一个玩家式布局模拟不同身份。
 
-## 类型迁移
+## 已完成覆盖
 
-### 会话与 encounter
+### 情景与战斗
 
-- 新增 `WorkspaceMode` 与 `SceneMode`。
-- 新增 `AppSessionState`、`SceneSessionState`、`StructuredSceneSequence`、`CombatEncounterState`。
-- 旧 `CombatState` 暂时保留为兼容层；阶段 1 提供 `migrateLegacyCombatState`。
-- 存档 schema 增加版本号。旧 `encounterMode: scene` 映射为 `SCENE_STRUCTURED`，避免旧存档丢失正在进行的队列；新开团默认 `SCENE_FREE`。
-- 旧统一 `round` 在迁移时：情景存入 `scene.sequence.round`，进入战斗后新 encounter 固定从 1 开始。
+- 自由情景没有强制队列；结构化情景只在追逐、潜入、争夺与限时事件中启用。
+- 情景行动支持动态行为分类、卡牌 / 法门 / 物品、对象、可选办法和公开范围。
+- 情景转战斗保留气海、息库、临气、状态、对象和轨道，不重新投骰。
+- 战斗使用独立顺序、轮次、目标线、七区气域和横向手牌。
+- 截击与应招已从独立工作台迁回原手牌与气骰动作台。
 
-### 招式
+### 规则与自动角色
 
-- `MoveDefinition` 只描述名称、类别、流派、品级、阴阳、式位、说明和美术绑定。
-- `MoveUsage` 描述使用域、模式、行动类型、时点、目标、距离、装备、势、最低投入、基础效果、触发、风险和资源去向。
-- 响应挂载引用 usage，不复制主用法效果。
-- 旧 `Move` 通过 `legacyMoveToDefinitionAndUsage` 迁移；缺少使用域时依据 timing/category 产生明确迁移警告。
+- `MoveDefinition` 与 `MoveUsage` 分离，模式与时点不再由 UI 猜测。
+- `AvailabilityResult` 返回模式、时点、距离、目标、装备、势、气骰和响应额度等原因。
+- 主动响应额度与目标本人自保应招额度分开记录。
+- 自动角色覆盖队友、敌人、NPC 和动景；涉及玩家响应时暂停。
+- 无合法招式时按移动、调整势、调息、返照和放弃行动兜底，禁止死循环。
+- 调息与返照按 2026-07-15 冻结口径实现并有测试覆盖。
 
-### 响应额度
+### UI 与桌面
 
-- 新增 `ResponseBudget`：`proactiveUsed/maxProactive` 与 `selfDefenseUsed/maxSelfDefense`。
-- 旧 `responseQuotaUsed/maxResponseQuota` 迁移为主动响应额度；目标本人自保默认按规则模板生成，避免悄悄重复已消耗额度。
-- 阶段 1 同时保留旧字段只读派生，阶段 3 UI 完成后移除写入路径。
+- 玩家战斗收束为顶部顺序、中央抽象距离战场、七区气域、横向手牌和边缘题签。
+- 人物、背包和招式改为大型覆盖页；日志、卷宗和设置保留窄抽屉。
+- DM 运行台与剧情创作工作台使用独立布局。
+- Electron 冷启动首页、受限 preload、应用数据存档、窗口控制和 Windows x64 目录包完成。
+- 1366×768、1920×1080、DPR 1.0 / 1.25 / 1.5、最大化和全屏完成实际窗口复核。
 
-## 各阶段代码边界
+### 数据、教学与 LAN
 
-### 阶段 1
+- `CampaignPack`、`SceneElement`、`TriggerCondition`、`CombatSetup`、`RewardDefinition` 和 `MediaAssetRef` 可版本化校验。
+- 《白蘋渡失匣》作为默认教学团包接入，旧样例只保留兼容 fixture。
+- 内嵌 LAN 房主覆盖房间、席位、版本握手、快照、重连和事务去重。
+- 停止房主时主动终止活动客户端，避免退出和自动测试悬挂。
 
-- `src/domain/session/*`：三态、转换和存档迁移。
-- `src/data/schema/*`：MoveDefinition/MoveUsage/ResponseUsage/ArtBinding。
-- `src/controllers/scene/*` 与 `src/controllers/combat/*`：独立控制器最小骨架。
-- 新增模式切换、战斗先后独立、usage 过滤、响应额度、调息/返照冻结测试。
+## 验收结果
 
-### 阶段 2—5
+- `npm run test:all`：27 个套件，146/146 通过。
+- `npm run build`：通过。
+- `npm run desktop:pack`：通过，生成 `release/win-unpacked/大梁武侠.exe`。
+- 实际 Electron 玩家完整流程、DM 房间 / 运行台 / 创作台、断网运行和窗口缩放复核通过。
+- 截图与逐图标注见仓库根目录 `reports/windows-ui-rebuild/README.md`。
 
-- 按工作区迁移 JSX，逐步削减 `App.tsx`。
-- 先迁玩家情景，再迁战斗响应，再迁大型覆盖页，最后迁日志和设置。
-- 每个旧页面只有在新页面通过功能测试和截图验收后才删除。
+## 发布边界
 
-### 阶段 6—9
-
-- DM 创作工作台输出版本化 Campaign Pack。
-- 正式数据库按 schema 生成索引和审计报告。
-- 美术由 manifest 绑定。
-- 《白蘋渡失匣》作为第一个完整新格式团包验证全部系统。
-
-## 存档与网络兼容
-
-- 每个动作事务、响应、落果和 DM 覆盖必须有唯一事务 ID。
-- 新客户端不得把旧客户端发来的重复消息重复结算。
-- 团包 manifest、数据库 schema 和存档各自版本化。
-- 无迁移器时，在开房前显示不兼容报告并阻止运行，不能静默丢字段。
-- 语音原始音频不进入存档和网络广播；只发送确认后的文本和结构化行动。
-
-## 删除时机
-
-- `PlayerResponseWorkbench`：阶段 3 内嵌响应通过后删除。
-- 旧窄人物/背包 drawer 内容：阶段 4 大型覆盖页通过后删除。
-- 组件中的旧样例卡牌数组：阶段 7 索引通过后删除。
-- `bridge/旧堤仓` 默认入口：阶段 9 教学团包完整通关后删除；legacy fixture 保留测试。
-- 旧 `encounterMode` 和统一 `round` 写路径：阶段 1 新存档迁移测试稳定后停止写入，阶段 9 前彻底移除。
-
-## 阶段验收门
-
-每个阶段必须同时满足：
-
-- 新增行为有自动测试，旧回归测试继续通过或有冻结规则说明替换。
-- `npm run build` 通过。
-- 核心页面在 Electron 或受控浏览器中实际操作并截图。
-- `README_PHASE_XX.md` 记录实现、已知限制、验证命令和下一阶段入口。
-- 只暂存该阶段应用、测试、截图和文档；不得带入 Office 锁文件、构建缓存或无关压缩包。
-
+本轮验证的是可直接运行的 Windows x64 目录包。安装器封装在当前环境中未稳定结束，因此没有把 NSIS / portable 安装器列为已通过交付物。正式发行安装器仍需单独处理签名、升级与杀毒软件兼容性。

@@ -29,10 +29,16 @@ export function QiDiceRollOverlay({
   dice,
   onConfirm,
   onClose: _onClose,
+  presentation = "full",
+  motionSpeed = 1,
+  context = "new_scene",
 }: {
   dice: QiDie[];
   onConfirm: (results: DiceRollResult[]) => void;
   onClose: () => void;
+  presentation?: "full" | "fast" | "2d";
+  motionSpeed?: 0.5 | 1 | 1.5 | 2;
+  context?: "new_scene" | "new_entrant";
 }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const skipAnimationRef = useRef(false);
@@ -62,7 +68,7 @@ export function QiDiceRollOverlay({
 
   useEffect(() => {
     if (results.length !== dice.length || confirmedRef.current) return;
-    const timer = window.setTimeout(() => confirmResults(), 260);
+    const timer = window.setTimeout(() => confirmResults(), presentation === "2d" ? 260 : 90);
     return () => window.clearTimeout(timer);
   }, [dice.length, results]);
 
@@ -72,6 +78,11 @@ export function QiDiceRollOverlay({
     if (!container) return;
 
     const targetResults = createResults(dice);
+    if (presentation === "2d") {
+      setRollPhase("fallback");
+      const timer = window.setTimeout(() => setResults(targetResults), Math.max(80, 180 / motionSpeed));
+      return () => window.clearTimeout(timer);
+    }
     const height = Math.max(150, container.clientHeight || 190);
     const width = Math.max(420, container.clientWidth || 720);
     const scene = new THREE.Scene();
@@ -169,8 +180,8 @@ export function QiDiceRollOverlay({
     let arrangingNotified = false;
     function render(now: number) {
       if (stopped) return;
-      const rollDuration = 760;
-      const arrangeDuration = 180;
+      const rollDuration = (presentation === "fast" ? 250 : 720) / motionSpeed;
+      const arrangeDuration = (presentation === "fast" ? 60 : 150) / motionSpeed;
       const elapsed = skipAnimationRef.current
         ? rollDuration + arrangeDuration
         : now - startedAt;
@@ -218,7 +229,7 @@ export function QiDiceRollOverlay({
       renderer.renderLists.dispose();
       if (renderer.domElement.parentElement === container) container.removeChild(renderer.domElement);
     };
-  }, [dice]); // The renderer owns the complete roll lifecycle for this dice set.
+  }, [dice, motionSpeed, presentation]); // The renderer owns the complete roll lifecycle for this dice set.
 
   function confirmResults() {
     if (confirmedRef.current || results.length !== dice.length) return;
@@ -231,7 +242,9 @@ export function QiDiceRollOverlay({
     : rollPhase === "arranging"
       ? "按骰阶、气性与点数归位……"
       : rollPhase === "fallback"
-        ? "三维渲染不可用，已使用等价随机投掷结果。"
+        ? presentation === "2d"
+          ? "稳定二维投掷：权威骰面已定。"
+          : "三维渲染不可用，已使用等价随机投掷结果。"
         : rollPhase === "done"
           ? "骰面已定，正在写入气海。"
           : "准备投掷。";
@@ -240,15 +253,24 @@ export function QiDiceRollOverlay({
     <div className="dice-roll-dock" role="status" aria-live="polite">
       <section
         className="dice-roll-overlay"
-        aria-label="新场景气骰整体投掷"
+        aria-label={context === "new_entrant" ? "新参战者补投气骰" : "新场景气骰整体投掷"}
       >
-        <div className="dice-roll-caption"><span>新场景 · 气池入海</span><strong>气骰整体投掷</strong><small>空格跳过表现</small></div>
+        <div className="dice-roll-caption"><span>{context === "new_entrant" ? "新参战者 · 仅补投自身" : "新场景 · 气池入海"}</span><strong>{context === "new_entrant" ? "补投气骰" : "气骰整体投掷"}</strong><small>空格跳过表现</small></div>
         <div
           className={`dice-canvas${rendererUnavailable ? " is-fallback" : ""}`}
           ref={mountRef}
           data-testid="three-dice-canvas"
           aria-hidden="true"
-        />
+        >
+          {presentation === "2d" ? (
+            <div className="dice-roll-2d" aria-hidden="true">
+              {results.map((result) => {
+                const die = dice.find((item) => item.id === result.id);
+                return <span className={`nature-${die?.nature ?? "raw"}`} key={result.id}><b>{result.value}</b><small>D{die?.sides}</small></span>;
+              })}
+            </div>
+          ) : null}
+        </div>
         <p className={`dice-roll-phase phase-${rollPhase}`}>
           {phaseMessage}
         </p>

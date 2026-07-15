@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Actor, CombatState, ResponseAttachment } from "../../../combat/types";
+import { canSpendResponseBudget, normalizeResponseBudget } from "../../../domain/session/runtime";
 import { QiDie } from "../dice/QiDie";
 import { RawQiSlotPicker } from "../dice/RawQiSlotPicker";
 import { sortQiDiceForPool } from "../dice/dicePresentation";
 
-export interface PlayerResponseWorkbenchProps {
+export interface InlineResponseWorkbenchProps {
   state: CombatState;
   actor: Actor;
   readOnly?: boolean;
@@ -16,13 +17,17 @@ export interface PlayerResponseWorkbenchProps {
   onSkip: () => void;
 }
 
-export function PlayerResponseWorkbench({
+/**
+ * Response handling stays inside the normal hand-and-qi workbench. The combat
+ * board never disappears and no modal/right-side response console is created.
+ */
+export function InlineResponseWorkbench({
   state,
   actor,
   readOnly = false,
   onSubmit,
   onSkip,
-}: PlayerResponseWorkbenchProps) {
+}: InlineResponseWorkbenchProps) {
   const responseType = state.phase === "intercept_window"
     ? "截击"
     : state.phase === "react_window"
@@ -42,6 +47,7 @@ export function PlayerResponseWorkbench({
   const [yangSlotDiceIds, setYangSlotDiceIds] = useState<string[]>([]);
   const [rawChoiceDieId, setRawChoiceDieId] = useState<string | null>(null);
   const selectedDiceIds = [...yinSlotDiceIds, ...yangSlotDiceIds];
+  const budget = normalizeResponseBudget(actor.responseBudget, actor.responseQuotaUsed, actor.maxResponseQuota);
 
   useEffect(() => {
     setSelectedResponseId(responses[0]?.id ?? "");
@@ -50,13 +56,17 @@ export function PlayerResponseWorkbench({
     setRawChoiceDieId(null);
   }, [responseType, state.pendingAction?.actorId, state.pendingAction?.moveId, responses]);
 
-  if (!responseType || state.pendingAction?.targetId !== actor.id) return null;
+  if (
+    !responseType
+    || state.pendingAction?.targetId !== actor.id
+    || state.pendingAction.actorId === actor.id
+  ) return null;
 
   const selectedResponse = responses.find((response) => response.id === selectedResponseId);
   const minimum = selectedResponse ? Math.max(0, Math.ceil(selectedResponse.minDice)) : 0;
   const canSubmit = Boolean(selectedResponse)
     && selectedDiceIds.length >= minimum
-    && actor.responseQuotaUsed < actor.maxResponseQuota
+    && canSpendResponseBudget(budget, "self_defense")
     && !readOnly;
 
   function toggleDie(dieId: string) {
@@ -89,21 +99,22 @@ export function PlayerResponseWorkbench({
   }
 
   return (
-    <section className="panel player-response-workbench" aria-labelledby="player-response-title">
-      <div className="response-workbench__heading">
+    <section className="inline-response-workbench" aria-labelledby="inline-response-title">
+      <header className="inline-response-heading">
         <div>
-          <p className="eyebrow">受招决策 · {responseType}窗口</p>
-          <h2 id="player-response-title">由你决定如何响应</h2>
+          <p className="eyebrow">{responseType}时点 · 棋盘保持可见</p>
+          <h2 id="inline-response-title">选择响应牌并双击气骰</h2>
         </div>
-        <span className="response-quota">
-          额度 {actor.responseQuotaUsed}/{actor.maxResponseQuota}
-        </span>
-      </div>
+        <div className="response-budget-pills" aria-label="响应额度">
+          <span>主动 {budget.proactiveUsed}/{budget.maxProactive}</span>
+          <span>自保 {budget.selfDefenseUsed}/{budget.maxSelfDefense}</span>
+        </div>
+      </header>
 
-      {responses.length > 0 ? (
-        <div className="response-option-list" role="radiogroup" aria-label={`${responseType}招式`}>
-          {responses.map((response) => (
-            <ResponseOption
+      <div className="inline-response-body">
+        <div className="inline-response-hand" role="radiogroup" aria-label={`${responseType}手牌`}>
+          {responses.length ? responses.map((response) => (
+            <ResponseCard
               key={response.id}
               response={response}
               selected={response.id === selectedResponseId}
@@ -115,18 +126,13 @@ export function PlayerResponseWorkbench({
                 setRawChoiceDieId(null);
               }}
             />
-          ))}
+          )) : <p className="response-empty">没有合法{responseType}牌，可直接放弃响应。</p>}
         </div>
-      ) : (
-        <p className="response-empty">当前角色没有可用的{responseType}挂载，可以直接放弃。</p>
-      )}
 
-      <div className="response-dice-section">
-        <div className="response-dice-summary">
-          <strong>投入气骰</strong>
-          <span>{selectedDiceIds.length}/{minimum} 枚</span>
-        </div>
-        {availableDice.length > 0 ? (
+        <div className="inline-response-qi">
+          <div className="response-dice-summary">
+            <strong>气海</strong><span>已投入 {selectedDiceIds.length}/{minimum}</span>
+          </div>
           <div className="response-dice-grid">
             {availableDice.map((die) => (
               <QiDie
@@ -139,32 +145,19 @@ export function PlayerResponseWorkbench({
               />
             ))}
           </div>
-        ) : (
-          <p className="response-empty">气海与临气区没有可投入的气骰。</p>
-        )}
-        <div className="response-slot-summary" aria-label="响应阴阳槽配置">
-          <span>阴槽 {yinSlotDiceIds.length}枚 · {yinSlotDiceIds.reduce((sum, id) => sum + (availableDice.find((die) => die.id === id)?.value ?? 0), 0)}点</span>
-          <span>阳槽 {yangSlotDiceIds.length}枚 · {yangSlotDiceIds.reduce((sum, id) => sum + (availableDice.find((die) => die.id === id)?.value ?? 0), 0)}点</span>
+          <div className="response-slot-summary">
+            <span>阴槽 {yinSlotDiceIds.length}枚 · {sumDice(yinSlotDiceIds, availableDice)}点</span>
+            <span>阳槽 {yangSlotDiceIds.length}枚 · {sumDice(yangSlotDiceIds, availableDice)}点</span>
+          </div>
+          {rawChoiceDie ? (
+            <RawQiSlotPicker die={rawChoiceDie} onChoose={assignRawDie} onCancel={() => setRawChoiceDieId(null)} />
+          ) : null}
         </div>
-        {rawChoiceDie ? (
-          <RawQiSlotPicker
-            die={rawChoiceDie}
-            onChoose={assignRawDie}
-            onCancel={() => setRawChoiceDieId(null)}
-          />
-        ) : null}
       </div>
 
-      {selectedResponse ? (
-        <div className="response-rule-summary">
-          <span>气性：{selectedResponse.qiNatureThreshold}</span>
-          <span>势：{selectedResponse.allowedShi.join("、") || "不限"}</span>
-          <span>效果：{selectedResponse.baseEffect}</span>
-        </div>
-      ) : null}
-
-      <div className="response-workbench__actions">
-        <button type="button" disabled={readOnly} onClick={onSkip}>放弃{responseType}</button>
+      <footer className="inline-response-actions">
+        <p>{selectedResponse?.baseEffect ?? "放弃不会消耗响应额度。"}</p>
+        <button type="button" disabled={readOnly} onClick={onSkip}>放弃响应</button>
         <button
           className="primary-action"
           type="button"
@@ -173,15 +166,17 @@ export function PlayerResponseWorkbench({
             yinSlotDiceIds,
             yangSlotDiceIds,
           })}
-        >
-          确认{responseType}
-        </button>
-      </div>
+        >采用{responseType}</button>
+      </footer>
     </section>
   );
 }
 
-function ResponseOption({
+function sumDice(ids: string[], dice: CombatState["dice"]) {
+  return ids.reduce((sum, id) => sum + (dice.find((die) => die.id === id)?.value ?? 0), 0);
+}
+
+function ResponseCard({
   response,
   selected,
   disabled,
@@ -195,17 +190,19 @@ function ResponseOption({
   return (
     <button
       type="button"
-      className={`response-option${selected ? " is-selected" : ""}`}
+      className={`action-card response-hand-card${selected ? " selected" : ""}`}
       role="radio"
       aria-checked={selected}
       disabled={disabled}
+      data-tooltip={`${response.timing}\n${response.constraints}\n${response.baseEffect}`}
       onClick={onSelect}
     >
-      <span className="response-option__topline">
-        <strong>{response.moveName}</strong>
-        <span>至少 {response.minDice} 枚</span>
-      </span>
-      <span>{response.constraints || response.timing}</span>
+      <span className="card-cost">{response.minDice}</span>
+      <span className="card-art"><i>{response.responseType === "截击" ? "截" : "应"}</i></span>
+      <span className="card-name">{response.moveName}</span>
+      <span className="card-type">{response.responseType}挂载</span>
+      <span className="card-effect">{response.baseEffect}</span>
+      <span className="card-reqs"><b>{response.qiNatureThreshold}</b><b>{response.allowedShi.join("/") || "不限势"}</b></span>
     </button>
   );
 }

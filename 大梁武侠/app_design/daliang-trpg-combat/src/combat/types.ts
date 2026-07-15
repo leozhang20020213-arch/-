@@ -345,8 +345,9 @@ export interface SceneActionRequest {
   actorId: string;
   actionType: SceneActionType;
   targetId?: string;
-  approach: string;
+  approach?: string;
   sourceId?: string;
+  audience?: "all" | "dm";
   createdAt: number;
 }
 
@@ -454,22 +455,31 @@ export type AppRoute =
   | "dmScene"
   | "dmCombat"
   | "dm"
+  | "dmStudio"
   | "library"
   | "packs"
   | "settings";
 
 export interface AppSession {
   route: AppRoute;
+  /** The last playable route. Cold starts always open home and continue uses this value. */
+  lastRoute?: AppRoute;
   identity?: "dm" | "player" | "spectator";
   gameMode: "scene" | "combat";
   developerMode: boolean;
   /** Local-only helper that advances enemy responses and DM settlement for solo testing. */
   autoDmEnabled: boolean;
   playMode: "solo" | "room";
-  aiNarrationEnabled: boolean;
-  aiNarrationEndpoint: string;
   roomCode: string;
   playerName: string;
+  preferences: {
+    uiScale: 0.9 | 1 | 1.1 | 1.2;
+    animationSpeed: 0.5 | 1 | 1.5 | 2;
+    dicePresentation: "full" | "fast" | "2d";
+    textSpeed: "slow" | "normal" | "fast";
+    masterVolume: number;
+    autoRuleLevel: "guided" | "standard" | "full";
+  };
   selectedActorId?: string;
   seats: Array<{
     id: string;
@@ -485,6 +495,7 @@ export interface AppSession {
     campaignId: string;
     mode: "local";
     allowSpectators: boolean;
+    allowPrivateDmMessages?: boolean;
     maxPlayers: number;
   };
 }

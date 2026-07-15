@@ -204,7 +204,7 @@ export function PacksPage({ state, session, onBack }: PacksPageProps) {
         <p>{state.sceneGoal}</p>
         <dl className="support-detail-list">
           <div><dt>团包标识</dt><dd>{session.room.campaignId || "未声明"}</dd></div>
-          <div><dt>版本</dt><dd>桥陵雨夜 v1 · 存档结构 v4</dd></div>
+          <div><dt>版本</dt><dd>白蘋渡失匣 v1 · 规则口径 2026-07-15</dd></div>
           <div><dt>当前场景</dt><dd>{state.sceneName}</dd></div>
           <div><dt>场景数量</dt><dd>1 个完整样例场景（调查→交锋→收束）</dd></div>
           <div><dt>数据完整性</dt><dd>{counts.actors > 0 && counts.moves > 0 && counts.dice > 0 && counts.tracks > 0 ? "校验通过" : "缺少关键数据"}</dd></div>
@@ -245,11 +245,15 @@ export interface SettingsPageProps {
 export function SettingsPage({ session, setSession, onBack, onReset }: SettingsPageProps) {
   const [confirmingReset, setConfirmingReset] = useState(false);
   const isDM = session.identity === "dm";
-  const canUseAutoDm = session.playMode === "solo" && session.identity === "player";
 
-  function setDeveloperMode(enabled: boolean) {
-    if (!isDM) return;
-    setSession((current) => ({ ...current, developerMode: enabled }));
+  function setPreference<K extends keyof AppSession["preferences"]>(
+    key: K,
+    value: AppSession["preferences"][K],
+  ) {
+    setSession((current) => ({
+      ...current,
+      preferences: { ...current.preferences, [key]: value },
+    }));
   }
 
   function setAllowSpectators(enabled: boolean) {
@@ -260,23 +264,18 @@ export function SettingsPage({ session, setSession, onBack, onReset }: SettingsP
     }));
   }
 
-  function setAutoDm(enabled: boolean) {
-    if (!canUseAutoDm) return;
-    setSession((current) => ({ ...current, autoDmEnabled: enabled }));
-  }
-
   function confirmReset() {
     setConfirmingReset(false);
     onReset();
   }
 
   return (
-    <main className="support-page" aria-labelledby="settings-page-title">
+    <main className="support-page support-page--settings" aria-labelledby="settings-page-title">
       <header className="support-page__header panel">
         <div>
-          <p className="eyebrow">本地会话与主持权限</p>
+          <p className="eyebrow">Windows 本机设置</p>
           <h1 id="settings-page-title">设置</h1>
-          <p className="hint">当前身份：{identityLabel(session.identity)}。主持设置只允许 DM 修改。</p>
+          <p className="hint">当前身份：{identityLabel(session.identity)}。设置保存在本机，不进行云端同步。</p>
         </div>
         <button type="button" onClick={onBack}>返回</button>
       </header>
@@ -296,45 +295,24 @@ export function SettingsPage({ session, setSession, onBack, onReset }: SettingsP
         </label>
       </section>
 
-      <section className="panel support-settings-section" aria-labelledby="test-settings-title">
+      <section className="panel support-settings-section" aria-labelledby="rule-settings-title">
         <div>
-          <h2 id="test-settings-title">自动 DM</h2>
-          <p className="hint">本地规则核心主持建场、NPC反应、危机、解密、交锋与收束；玩家始终自行决定自己的招式、配骰与响应。</p>
+          <h2 id="rule-settings-title">规则处理</h2>
+          <p className="hint">决定本机提示与自动结算程度；玩家自己的招式、配骰和响应始终由玩家确认。</p>
         </div>
-        <label className="check-row support-setting-row">
-          <input
-            type="checkbox"
-            checked={session.autoDmEnabled}
-            disabled={!canUseAutoDm}
-            title={!canUseAutoDm ? "仅单人玩家故事可启用；真人房间中自动 DM 只提供主持建议" : undefined}
-            onChange={(event) => setAutoDm(event.target.checked)}
-          />
-          <span><strong>启用自动 DM</strong><small>{canUseAutoDm ? "单人模式默认启用；断网和未配置 AI 时仍可完整游玩。" : "仅用于单人玩家故事；真人房间中自动 DM 只向主持提供建议，不直接提交。"}</small></span>
-        </label>
-        <label className="check-row support-setting-row">
-          <input type="checkbox" checked={session.aiNarrationEnabled} onChange={(event) => setSession((current) => ({ ...current, aiNarrationEnabled: event.target.checked }))} />
-          <span><strong>可选 AI 叙述润色</strong><small>AI 只能润色本地规则已经批准的叙述，不能修改状态。</small></span>
-        </label>
         <label className="support-setting-row">
-          <span><strong>受约束叙述端点</strong><small>留空或请求失败会在 2.5 秒内退回本地规则叙述。</small></span>
-          <input value={session.aiNarrationEndpoint} placeholder="https://…（可留空）" disabled={!session.aiNarrationEnabled} onChange={(event) => setSession((current) => ({ ...current, aiNarrationEndpoint: event.target.value }))} />
+          <span><strong>处理程度</strong><small>引导只提示；标准自动处理非玩家角色；完整还会自动推进无争议时点。</small></span>
+          <select value={session.preferences.autoRuleLevel} onChange={(event) => setPreference("autoRuleLevel", event.target.value as AppSession["preferences"]["autoRuleLevel"])}>
+            <option value="guided">引导</option><option value="standard">标准</option><option value="full">完整</option>
+          </select>
         </label>
       </section>
 
-      <section className="panel support-settings-section" aria-labelledby="host-settings-title">
+      <section className="panel support-settings-section" aria-labelledby="network-settings-title">
         <div>
-          <h2 id="host-settings-title">真人 DM</h2>
+          <h2 id="network-settings-title">房间与网络</h2>
           {!isDM && <p className="hint">当前为只读状态；请由房间 DM 调整。</p>}
         </div>
-        <label className="check-row support-setting-row">
-          <input
-            type="checkbox"
-            checked={session.developerMode}
-            disabled={!isDM}
-            onChange={(event) => setDeveloperMode(event.target.checked)}
-          />
-          <span><strong>开发模式</strong><small>显示本地调试入口；仅 DM 可修改。</small></span>
-        </label>
         <label className="check-row support-setting-row">
           <input
             type="checkbox"
@@ -347,19 +325,27 @@ export function SettingsPage({ session, setSession, onBack, onReset }: SettingsP
       </section>
 
       <section className="panel support-settings-section" aria-labelledby="display-settings-title">
-        <div><h2 id="display-settings-title">显示</h2><p className="hint">窗口化、最大化与 F11 全屏由 Windows 桌面外壳管理。</p></div>
-        <label className="check-row support-setting-row"><input type="checkbox" checked disabled title="Windows 桌面版固定启用" /><span><strong>高 DPI 清晰渲染</strong><small>Windows 桌面版固定启用；跟随 100%、125% 和 150% 缩放。</small></span></label>
+        <div><h2 id="display-settings-title">显示</h2><p className="hint">界面缩放独立于Windows显示缩放；F11切换全屏。</p></div>
+        <label className="support-setting-row"><span><strong>界面大小</strong><small>适配1366×768至1920×1080。</small></span><select value={session.preferences.uiScale} onChange={(event) => setPreference("uiScale", Number(event.target.value) as AppSession["preferences"]["uiScale"])}><option value="0.9">90%</option><option value="1">100%</option><option value="1.1">110%</option><option value="1.2">120%</option></select></label>
+        <button type="button" onClick={() => window.daliangDesktop?.toggleFullScreen()}>切换窗口 / 全屏</button>
+      </section>
+
+      <section className="panel support-settings-section" aria-labelledby="motion-settings-title">
+        <div><h2 id="motion-settings-title">动画与文字</h2><p className="hint">速度只改变表现，不改变骰面、时点、日志或网络结果。</p></div>
+        <label className="support-setting-row"><span><strong>动画速度</strong><small>包括卡牌、目标线、受击和骰子整理。</small></span><select value={session.preferences.animationSpeed} onChange={(event) => setPreference("animationSpeed", Number(event.target.value) as AppSession["preferences"]["animationSpeed"])}><option value="0.5">0.5×</option><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+        <label className="support-setting-row"><span><strong>骰子表现</strong><small>2D模式保留相同权威结果。</small></span><select value={session.preferences.dicePresentation} onChange={(event) => setPreference("dicePresentation", event.target.value as AppSession["preferences"]["dicePresentation"])}><option value="full">完整3D</option><option value="fast">快速3D</option><option value="2d">稳定2D</option></select></label>
+        <label className="support-setting-row"><span><strong>文本速度</strong><small>控制场景叙述展开速度。</small></span><select value={session.preferences.textSpeed} onChange={(event) => setPreference("textSpeed", event.target.value as AppSession["preferences"]["textSpeed"])}><option value="slow">慢</option><option value="normal">标准</option><option value="fast">快</option></select></label>
       </section>
 
       <section className="panel support-settings-section" aria-labelledby="sound-settings-title">
-        <div><h2 id="sound-settings-title">声音</h2><p className="hint">当前团包没有提供音频资源。</p></div>
-        <button type="button" disabled title="当前团包未包含可调节的音频轨道">音量控制（团包未提供音频）</button>
+        <div><h2 id="sound-settings-title">声音</h2><p className="hint">控制游戏音效、背景音乐与环境音。</p></div>
+        <label className="support-setting-row"><span><strong>主音量</strong><small>{Math.round(session.preferences.masterVolume * 100)}%</small></span><input type="range" min="0" max="1" step="0.05" value={session.preferences.masterVolume} onChange={(event) => setPreference("masterVolume", Number(event.target.value))} /></label>
       </section>
 
       <section className="panel support-settings-section" aria-labelledby="local-settings-title">
         <div>
           <h2 id="local-settings-title">保存</h2>
-          <p className="hint">状态变更后自动写入 Windows 应用数据目录中的隔离渲染器存储。</p>
+          <p className="hint">状态变更后自动写入Windows应用数据目录，渲染界面没有任意文件系统权限。</p>
         </div>
         <label className="check-row support-setting-row">
           <input type="checkbox" checked disabled title="Windows 桌面版固定启用" />

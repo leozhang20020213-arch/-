@@ -23,6 +23,7 @@ export const TitleBar: FC<TitleBarProps> = ({
   onReset,
 }) => {
   const identity = session.identity;
+  const isHome = session.route === "home";
   const roomCode = session.roomCode || "本地";
 
   const sceneLabel =
@@ -35,8 +36,8 @@ export const TitleBar: FC<TitleBarProps> = ({
   return (
     <header className="title-bar">
       <div className="title-bar__left">
-        <span className="app-name">大梁江湖 TRPG</span>
-        <span className="room-code">{roomCode}</span>
+        <span className="app-name">大梁武侠</span>
+        {!isHome && <span className="room-code">{roomCode}</span>}
       </div>
 
       <div className="title-bar__center">
@@ -44,9 +45,11 @@ export const TitleBar: FC<TitleBarProps> = ({
       </div>
 
       <div className="title-bar__right">
-        <span className={`identity-badge ${identity === "dm" ? "dm" : "player"}`}>
-          {identityLabel(identity)}
-        </span>
+        {!isHome && (
+          <span className={`identity-badge ${identity === "dm" ? "dm" : "player"}`}>
+            {identityLabel(identity)}
+          </span>
+        )}
 
         {identity === "dm" && session.developerMode && (
           <button
@@ -59,13 +62,16 @@ export const TitleBar: FC<TitleBarProps> = ({
           </button>
         )}
 
-        <button className="window-btn" title="返回首页" onClick={onHome} type="button">
-          ↩
-        </button>
-
-        <button className="window-btn" title="进度会自动保存在本机" aria-label="进度已自动保存" disabled type="button">
-          💾
-        </button>
+        {!isHome && (
+          <>
+            <button className="window-btn" title="返回首页" onClick={onHome} type="button">
+              ↩
+            </button>
+            <button className="window-btn" title="进度会自动保存在本机" aria-label="进度已自动保存" disabled type="button">
+              💾
+            </button>
+          </>
+        )}
 
         <WindowControls />
       </div>

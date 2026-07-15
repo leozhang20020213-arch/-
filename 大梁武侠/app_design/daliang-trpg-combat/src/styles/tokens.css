@@ -82,11 +82,16 @@
   --shadow-modal:       0 26px 90px rgba(0, 0, 0, 0.52);
 
   /* ---- Transitions ---- */
-  --ease-lift:          200ms ease;
-  --ease-shi:           500ms ease;
-  --ease-drawer:        280ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  --ease-toast:         240ms cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-dialog:        200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-rate:        1;
+  --motion-fast:        120ms;
+  --motion-standard:    200ms;
+  --motion-slow:        420ms;
+  --motion-feedback:    900ms;
+  --ease-lift:          var(--motion-standard) ease;
+  --ease-shi:           var(--motion-slow) ease;
+  --ease-drawer:        var(--motion-standard) cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-toast:         var(--motion-standard) cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-dialog:        var(--motion-standard) cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ---- Typography ---- */
   font-family:

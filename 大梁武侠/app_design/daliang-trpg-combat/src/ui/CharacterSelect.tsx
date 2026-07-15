@@ -503,7 +503,7 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
   // Main select screen
   return (
     <section className="cs-root">
-      {/* ART SLOT: home-bg — 1920×1080 桥陵镇雨夜全景，水墨风格，画面下半部留暗 */}
+      {/* ART SLOT: home-bg — 1920×1080 白蘋渡晨雾全景，水墨风格，画面下半部留暗 */}
       <div className="cs-background" />
 
       {/* Ambient overlay */}
@@ -514,8 +514,8 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
 
       {/* Scene title */}
       <div className="cs-scene-title">
-        <h1 className="cs-title-text">桥陵镇 · 雨夜</h1>
-        <p className="cs-subtitle-text">一桩失镖案。你为何而来？</p>
+        <h1 className="cs-title-text">白蘋渡 · 晨雾</h1>
+        <p className="cs-subtitle-text">一只失踪的药匣。你为何而来？</p>
       </div>
 
       {/* Character slots row */}
@@ -669,7 +669,7 @@ function CreatorWizard({
   return (
     <div className="cs-creator-overlay">
       <div className="cs-creator-bg" />
-      {/* ART SLOT: creator-bg — 1920×1080 桥陵镇雨夜茶棚内景，暖灯，窗外雨幕 */}
+      {/* ART SLOT: creator-bg — 1920×1080 白蘋渡茶棚内景，晨雾，窗外栈桥 */}
       <div className="cs-creator-card">
         {/* Header */}
         <div className="cs-creator-header">

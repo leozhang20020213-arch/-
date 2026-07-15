@@ -1,82 +1,95 @@
-# 大梁江湖 TRPG 交锋辅助桌面原型
+# 大梁武侠 Windows 桌面版
 
-首版定位：本地 Web 原型，用于验证“大梁江湖 TRPG 专用交锋辅助桌面”的核心闭环。
+《大梁武侠》是以 React 作为渲染层、Electron 作为 Windows 桌面外壳的武侠 TRPG 游戏。当前版本围绕玩家情景、战斗交锋、规则型自动 DM、真人 DM 运行台和剧情创作工作台建立完整闭环，核心功能不依赖互联网。
 
-## 已实现
+## 当前能力
 
-- 桥陵镇雨夜失镖内置样例团包。
-- 启动首页、房间设置、身份选择、玩家桌面、DM主持台。
-- 玩家、短兵客、黑衣脚夫预设数据。
-- 气骰五区：气池、气海、锁气、息库、临气区。
-- 交锋流程：开始场景、宣言锁气、截击取消、成招、应招、落果。
-- 手动入口：调息、返照、来源失效、势变化、轮次结束、DM 裁定。
-- 玩家端 / DM端按身份进入；开发调试全量视图仅作为顶部调试入口。
-- 玩家视图隐藏 DM 信息、隐藏轨、敌人隐藏目标和敌方截击挂载。
-- 气骰操作区按“气海最大、临时来源在锁气上方、锁气分阴阳槽、息库右侧、气池折叠”布局。
-- 气骰支持基础拖拽到阴槽/阳槽，不合法拖拽给出小提示并回弹。
-- 骰子主卡只显示阴/阳/中、点数和骰阶；来源保留在详情提示中。
-- 单位卡统一显示势徽记和状态栏，势贴近名称，状态栏位于势下方。
-- 交锋桌面增加回合条、时点条、距离线和当前行动栈。
-- 背包分栏：装备、药物、器具、杂物、临时来源。
-- 物品事件：使用药物生成临时气骰、装备/卸下、物品触发来源失效。
-- 浏览器本地保存当前交锋状态。
-- 浏览器本地保存房间和身份会话。
-- 规则纯函数测试。
+- Windows 桌面外壳：隔离 preload、关闭渲染层 Node 权限、正式构建关闭开发工具。
+- 冷启动首页：玩家游玩、主持开团、旁观入席、规则资料库和设置。
+- 三运行态：自由情景、结构化情景和战斗；情景转战斗沿用气骰与状态，不重新投骰。
+- 玩家交锋：横向卡牌手牌、抽象距离战场、七区气域、目标线和内嵌响应。
+- 权威流程：宣言、锁气、截击、成招、应招、落果、资源去向、下一角色和统一轮末。
+- 规则型自动 DM：本地确定性裁定队友、敌人、NPC 和动景；涉及玩家响应时暂停等待。
+- 真人 DM：独立运行台、隐藏牌匣、手动接管、广播与覆盖记录。
+- DM 创作：团包、章节、场景、区域、人物、物件、线索、事件、触发器、奖励和战斗配置。
+- 角色与资源：人物、六根、内功、装备、暗黑式网格背包、招式库、日志和设置覆盖页。
+- Windows 本地存档：由 Electron 写入应用数据目录，并迁移兼容旧 `localStorage` 存档。
+- 局域网骨架：DM 房主、房间码、席位、版本握手、权威快照、断线恢复和事务去重。
+- 教学团包：《白蘋渡失匣》，覆盖调查、交涉、追逐、战斗、响应、调息、返照与多结局结构。
 
-## 交锋 UI 内测版运行方式
+本项目不包含语音输入、录音、语音转文字、麦克风权限或语音日志。背景音乐、环境音和游戏音效仍可作为 DM 场景媒体资源。
 
-```bash
+## 开发与运行
+
+在本目录执行：
+
+```powershell
 npm install
-npm run dev:legacy -- --port 5174 --host 127.0.0.1
+npm run desktop:dev
 ```
 
-打开：`http://127.0.0.1:5174`
+常用验证命令：
 
-## 验证
-
-```bash
-npm run build         # TypeScript + Vite 生产构建
-npm run test          # 规则引擎测试 (34 项)
-npm run test:lib      # UI 逻辑测试 (34 项)
-npm run test:all      # 全部测试 (68 项)
+```powershell
+npm run test:all
+npm run build
+npm run desktop:pack
 ```
 
-## 开发文档入口
+`desktop:pack` 生成 Windows x64 目录包：
 
-| 文档 | 说明 |
-|------|------|
-| [PHASE 0 — 审查基线](docs/devlog/README_UI_PHASE0_2026年6月24日.md) | 技术栈、目录结构、UI 问题诊断 |
-| [PHASE 1 — 三栏桌面](docs/devlog/README_UI_PHASE1_2026年6月24日.md) | CombatShell 骨架、三栏布局 |
-| [PHASE 2 — 战术舞台](docs/devlog/README_UI_PHASE2_2026年6月24日.md) | CombatantNode、SVG 距离线 |
-| [PHASE 3 — 敌方公开卡](docs/devlog/README_UI_PHASE3_2026年6月24日.md) | 选中展开、player/dm 双模式 |
-| [PHASE 5 — 气骰拖拽](docs/devlog/README_UI_PHASE5_2026年6月24日.md) | 卡牌式拖骰、确认宣言条件 |
-| [PHASE 6 — 状态机](docs/devlog/README_UI_PHASE6_2026年6月24日.md) | 阶段按钮、自然语言提示 |
-| [PHASE 7 — 玩家/DM分离](docs/devlog/README_UI_PHASE7_2026年6月24日.md) | DebugPanel、DmControlPanel、PlayerPromptBar |
-| [PHASE 8 — 导航收束](docs/devlog/README_UI_PHASE8_2026年6月24日.md) | 六根/内功并入人物抽屉 |
-| [PHASE 9 — 设计Token](docs/devlog/README_UI_PHASE9_2026年6月24日.md) | 颜色语义统一 |
-| [PHASE 10 — 气骰系统重构](docs/devlog/README_UI_PHASE_DICE.md) | 骰子可见可拖可锁、单一操作区、去重 |
-| [PHASE 11 — 行动顺序队列](docs/devlog/README_UI_PHASE_TURN_ORDER.md) | 先攻排序、角色芯片、当前/已行动/可响应状态 |
-| [PHASE 12 — 目标线与距离](docs/devlog/README_UI_PHASE_TARGET_LINE.md) | 动态目标线、距离校验、目标选择同步 |
-| [PHASE 13 — 场景轨统一](docs/devlog/README_UI_PHASE_SCENE_CLOCK.md) | SceneClock 统一、主界面减字、详情折叠 |
-| [总结文档](docs/devlog/README_UI_COMBAT_REFACTOR_SUMMARY_2026年6月24日.md) | 架构、组件树、状态机、已知问题 |
-
-## 主要组件位置
-
-```
-src/ui/combat/CombatShell.tsx    — 桌面外壳
-src/ui/combat/TopCombatBar.tsx   — 顶部导航栏
-src/ui/combat/PhaseActionBar.tsx — 底部阶段按钮
-src/ui/combat/stage/CombatStage.tsx — 战术舞台
-src/ui/combat/dice/QiDiceDock.tsx   — 气骰拖拽区
-src/ui/combat/enemy/EnemyPublicDrawer.tsx — 敌方信息卡片
-src/lib/combat/qiAssignment.ts       — 拖拽验证逻辑
-src/lib/combat/combatPhaseMachine.ts — 阶段状态机
+```text
+release/win-unpacked/大梁武侠.exe
 ```
 
-## 首版边界
+该目录包已从实际可执行文件启动验证。安装器封装不作为本次已通过产物声明。
 
-- 不做联网多人同步。
-- 不导入 xlsx 数据库。
-- 不实现完整角色创建。
-- 不做 AI DM、NPC 自然语言或玩家推理判定。
-- UI 动画只读取事件；规则结果来自规则层。
+## 验收状态
+
+| 项目 | 结果 |
+| --- | --- |
+| 自动测试 | 27 个套件，146/146 通过 |
+| TypeScript + Vite 生产构建 | 通过 |
+| Windows x64 目录包 | 通过 |
+| 实际 Electron 完整玩家流程 | 通过 |
+| DM 房间、运行台与创作台 | 通过 |
+| 1366×768 与 1920×1080 | 通过 |
+| Windows DPR 1.0 / 1.25 / 1.5 | 通过 |
+| 窗口化、最大化、F11 全屏 | 通过 |
+| 断网运行与 2D 骰子回退 | 通过 |
+| Electron 控制台错误 | 0 |
+
+实际 Electron 截图、每张截图的身份与时点说明见：
+
+- [Windows UI 截图索引](../../reports/windows-ui-rebuild/README.md)
+- [Windows 桌面实现说明](docs/windows-desktop-rebuild.md)
+
+## 主要结构
+
+```text
+electron/                       Windows 外壳、存档桥接与内嵌 LAN 房主
+src/combat/                     权威交锋状态与规则事务
+src/controllers/scene/         情景运行与模式切换
+src/data/schema/                招式用法、可用性与公共数据接口
+src/data/campaign/              团包、教学内容与结构校验
+src/domain/session/             三运行态、身份与会话状态
+src/lib/combat/                 自动角色、目标、配气与行动序列
+src/lib/scene/                  规则型情景自动 DM
+src/net/                        LAN 协议与客户端
+src/ui/scene/                   玩家自由 / 结构化情景桌面
+src/ui/combat/                  战斗桌面、手牌、气骰和反馈
+src/ui/dm/                      真人 DM 运行台与创作工作台
+src/ui/overlays/                人物、背包、招式等大型覆盖页
+```
+
+## 规则与数据边界
+
+- `MoveDefinition` 描述招式本体，`MoveUsage` 描述情景、战斗、截击或应招中的具体用法。
+- UI 通过 `AvailabilityResult` 展示模式、时点、距离、目标、装备、势、气骰和额度等禁用原因，不自行猜测规则。
+- 只有结构化效果可以修改权威状态；自由文本用于叙事，不直接改变数值。
+- 遇到规则书没有冻结的内容，应记录规则问题，不批量发明招式或数值。
+- 3D 与 2D 只负责表现，权威随机结果和日志由规则层决定。
+
+## 当前发布说明
+
+本次已验证的是 Windows x64 目录版。`desktop:dist` 在当前构建环境中完成应用打包后未能稳定结束安装器封装，因此没有把 NSIS 或 portable 安装包列为交付完成项。目录版可直接运行，后续如需正式分发安装器，应单独复核签名、安装路径与杀毒软件兼容性。

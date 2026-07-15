@@ -89,12 +89,13 @@ export function queueSceneActionRequest(state: CombatState, request: SceneAction
   if (!actor || !target?.public || !definition || !target.interactionIds.includes(request.actionType)) {
     return resolveSceneAction(state, request, { now: () => request.createdAt });
   }
+  const approach = request.approach?.trim();
   const log: CombatLogEntry = {
     id: `SCENE_REQUEST-${request.id}`,
     type: "SCENE_REQUEST",
     round: state.round,
-    message: `${actor.name}请求${definition.name}｜目标：${target.name}｜办法：${request.approach}`,
-    public: true,
+    message: `${actor.name}请求${definition.name}｜目标：${target.name}${approach ? `｜办法：${approach}` : ""}`,
+    public: request.audience !== "dm",
     createdAt: request.createdAt,
   };
   return {
@@ -135,7 +136,7 @@ export function resolveQueuedSceneRequest(
       type: "DM_RULING",
       round: state.round,
       message: `驳回｜${actor?.name ?? request.actorId}｜${target?.name ?? request.targetId ?? "无目标"}｜${narration}`,
-      public: true,
+      public: request.audience !== "dm",
       createdAt: now,
     };
     return {
@@ -158,7 +159,7 @@ export function resolveQueuedSceneRequest(
     type: "DM_RULING",
     round: state.round,
     message: `${ruling === "modified" ? "修改后批准" : "批准"}｜${actor?.name ?? request.actorId}｜${target?.name ?? request.targetId ?? "无目标"}${trimmedNote ? `｜主持备注：${trimmedNote}` : ""}`,
-    public: true,
+    public: request.audience !== "dm",
     createdAt: now,
   };
   return {
@@ -199,7 +200,12 @@ export function resolveSceneAction(
       "请改选高亮的行动或目标。",
       now,
     );
-    return appendSceneLog({ ...state, scene: { ...state.scene, pendingRequest: undefined, lastResolution: resolution } }, resolution.narration, now);
+    return appendSceneLog(
+      { ...state, scene: { ...state.scene, pendingRequest: undefined, lastResolution: resolution } },
+      resolution.narration,
+      now,
+      request.audience !== "dm",
+    );
   }
 
   let next = structuredClone(state);
@@ -304,7 +310,12 @@ export function resolveSceneAction(
     pendingRequest: undefined,
     lastResolution: resolution,
   };
-  return appendSceneLog(next, `${definition.name}｜${narration}｜${changes.join("；")}`, now);
+  return appendSceneLog(
+    next,
+    `${definition.name}｜${narration}｜${changes.join("；")}`,
+    now,
+    request.audience !== "dm",
+  );
 }
 
 function validNarration(value: unknown): value is string {
@@ -350,7 +361,7 @@ export async function resolveSceneActionWithNarration(
   const narration = await options.narrationProvider.narrate({
     actionName: definition.name,
     targetName: target.name,
-    approach: request.approach,
+    approach: request.approach?.trim() || "依照选定用法直接行动",
     baseNarration: resolution.narration,
     changes: resolution.changes,
   });

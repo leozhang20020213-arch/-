@@ -241,6 +241,61 @@
   border-color: rgba(139, 42, 42, 0.4);
 }
 
+.support-page--settings {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(1320px, calc(100% - 32px));
+  color: var(--paper-warm);
+}
+
+.support-page--settings .support-page__header,
+.support-page--settings .support-danger-zone {
+  grid-column: 1 / -1;
+}
+
+.support-page--settings .panel {
+  color: var(--paper-warm);
+  border-color: rgba(177, 135, 72, 0.34);
+  background:
+    linear-gradient(150deg, rgba(44, 35, 29, 0.98), rgba(20, 24, 24, 0.98)),
+    radial-gradient(circle at 20% 0%, rgba(196, 156, 86, 0.09), transparent 42%);
+  box-shadow: inset 0 1px rgba(255, 239, 198, 0.05), 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.support-page--settings h1,
+.support-page--settings h2,
+.support-page--settings h3,
+.support-page--settings strong {
+  color: #f0dfbd;
+}
+
+.support-page--settings p,
+.support-page--settings .hint,
+.support-page--settings .empty-state,
+.support-page--settings .support-setting-row small {
+  color: #bfae91;
+}
+
+.support-page--settings .eyebrow {
+  color: #d1a45e;
+}
+
+.support-page--settings .support-setting-row {
+  border-color: rgba(177, 135, 72, 0.25);
+  background: rgba(6, 11, 12, 0.4);
+}
+
+.support-page--settings input,
+.support-page--settings select {
+  color: #f0dfbd;
+  border-color: rgba(177, 135, 72, 0.34);
+  background: rgba(5, 9, 10, 0.72);
+}
+
+.support-page--settings option {
+  color: #f0dfbd;
+  background: #151918;
+}
+
 .support-danger-button {
   border-color: var(--btn-danger);
   background: var(--btn-danger);
@@ -279,5 +334,16 @@
 
   .support-toolbar__summary {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1040px) {
+  .support-page--settings {
+    grid-template-columns: 1fr;
+  }
+
+  .support-page--settings .support-page__header,
+  .support-page--settings .support-danger-zone {
+    grid-column: auto;
   }
 }

@@ -292,7 +292,7 @@ export function advanceAutoDm(
 ): AutoDmResult {
   try {
     if (!state || !Array.isArray(state.actors) || !Array.isArray(state.dice)) {
-      return result(state, "idle", "自动 DM 收到的交锋状态不完整，未推进。");
+      return result(state, "idle", "规则主持收到的交锋状态不完整，未推进。");
     }
 
     if (state.phase === "intercept_window" || state.phase === "react_window") {
@@ -321,6 +321,12 @@ export function advanceAutoDm(
           "skip_react",
           `「${move.name}」没有应招窗口，直接进入落果。`,
         );
+      }
+
+      if (source?.id === target.id) {
+        return state.phase === "intercept_window"
+          ? result(formMove(state), "skip_intercept", `${target.name}不能截击自己的宣言，自动进入成招。`)
+          : result(skipReact(state), "skip_react", `${target.name}不能应招自己的宣言，自动进入落果。`);
       }
 
       if (target.id === playerActorId) {
@@ -385,7 +391,7 @@ export function advanceAutoDm(
     }
 
     if (state.phase === "outcome") {
-      return result(applyOutcome(state), "apply_outcome", "自动 DM 已结算落果。");
+      return result(applyOutcome(state), "apply_outcome", "规则主持已结算落果。");
     }
 
     if (state.phase === "round_end") {
@@ -432,10 +438,10 @@ export function advanceAutoDm(
       return result(state, "idle", "请先点击“进入宣言”完成本场景整体投骰。");
     }
 
-    return result(state, "idle", `当前阶段 ${state.phase} 没有自动 DM 步骤。`);
+    return result(state, "idle", `当前阶段 ${state.phase} 没有规则主持步骤。`);
   } catch {
     // Malformed or stale state must never break the solo-test loop. Returning
     // the exact input state also prevents an accidental multi-step advance.
-    return result(state, "idle", "自动 DM 无法合法推进，状态保持不变。");
+    return result(state, "idle", "规则主持无法合法推进，状态保持不变。");
   }
 }

@@ -54,11 +54,14 @@ export function createLanClient(options: LanClientOptions): LanClient {
   }
 
   function send(type: LanMessage["type"], payload: unknown): boolean {
+    const versionedPayload = payload && typeof payload === "object" && !Array.isArray(payload)
+      ? { ...(payload as Record<string, unknown>), protocolVersion: 1 }
+      : { value: payload, protocolVersion: 1 };
     const message: LanMessage = {
       type,
       roomCode: options.roomCode,
       senderId: options.senderId,
-      payload,
+      payload: versionedPayload,
     };
     const validation = validateLanMessage(message);
     if (!validation.ok) {

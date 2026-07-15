@@ -16,6 +16,7 @@ import type {
   ShiCondition,
 } from "./types";
 import { deriveTargetState } from "../lib/combat/targetValidation";
+import { createAvailabilityResult, type AvailabilityCheck, type AvailabilityResult } from "../data/schema/availability";
 import { computeTurnOrder } from "../lib/combat/turnOrder";
 import {
   beginCombatEncounter,
@@ -37,6 +38,7 @@ export const defaultRoll: RollFn = (sides) => Math.floor(Math.random() * sides) 
 export interface ActionAvailability {
   allowed: boolean;
   reasons: string[];
+  availability: AvailabilityResult;
 }
 
 // ============================================================================
@@ -633,36 +635,56 @@ export function canDeclareAction(
   const reasons: string[] = [];
 
   if (!actor || !move) {
-    return { allowed: false, reasons: ["未找到行动或角色"] };
+    const availability = createAvailabilityResult([{ dimension: "target", status: "fail", reason: "未找到行动或角色" }]);
+    return { allowed: false, reasons: availability.reasons, availability };
   }
+
+  const checks: AvailabilityCheck[] = [
+    { dimension: "mode", status: "pass" },
+    { dimension: "distance", status: "not_evaluated", reason: "选择目标后检查距离" },
+    { dimension: "target", status: "not_evaluated", reason: "选择目标后检查对象" },
+    { dimension: "response_budget", status: "not_applicable" },
+  ];
 
   if (state.activeActorId !== actorId) {
     reasons.push("不是当前行动者");
+    checks.push({ dimension: "timepoint", status: "fail", reason: "不是当前行动者" });
   }
 
   if (state.phase !== "scene" && state.phase !== "declare") {
     reasons.push("当前时点不允许宣言");
+    checks.push({ dimension: "timepoint", status: "fail", reason: "当前时点不允许宣言" });
+  } else if (state.activeActorId === actorId) {
+    checks.push({ dimension: "timepoint", status: "pass" });
   }
 
   // Momentum validation
   const momentumCheck = validateMomentum(actor, move.shiCondition, move.allowedShi);
   if (!momentumCheck.valid && momentumCheck.reason) {
     reasons.push(momentumCheck.reason);
+    checks.push({ dimension: "momentum", status: "fail", reason: momentumCheck.reason });
+  } else {
+    checks.push({ dimension: "momentum", status: "pass" });
   }
 
   // Equipment validation
   const equipCheck = validateEquipPermission(actor, move.equipPermission);
   if (!equipCheck.valid && equipCheck.reason) {
     reasons.push(equipCheck.reason);
+    checks.push({ dimension: "equipment", status: "fail", reason: equipCheck.reason });
+  } else {
+    checks.push({ dimension: "equipment", status: "pass" });
   }
 
   // Formal move (正式出手) requires both yin and yang slot dice
   if (move.timing === "正式出手") {
     if ((slotDice.yinSlotDiceIds?.length ?? 0) === 0) {
       reasons.push("缺少阴槽气骰（正式出手必须配置阴槽和阳槽）");
+      checks.push({ dimension: "qi", status: "fail", reason: "缺少阴槽气骰" });
     }
     if ((slotDice.yangSlotDiceIds?.length ?? 0) === 0) {
       reasons.push("缺少阳槽气骰（正式出手必须配置阴槽和阳槽）");
+      checks.push({ dimension: "qi", status: "fail", reason: "缺少阳槽气骰" });
     }
   }
 
@@ -675,10 +697,14 @@ export function canDeclareAction(
     const qiCheck = validateQiNature(selectedDice, move.qiNatureThreshold);
     if (!qiCheck.valid && qiCheck.reason) {
       reasons.push(qiCheck.reason);
+      checks.push({ dimension: "qi", status: "fail", reason: qiCheck.reason });
     }
   }
-
-  return { allowed: reasons.length === 0, reasons };
+  if (!checks.some((check) => check.dimension === "qi" && check.status === "fail")) {
+    checks.push({ dimension: "qi", status: "pass" });
+  }
+  const availability = createAvailabilityResult(checks);
+  return { allowed: availability.available, reasons: availability.reasons, availability };
 }
 
 // ============================================================================
@@ -1593,8 +1619,8 @@ export function useReflection(
 // BASIC ACTION AVAILABILITY (调息 / 返照)
 // ============================================================================
 
-/** Supported basic action types (self-targeting, no enemy target needed) */
-export type BasicActionType = "regulateBreath" | "fanzhao";
+/** Supported basic action types (self-targeting, no enemy target needed). */
+export type BasicActionType = "regulateBreath" | "fanzhao" | "pass";
 
 /** Unified availability result with short tags for UI badges */
 export interface SkillAvailability {
@@ -1604,7 +1630,7 @@ export interface SkillAvailability {
 }
 
 /**
- * Check whether a basic action (调息 / 返照) is currently available for an actor.
+ * Check whether a basic action (调息 / 返照 / 放弃出手) is available.
  *
  * Rules:
  *   调息: self, no enemy target, no distance, needs rest pool non-empty, needs scene/declare phase
@@ -1683,6 +1709,33 @@ export function getBasicActionAvailability(
   }
 
   return { usable, reasonTags, detailReasons };
+}
+
+/**
+ * End the current actor's formal action without creating a declaration.
+ * This is the guaranteed escape hatch for an empty hand or an invalidated
+ * board state. Turn advancement remains centralized in advanceTurn().
+ */
+export function passMainAction(
+  state: CombatState,
+  actorId: string,
+  reason = "主动放弃出手",
+): CombatState {
+  const availability = getBasicActionAvailability(state, actorId, "pass");
+  if (!availability.usable) {
+    throw new Error(availability.detailReasons.join("、") || "当前不能放弃出手。");
+  }
+  let next = cloneState(state);
+  const actor = requireActor(next, actorId);
+  next.pendingAction = undefined;
+  next.phase = "round_end";
+  next = appendLog(next, "PASS_ACTION", `${actor.name} ${reason}，行动序列安全推进。`);
+  return appendFeedback(next, {
+    kind: "resource",
+    actorId,
+    title: "放弃出手",
+    detail: "未消耗气骰",
+  });
 }
 
 /**

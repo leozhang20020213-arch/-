@@ -6,7 +6,6 @@ test("旧玩家路由迁移到独立交锋桌面并补齐自动DM设置", () => 
   const migrated = normalizeAppSession({ route: "player" as never, autoDmEnabled: true });
   assert.equal(migrated.route, "playerCombat");
   assert.equal(migrated.playMode, "solo");
-  assert.equal(migrated.aiNarrationEnabled, false);
 });
 
 test("旧存档缺少情景运行态时补齐完整情景", () => {

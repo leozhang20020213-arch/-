@@ -45,6 +45,34 @@ function enemyDeclaration(): CombatState {
 }
 
 describe("test auto DM", () => {
+  it("never asks a player to intercept or react to their own self-targeted declaration", () => {
+    let state = enterScene(createSeedState(), fixedRoll);
+    const actor = state.actors.find((entry) => entry.id === PLAYER_ID)!;
+    const move = actor.moves.find((entry) => entry.id === "WG001") ?? actor.moves[0];
+    const seaDice = state.dice.filter((die) => die.ownerId === actor.id && die.zone === "QI_SEA").slice(0, 2);
+    state = {
+      ...state,
+      phase: "intercept_window",
+      activeActorId: actor.id,
+      pendingAction: {
+        actorId: actor.id,
+        targetId: actor.id,
+        moveId: move.id,
+        diceIds: seaDice.map((die) => die.id),
+        yinSlotDiceIds: seaDice.filter((die) => die.nature !== "yang").map((die) => die.id),
+        yangSlotDiceIds: seaDice.filter((die) => die.nature === "yang").map((die) => die.id),
+      },
+    };
+
+    const intercept = advanceAutoDm(state, PLAYER_ID);
+    assert.equal(intercept.decision, "skip_intercept");
+    assert.notEqual(intercept.decision, "waiting_player");
+    if (intercept.state.phase === "react_window") {
+      const react = advanceAutoDm(intercept.state, PLAYER_ID);
+      assert.equal(react.decision, "skip_react");
+      assert.notEqual(react.decision, "waiting_player");
+    }
+  });
   it("advances the first-round main line one step at a time", () => {
     const declared = playerDeclaration();
 

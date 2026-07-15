@@ -4,6 +4,7 @@ import type { DrawerId } from "../layouts/MainToolbar";
 import { identityLabel } from "../utils/labels";
 import { deriveTurnState, type TurnOrderEntry } from "../../lib/combat/turnOrder";
 import { WindowControls } from "../components/WindowControls";
+import { normalizeResponseBudget } from "../../domain/session/runtime";
 
 export interface TopCombatBarProps {
   session: AppSession;
@@ -109,12 +110,16 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
 
   // Separator dots between turn chips (not after the last one)
   const turnEntries = turnState.order;
+  const budgetActor = state.actors.find((actor) => actor.id === (session.selectedActorId ?? state.activeActorId));
+  const responseBudget = budgetActor
+    ? normalizeResponseBudget(budgetActor.responseBudget, budgetActor.responseQuotaUsed, budgetActor.maxResponseQuota)
+    : undefined;
 
   return (
     <header className="combat-topbar" role="banner" aria-label="交锋顶栏">
       {/* Left: App name (compact) */}
       <div className="combat-topbar__left">
-        <span className="app-name" title="大梁江湖 TRPG">大梁江湖</span>
+        <span className="app-name" title="大梁武侠">大梁武侠</span>
       </div>
 
       {/* Center-left: Round + phase. Current actor is the highlighted queue chip. */}
@@ -163,7 +168,8 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
         <span className={`identity-badge ${isDM ? "dm" : "player"}`}>
           {identityLabel(session.identity)}
         </span>
-        {session.autoDmEnabled ? <span className="auto-dm-badge" title="本地测试自动 DM 已启用">自动DM</span> : null}
+        {responseBudget ? <span className="response-budget-badge" title="主动响应 / 自保应招额度">响 {responseBudget.proactiveUsed}/{responseBudget.maxProactive} · 守 {responseBudget.selfDefenseUsed}/{responseBudget.maxSelfDefense}</span> : null}
+        {session.autoDmEnabled ? <span className="auto-dm-badge" title="本地规则主持已启用">规则主持</span> : null}
 
         {isDM && session.developerMode && (
           <button

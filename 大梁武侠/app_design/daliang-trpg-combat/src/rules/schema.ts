@@ -72,19 +72,19 @@ export const LAN_MESSAGE_TYPES = [
 ] as const;
 
 export const LAN_PAYLOAD_FIELDS = {
-  room_created: ["room", "seats", "publicState"],
-  room_joined: ["playerName", "actorId"],
-  seat_assigned: ["seatId", "playerName", "actorId", "ready"],
-  scene_action_requested: ["request"],
-  public_state_synced: ["publicState", "gameMode"],
-  combat_event_committed: ["event"],
-  dm_broadcast: ["message", "level"],
-  client_error: ["message"],
+  room_created: ["room", "seats", "publicState", "protocolVersion"],
+  room_joined: ["playerName", "actorId", "protocolVersion"],
+  seat_assigned: ["seatId", "playerName", "actorId", "ready", "protocolVersion"],
+  scene_action_requested: ["request", "protocolVersion"],
+  public_state_synced: ["publicState", "gameMode", "protocolVersion"],
+  combat_event_committed: ["event", "protocolVersion"],
+  dm_broadcast: ["message", "level", "protocolVersion"],
+  client_error: ["message", "protocolVersion"],
 } as const satisfies Record<(typeof LAN_MESSAGE_TYPES)[number], readonly string[]>;
 
-export const ROOM_SETTING_FIELDS = ["roomName", "hostName", "campaignId", "mode", "allowSpectators", "maxPlayers"] as const;
-export const ROOM_SEAT_FIELDS = ["id", "label", "playerName", "actorId", "ready"] as const;
-export const SCENE_ACTION_REQUEST_FIELDS = ["id", "actorId", "actionType", "targetId", "approach", "sourceId", "createdAt"] as const;
+export const ROOM_SETTING_FIELDS = ["roomName", "hostName", "campaignId", "mode", "allowSpectators", "allowPrivateDmMessages", "maxPlayers"] as const;
+export const ROOM_SEAT_FIELDS = ["id", "label", "playerName", "actorId", "ready", "connectionStatus"] as const;
+export const SCENE_ACTION_REQUEST_FIELDS = ["id", "actorId", "actionType", "targetId", "approach", "sourceId", "audience", "createdAt"] as const;
 export const COMBAT_LOG_FIELDS = ["id", "type", "round", "message", "public", "createdAt"] as const;
 
 export const STATUS_FIELDS = [
@@ -390,6 +390,9 @@ function unknownKeys(value: object, allowed: readonly string[], label: string): 
 function validateLanPayload(type: (typeof LAN_MESSAGE_TYPES)[number], payload: unknown): string[] {
   if (!isRecord(payload)) return [`${type}.payload must be an object`];
   const errors = unknownKeys(payload, LAN_PAYLOAD_FIELDS[type], `${type}.payload`);
+  if ("protocolVersion" in payload && (!Number.isInteger(payload.protocolVersion) || Number(payload.protocolVersion) < 1)) {
+    errors.push(`${type}.payload.protocolVersion must be a positive integer`);
+  }
 
   if (type === "room_created") {
     if (!isRecord(payload.room)) {
@@ -431,7 +434,8 @@ function validateLanPayload(type: (typeof LAN_MESSAGE_TYPES)[number], payload: u
       if (typeof payload.request.actorId !== "string" || payload.request.actorId.length === 0) errors.push("scene_action_requested.payload.request.actorId is required");
       if (!includes(["observe", "negotiate", "investigate", "move", "take", "use-item"] as const, String(payload.request.actionType))) errors.push("scene_action_requested.payload.request.actionType is invalid");
       if ("targetId" in payload.request && typeof payload.request.targetId !== "string") errors.push("scene_action_requested.payload.request.targetId must be a string");
-      if (typeof payload.request.approach !== "string" || payload.request.approach.length === 0) errors.push("scene_action_requested.payload.request.approach is required");
+      if ("approach" in payload.request && typeof payload.request.approach !== "string") errors.push("scene_action_requested.payload.request.approach must be a string");
+      if ("audience" in payload.request && !includes(["all", "dm"] as const, String(payload.request.audience))) errors.push("scene_action_requested.payload.request.audience is invalid");
       if (typeof payload.request.createdAt !== "number" || !Number.isFinite(payload.request.createdAt)) errors.push("scene_action_requested.payload.request.createdAt must be finite");
     }
   }

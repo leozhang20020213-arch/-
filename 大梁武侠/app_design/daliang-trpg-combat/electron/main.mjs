@@ -1,11 +1,44 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
+import { startLanHost, stopLanHost } from "./lanHost.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
 
 let mainWindow;
+const SAVE_KEYS = new Set(["combat", "session", "campaign"]);
+
+function savePath(key) {
+  if (!SAVE_KEYS.has(key)) throw new Error("不支持的存档类型");
+  return path.join(app.getPath("userData"), "saves", `${key}.json`);
+}
+
+function readSave(key) {
+  try {
+    return JSON.parse(fs.readFileSync(savePath(key), "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+function writeSave(key, value) {
+  const target = savePath(key);
+  const directory = path.dirname(target);
+  const temporary = `${target}.tmp`;
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(temporary, JSON.stringify(value), "utf8");
+  fs.renameSync(temporary, target);
+}
+
+function clearSave(key) {
+  try {
+    fs.rmSync(savePath(key), { force: true });
+  } catch {
+    // A missing or locked save is reported by the renderer on the next write.
+  }
+}
 
 function emitWindowState(window) {
   window.webContents.send("desktop:window-state", {
@@ -24,7 +57,7 @@ function createWindow() {
     frame: false,
     backgroundColor: "#130f0b",
     autoHideMenuBar: true,
-    title: "大梁江湖TRPG",
+    title: "大梁武侠",
     icon: path.join(__dirname, "../public/assets/icons/png512/005_world_世界.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -86,6 +119,19 @@ ipcMain.on("desktop:toggle-full-screen", () => {
   mainWindow.setFullScreen(!mainWindow.isFullScreen());
 });
 ipcMain.on("desktop:close", () => mainWindow?.close());
+ipcMain.on("storage:read-sync", (event, key) => {
+  event.returnValue = readSave(key);
+});
+ipcMain.handle("storage:write", (_event, key, value) => {
+  writeSave(key, value);
+  return true;
+});
+ipcMain.handle("storage:clear", (_event, key) => {
+  clearSave(key);
+  return true;
+});
+ipcMain.handle("lan-host:start", (_event, port) => startLanHost(Number(port) || 8787));
+ipcMain.handle("lan-host:stop", () => stopLanHost());
 
 app.on("web-contents-created", (_event, contents) => {
   contents.setWindowOpenHandler(() => ({ action: "deny" }));

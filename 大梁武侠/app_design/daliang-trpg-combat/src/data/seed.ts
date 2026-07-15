@@ -788,48 +788,48 @@ const actorArcher: Actor = {
 const trackClue: SceneTrack = {
   id: "track-clue", name: "解密值", value: 0, max: 8,
   kind: "insight",
-  description: "调查失镖真相。达到8时查明全部线索。",
+  description: "调查白蘋渡药匣去向。达到8时查明全部线索。",
   insightLayers: [
-    { level: 1, summary: "仓门和地面留有刻意清理过的水痕。", dmContent: "水痕来自转运镖箱的窄轮车。" },
-    { level: 2, summary: "染血封条不是在仓内被撕开。", dmContent: "封条在桥下船边被替换。" },
-    { level: 3, summary: "失镖案有熟悉镖局交接规矩的内应。", dmContent: "内应向水会递出了仓单副本。" },
-    { level: 4, summary: "真正的买主藏在巡检到场后的接应链中。" },
+    { level: 1, summary: "系舟石旁的封签被利器整齐挑开。", dmContent: "封签来自被调换的药匣。" },
+    { level: 2, summary: "替换药匣的重量与船账不符。", dmContent: "真匣已由搬匣人带往苇岸。" },
+    { level: 3, summary: "有人熟悉渡口药材交接规矩。", dmContent: "内应提前改写了当日船账。" },
+    { level: 4, summary: "苇岸的小舟是接应路线，也是非战斗谈判的筹码。" },
   ],
 };
 
 const trackPatrol: SceneTrack = {
   id: "track-patrol", name: "巡检注意", value: 2, max: 10, hidden: true,
   kind: "crisis",
-  description: "巡检发现异常会搜查。达到10时官府介入，镖局名声受损。",
+  description: "渡口众人受到惊扰会封锁去路。达到10时官差介入。",
   growthConditions: ["发出明显响动", "亮出兵刃", "在仓外留下目击者"],
-  triggerOutcome: "达到10时巡检队封锁旧堤仓，镖局名声受损。",
+  triggerOutcome: "达到10时官差封锁白蘋渡，追查转入公开盘问。",
   reductionConditions: ["转移注意", "取得巡检通行许可", "及时收束场景"],
 };
 
 const trackEscape: SceneTrack = {
   id: "track-escape", name: "危机值", value: 0, max: 8,
   kind: "crisis",
-  description: "火势/追兵/船期。达到8时敌人借机撤离或局势失控。",
+  description: "雾散与开船时机。达到8时搬匣人抵达苇岸接应点。",
   growthConditions: ["拖延行动", "搜查失败", "敌人完成搬箱"],
-  triggerOutcome: "达到8时敌人带箱撤离，玩家只能转入雨夜追逐。",
+  triggerOutcome: "达到8时搬匣人带药匣转入苇岸追逐。",
   reductionConditions: ["控制仓门", "夺回镖箱", "压制望风探子"],
 };
 
 const initialScene: SceneRuntimeState = {
-  id: "scene-old-dike-warehouse",
-  act: 2,
-  location: "桥陵镇·旧堤仓",
-  timeWindow: "子时前一刻至巡检换岗",
-  boundary: "仓门、堤岸与桥下泊船；离开此区域将进入新场景。",
-  narration: "雨脚斜打仓檐。半掩的仓门后有拖拽重物的闷响，堤岸上的火把正在向桥头靠近。",
+  id: "white-duckweed-ferry",
+  act: 1,
+  location: "白蘋渡·晨雾",
+  timeWindow: "晨雾散尽至渡船开行",
+  boundary: "茶棚、栈桥、系舟石与渡船候客处；进入窄巷将切换场景。",
+  narration: "雨刚停，白蘋浮在渡口缓流间。栈桥木板残留着被刻意清理过的水痕，系舟石旁压着一角带血封签。",
   turn: 1,
   permissions: [],
   resources: [],
   elements: [
-    { id: "warehouse-door", name: "半掩仓门", kind: "environment", description: "门缝里有新鲜水痕和断裂麻绳。", public: true, interactionIds: ["observe", "investigate", "move"] },
-    { id: "blood-seal", name: "染血封条", kind: "object", description: "镖箱封条的一角压在湿泥里。", public: true, interactionIds: ["observe", "investigate", "take"] },
-    { id: "porter-shadow", name: "搬箱黑影", kind: "person", description: "仓内有人正把沉重木箱拖向后门。", public: true, interactionIds: ["observe", "negotiate", "move"] },
-    { id: "hidden-archer", name: "暗处弓手", kind: "person", description: "高处伏兵，尚未被玩家发现。", public: false, interactionIds: ["observe"] },
+    { id: "warehouse-door", name: "雾中栈桥", kind: "environment", description: "湿滑木板上残留着被刻意清理过的水痕。", public: true, interactionIds: ["observe", "investigate", "move"] },
+    { id: "blood-seal", name: "带血封签", kind: "object", description: "药匣封签的一角压在系舟石旁。", public: true, interactionIds: ["observe", "investigate", "take"] },
+    { id: "porter-shadow", name: "雾中人影", kind: "person", description: "有人攥着相同封签向渡口窄巷退去。", public: true, interactionIds: ["observe", "negotiate", "move"] },
+    { id: "hidden-archer", name: "苇岸接应者", kind: "person", description: "尚未公开的接应者，守着离岸小舟。", public: false, interactionIds: ["observe"] },
   ],
   combatUnlocked: false,
   completed: false,
@@ -903,9 +903,9 @@ export function createSeedState(): CombatState {
     }));
   return {
     runtime: createRuntimeSession(initialScene.id, "SCENE_FREE"),
-    campaignName: "桥陵镇雨夜失镖",
-    sceneName: "旧堤仓",
-    sceneGoal: "找回失踪的镖箱，查明内鬼",
+    campaignName: "白蘋渡失匣",
+    sceneName: "白蘋渡",
+    sceneGoal: "查明药匣去向，在开船前取得追查许可",
     round: 1,
     phase: "setup",
     activeActorId: "pc-shen-qing",

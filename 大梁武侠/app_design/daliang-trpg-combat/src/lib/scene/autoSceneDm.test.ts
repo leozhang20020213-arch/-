@@ -54,6 +54,18 @@ describe("scene auto DM", () => {
     assert.equal(next.logs[0]?.type, "SCENE_REQUEST");
   });
 
+  it("keeps a DM-only scene request and its ruling out of the public log", () => {
+    const queued = queueSceneActionRequest(createSeedState(), {
+      id: "room-private", actorId, actionType: "observe", targetId: "warehouse-door",
+      approach: "我只把真正来意告诉主持", audience: "dm", createdAt: 10,
+    });
+    assert.equal(queued.logs[0]?.public, false);
+    const resolved = resolveQueuedSceneRequest(queued, "approved", "", { now: () => 20 });
+    assert.equal(resolved.logs[0]?.type, "DM_RULING");
+    assert.equal(resolved.logs[0]?.public, false);
+    assert.equal(resolved.logs.find((entry) => entry.type === "SCENE_ACTION")?.public, false);
+  });
+
   it("lets the真人 DM modify and resolve a queued request with an audit log", () => {
     const queued = queueSceneActionRequest(createSeedState(), {
       id: "room-r2", actorId, actionType: "observe", targetId: "warehouse-door", approach: "直接推门", createdAt: 10,

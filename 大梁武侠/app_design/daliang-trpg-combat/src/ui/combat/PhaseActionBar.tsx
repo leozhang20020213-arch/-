@@ -146,7 +146,7 @@ export const PhaseActionBar: FC<PhaseActionBarProps> = ({
         {readOnly ? "旁观模式：只显示公开进程，不能提交操作。" : disabledHints.length > 0 ? disabledHints.join(" · ") : hint}
       </span>
       {automationMessage ? (
-        <span className="auto-dm-status" role="status">自动 DM · {automationMessage}</span>
+        <span className="auto-dm-status" role="status">规则主持 · {automationMessage}</span>
       ) : null}
     </div>
   );

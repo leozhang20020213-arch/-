@@ -15,6 +15,7 @@ import "./styles/support-pages.css";
 import "./styles/accessibility.css";
 import "./styles/windows-desktop.css";
 import "./styles/rebuild.css";
+import "./styles/scene-workspace.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

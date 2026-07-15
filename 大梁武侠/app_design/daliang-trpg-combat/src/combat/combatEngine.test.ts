@@ -17,6 +17,7 @@ import {
   equipItem,
   expireSource,
   formMove,
+  passMainAction,
   prepareCombatRound,
   confirmInitiative,
   regulateBreath,
@@ -393,6 +394,8 @@ describe("combat engine", () => {
     ]);
     assert.equal(next.dice.find((die) => die.id === "pc-d1")?.zone, "QI_SEA");
     assert.equal(next.dice.find((die) => die.id === "pc-d1")?.value, 6);
+    assert.equal(next.dice.find((die) => die.id === "sb-d1")?.zone, "QI_POOL");
+    assert.equal(next.dice.find((die) => die.id === "sb-d1")?.value, null);
     assert.equal(next.logs.some((log) => log.type === "dice_rolled"), true);
     assert.equal(next.logs.some((log) => log.type === "qi_entered_sea"), true);
   });
@@ -432,6 +435,12 @@ describe("combat engine", () => {
       payload: { request: { id: "r1", actorId: "pc-shen-qing", actionType: "hack", approach: "非法入口", createdAt: 1 } },
     }).ok, false);
     assert.equal(validateLanMessage({ type: "unknown", roomCode: "LAN-AB12", senderId: "dm", payload: {} }).ok, false);
+    assert.equal(validateLanMessage({
+      type: "scene_action_requested",
+      roomCode: "LAN-AB12",
+      senderId: "player",
+      payload: { protocolVersion: 1, request: { id: "private-r1", actorId: "pc-shen-qing", actionType: "observe", targetId: "warehouse-door", sourceId: "scene-observe", audience: "dm", createdAt: 2 } },
+    }).ok, true);
     assert.equal(validateStatusRecord({ name: "status", public: true, illegal: true }).ok, false);
   });
 
@@ -907,5 +916,19 @@ describe("combat engine", () => {
     assert.equal(matching[0].band, "中距");
     assert.equal(matching[0].entangled, true);
     assert.match(next.logs.at(-1)?.message ?? "", /DM调整距离/);
+  });
+
+  it("lets the active actor safely pass without spending qi", () => {
+    const state = enterScene(createSeedState(), fixedRoll);
+    const before = state.dice.map((die) => ({ id: die.id, zone: die.zone, value: die.value }));
+    const next = passMainAction(state, state.activeActorId);
+
+    assert.equal(next.phase, "round_end");
+    assert.equal(next.pendingAction, undefined);
+    assert.deepEqual(
+      next.dice.map((die) => ({ id: die.id, zone: die.zone, value: die.value })),
+      before,
+    );
+    assert.equal(next.logs.some((entry) => /放弃出手/.test(entry.message)), true);
   });
 });

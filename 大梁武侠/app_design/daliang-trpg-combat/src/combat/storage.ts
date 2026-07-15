@@ -21,10 +21,16 @@ export function createDefaultSession(): AppSession {
     developerMode: false,
     autoDmEnabled: false,
     playMode: "solo",
-    aiNarrationEnabled: false,
-    aiNarrationEndpoint: "",
-    roomCode: "LOCAL-BRIDGE-RAIN",
+    roomCode: "LAN-BP01",
     playerName: "沈青玩家",
+    preferences: {
+      uiScale: 1,
+      animationSpeed: 1,
+      dicePresentation: "full",
+      textSpeed: "normal",
+      masterVolume: 0.8,
+      autoRuleLevel: "standard",
+    },
     selectedActorId: "pc-shen-qing",
     seats: [
       { id: "seat-dm", label: "DM", playerName: "试跑DM", ready: true, connectionStatus: "offline" },
@@ -33,11 +39,12 @@ export function createDefaultSession(): AppSession {
       { id: "seat-3", label: "玩家3", ready: false },
     ],
     room: {
-      roomName: "桥陵镇雨夜失镖",
+      roomName: "白蘋渡失匣",
       hostName: "试跑DM",
-      campaignId: "bridge-rain",
+      campaignId: "tutorial-white-duckweed-ferry",
       mode: "local",
       allowSpectators: true,
+      allowPrivateDmMessages: true,
       maxPlayers: 4,
     },
   };
@@ -49,11 +56,14 @@ export function loadCombatState(): CombatState {
   }
 
   try {
+    const desktopValue = window.daliangDesktop?.storage.read("combat") as Partial<CombatState> | undefined;
+    if (desktopValue) return normalizeCombatState(desktopValue);
     const raw = window.localStorage.getItem(STORAGE_KEY);
     // If saved state exists, normalize it. Otherwise use initial state with pre-rolled dice.
-    return raw
-      ? normalizeCombatState(JSON.parse(raw) as Partial<CombatState>)
-      : createInitialCombatState();
+    if (!raw) return createInitialCombatState();
+    const migrated = normalizeCombatState(JSON.parse(raw) as Partial<CombatState>);
+    void window.daliangDesktop?.storage.write("combat", migrated);
+    return migrated;
   } catch {
     return createInitialCombatState();
   }
@@ -65,6 +75,10 @@ export function saveCombatState(state: CombatState): void {
   }
 
   try {
+    if (window.daliangDesktop) {
+      void window.daliangDesktop.storage.write("combat", { ...state, lastSavedAt: Date.now() });
+      return;
+    }
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, lastSavedAt: Date.now() }));
   } catch {
     // Local storage can be unavailable in restricted browser contexts.
@@ -74,6 +88,7 @@ export function saveCombatState(state: CombatState): void {
 export function clearCombatState(): CombatState {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(STORAGE_KEY);
+    void window.daliangDesktop?.storage.clear("combat");
   }
   return createInitialCombatState();
 }
@@ -84,8 +99,19 @@ export function loadAppSession(): AppSession {
   }
 
   try {
-    const raw = window.localStorage.getItem(SESSION_KEY);
-    return raw ? normalizeAppSession(JSON.parse(raw) as Partial<AppSession>) : createDefaultSession();
+    const desktopValue = window.daliangDesktop?.storage.read("session") as Partial<AppSession> | undefined;
+    const rawValue = desktopValue ?? (() => {
+      const raw = window.localStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) as Partial<AppSession> : undefined;
+    })();
+    if (!rawValue) return createDefaultSession();
+    const normalized = normalizeAppSession(rawValue);
+    if (!desktopValue) void window.daliangDesktop?.storage.write("session", normalized);
+    return {
+      ...normalized,
+      route: "home",
+      lastRoute: normalized.route === "home" ? normalized.lastRoute : normalized.route,
+    };
   } catch {
     return createDefaultSession();
   }
@@ -97,7 +123,14 @@ export function saveAppSession(session: AppSession): void {
   }
 
   try {
-    window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    const persisted = session.route === "home"
+      ? session
+      : { ...session, lastRoute: session.route };
+    if (window.daliangDesktop) {
+      void window.daliangDesktop.storage.write("session", persisted);
+      return;
+    }
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify(persisted));
   } catch {
     // Local storage can be unavailable in restricted browser contexts.
   }
@@ -106,6 +139,7 @@ export function saveAppSession(session: AppSession): void {
 export function clearAppSession(): AppSession {
   if (typeof window !== "undefined") {
     window.localStorage.removeItem(SESSION_KEY);
+    void window.daliangDesktop?.storage.clear("session");
   }
   return createDefaultSession();
 }
@@ -241,13 +275,13 @@ export function normalizeAppSession(value: Partial<AppSession>): AppSession {
     ...seed,
     ...value,
     route: routeMap[value.route ?? "home"] ?? "home",
+    lastRoute: value.lastRoute ? routeMap[value.lastRoute] ?? "home" : undefined,
     gameMode: value.gameMode ?? (value.route === "player" || value.route === "dm" ? "combat" : "scene"),
     developerMode: value.developerMode ?? false,
     autoDmEnabled: value.autoDmEnabled ?? false,
     playMode: value.playMode ?? "solo",
-    aiNarrationEnabled: value.aiNarrationEnabled ?? false,
-    aiNarrationEndpoint: value.aiNarrationEndpoint ?? "",
     roomCode: value.roomCode ?? seed.roomCode,
+    preferences: { ...seed.preferences, ...value.preferences },
     seats: value.seats ?? seed.seats,
     room: { ...seed.room, ...value.room },
   };

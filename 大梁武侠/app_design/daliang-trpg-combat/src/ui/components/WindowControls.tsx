@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export function WindowControls() {
   const [state, setState] = useState<DesktopWindowState>({ maximized: false, fullScreen: false });
-  const desktop = window.daliangDesktop;
+  const desktop = typeof window !== "undefined" ? window.daliangDesktop : undefined;
 
   useEffect(() => {
     if (!desktop) return undefined;

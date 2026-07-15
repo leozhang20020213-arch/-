@@ -23,6 +23,15 @@ interface DaliangDesktopApi {
   close: () => void;
   getWindowState: () => Promise<DesktopWindowState>;
   onWindowState: (listener: (state: DesktopWindowState) => void) => () => void;
+  storage: {
+    read: (key: "combat" | "session" | "campaign") => unknown;
+    write: (key: "combat" | "session" | "campaign", value: unknown) => Promise<boolean>;
+    clear: (key: "combat" | "session" | "campaign") => Promise<boolean>;
+  };
+  lanHost: {
+    start: (port?: number) => Promise<{ running: true; port: number; localUrl: string; networkUrls: string[]; protocolVersion: number }>;
+    stop: () => Promise<{ running: false }>;
+  };
 }
 
 interface Window {
