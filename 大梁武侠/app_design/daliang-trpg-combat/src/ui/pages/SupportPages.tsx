@@ -5,6 +5,8 @@ import type {
   CombatState,
   InventoryCategory,
 } from "../../combat/types";
+import { CAMPAIGN_PACKS, getCampaignPack } from "../../data/campaign/campaignRegistry";
+import { validateCampaignPack } from "../../data/campaign/campaignSchema";
 import {
   loadRuleTextCatalog,
   reviewStatusDescription,
@@ -151,7 +153,7 @@ export function LibraryPage({ state, isDm = false, onBack }: LibraryPageProps) {
         <div>
           <p className="eyebrow">权威规则文字库 · 版本化接入</p>
           <h1 id="library-page-title">大梁武侠资料库</h1>
-          <p className="hint">完整资料与可执行团包分离。审校异常条目不会进入自动DM或权威结算。</p>
+          <p className="hint">完整资料与可执行团包分离。审校异常条目不会进入规则主持或权威结算。</p>
         </div>
         <button type="button" onClick={onBack}>返回</button>
       </header>
@@ -269,7 +271,7 @@ function CatalogInspector({ entry, isDm }: { entry: RuleTextEntry; isDm: boolean
         <strong>{reviewStatusLabel(entry.review.status)}</strong>
       </header>
       <p className="catalog-inspector__summary">{entry.summary || entry.playerText}</p>
-      {entry.review.issues.length > 0 ? <section className="catalog-inspector__issues" aria-label="审校问题"><h3>接入限制</h3>{entry.review.issues.map((issue) => <p key={issue.code}><b>{issue.severity === "error" ? "阻断" : "提醒"}</b>{issue.message}</p>)}</section> : <p className="catalog-inspector__safe">文字资料通过自动审计；正式进入角色、敌人或自动DM前仍需制作可执行用法。</p>}
+      {entry.review.issues.length > 0 ? <section className="catalog-inspector__issues" aria-label="审校问题"><h3>接入限制</h3>{entry.review.issues.map((issue) => <p key={issue.code}><b>{issue.severity === "error" ? "阻断" : "提醒"}</b>{issue.message}</p>)}</section> : <p className="catalog-inspector__safe">文字资料通过自动审计；正式进入角色、敌人或规则主持前仍需制作可执行用法。</p>}
       <section className="catalog-inspector__text"><h3>玩家说明</h3><p>{entry.playerText || "该条目尚无独立玩家说明。"}</p></section>
       <dl className="catalog-inspector__sections">{sections.map((section) => <div key={`${section.label}:${section.value}`}><dt>{section.label}</dt><dd>{section.value}</dd></div>)}</dl>
       {isDm && entry.dmText ? <section className="catalog-inspector__dm"><h3>DM裁定</h3><p>{entry.dmText}</p></section> : null}
@@ -284,8 +286,10 @@ export interface PacksPageProps {
   onBack: () => void;
 }
 
-/** Read-only campaign pack status. It intentionally does not advertise import support. */
+/** Installed campaign status and runtime progress. Import is deliberately not advertised until it is executable. */
 export function PacksPage({ state, session, onBack }: PacksPageProps) {
+  const activePack = getCampaignPack(state.campaign.packId);
+  const activeIssues = validateCampaignPack(activePack);
   const counts = useMemo(() => ({
     actors: state.actors.length,
     moves: state.actors.reduce((sum, actor) => sum + actor.moves.length + actor.responses.length, 0),
@@ -324,17 +328,36 @@ export function PacksPage({ state, session, onBack }: PacksPageProps) {
         </div>
         <p>{state.sceneGoal}</p>
         <dl className="support-detail-list">
-          <div><dt>团包标识</dt><dd>{session.room.campaignId || "未声明"}</dd></div>
-          <div><dt>版本</dt><dd>白蘋渡失匣 v1 · 冻结口径 2026-07-15 · 文字库 2026-07-16</dd></div>
+          <div><dt>团包标识</dt><dd>{activePack.id}</dd></div>
+          <div><dt>版本</dt><dd>{activePack.version} · 规则 {activePack.rulesVersion}{activePack.catalogVersion ? ` · 文字库 ${activePack.catalogVersion}` : ""}</dd></div>
           <div><dt>当前场景</dt><dd>{state.sceneName}</dd></div>
-          <div><dt>场景数量</dt><dd>3 个教学场景（自由情景→结构化追逐→战斗）</dd></div>
+          <div><dt>场景数量</dt><dd>{activePack.scenes.length} 个场景 · {activePack.chapters.length} 个章节</dd></div>
+          <div><dt>团档进度</dt><dd>{state.campaign.completedSceneIds.length}/{activePack.scenes.length} 场景 · {state.campaign.completedEventIds.length} 事件 · {state.campaign.earnedRewardIds.length} 奖励</dd></div>
           <div><dt>规则文字库</dt><dd>1004 条版本化资料；异常条目与可执行规则隔离</dd></div>
-          <div><dt>数据完整性</dt><dd>{counts.actors > 0 && counts.moves > 0 && counts.dice > 0 && counts.tracks > 0 ? "可执行样例校验通过" : "缺少关键数据"}</dd></div>
+          <div><dt>数据完整性</dt><dd>{activeIssues.some((issue) => issue.severity === "error") ? `${activeIssues.filter((issue) => issue.severity === "error").length} 项阻断错误` : "结构校验通过"}</dd></div>
           <div><dt>兼容状态</dt><dd>Windows x64 · 当前规则引擎兼容</dd></div>
           <div><dt>房间</dt><dd>{session.room.roomName} · {session.roomCode}</dd></div>
           <div><dt>运行方式</dt><dd>{session.room.mode === "local" ? "本地模式" : session.room.mode}</dd></div>
           <div><dt>保存策略</dt><dd>本地自动保存 · {savedAt}</dd></div>
         </dl>
+      </section>
+
+      <section className="panel" aria-labelledby="installed-packs-title">
+        <div className="panel-title"><div><p className="eyebrow">正常故事与教学相互隔离</p><h2 id="installed-packs-title">已安装团包</h2></div></div>
+        <div className="support-pack-list">
+          {CAMPAIGN_PACKS.map(({ pack, kind }) => {
+            const issues = validateCampaignPack(pack);
+            const errorCount = issues.filter((issue) => issue.severity === "error").length;
+            const current = pack.id === state.campaign.packId;
+            return (
+              <article className={`support-pack-entry${current ? " is-current" : ""}`} key={pack.id}>
+                <header><span>{kind === "tutorial" ? "新手教学" : "正常故事"}</span><strong>{pack.name}</strong>{current ? <b>当前团档</b> : null}</header>
+                <p>{pack.description}</p>
+                <dl><div><dt>章节 / 场景</dt><dd>{pack.chapters.length} / {pack.scenes.length}</dd></div><div><dt>结局</dt><dd>{pack.endings?.length ?? 0}</dd></div><div><dt>校验</dt><dd>{errorCount ? `${errorCount} 项错误` : "通过"}</dd></div></dl>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <section className="panel" aria-labelledby="pack-data-title">

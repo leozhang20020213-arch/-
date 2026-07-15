@@ -67,4 +67,34 @@ describe("move usage scope", () => {
     assert.equal(converted.usage.moveId, move.id);
     assert.equal(converted.usage.scope, "SCENE_ONLY");
   });
+
+  it("honors an authored scene discriminator even with a formal timing label", () => {
+    const move: Move = {
+      id: "FM-SCENE",
+      name: "听痕辨路",
+      category: "法门",
+      subCategory: "查探",
+      tier: "俗家",
+      designGrade: "C",
+      yinYangLabel: "少阴",
+      timing: "正式出手",
+      formPosition: "无",
+      minDice: 2,
+      qiNatureThreshold: "至少1阴",
+      shiCondition: "无势",
+      allowedShi: ["阴盛", "阳盛", "合势", "圆融", "失势"],
+      targetRange: "道路或机关痕迹",
+      equipPermission: "无",
+      baseEffect: "确认一处痕迹",
+      triggers: [],
+      postShi: "不改势",
+      resourceDestination: "已用常规气骰入息库",
+      hasIntercept: false,
+      hasReact: false,
+      actionType: "scene",
+    };
+    const converted = legacyMoveToDefinitionAndUsage(move);
+    assert.equal(converted.usage.scope, "SCENE_ONLY");
+    assert.deepEqual(converted.usage.modes, ["SCENE_FREE", "SCENE_STRUCTURED"]);
+  });
 });

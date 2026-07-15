@@ -224,8 +224,9 @@ function chooseAutomaticTarget(
   actor: Actor,
   playerActorId: string,
 ): Actor | undefined {
+  const activeActorIds = new Set(state.campaign.activeActorIds);
   const candidates = state.actors.filter((target) => {
-    if (target.id === actor.id || target.hp <= 0) return false;
+    if (target.id === actor.id || target.hp <= 0 || (activeActorIds.size > 0 && !activeActorIds.has(target.id))) return false;
     if (actor.side === "player") return target.side === "enemy" || target.side === "pressure";
     return target.side === "player";
   });
@@ -325,22 +326,15 @@ export function advanceAutoDm(
       }
 
       const source = state.actors.find((actor) => actor.id === pending.actorId);
-      const move = source?.moves.find((entry) => entry.id === pending.moveId);
-      if (state.phase === "intercept_window" && move && !move.hasIntercept) {
-        return result(
-          formMove(state),
-          "skip_intercept",
-          `「${move.name}」没有截击窗口，直接进入成招。`,
-        );
+      const sourceMove = source?.moves.find((entry) => entry.id === pending.moveId);
+      const isUnopposedQuickAction = sourceMove?.actionType === "quick"
+        || sourceMove?.timing === "出手便行"
+        || sourceMove?.timing === "随手便行";
+      if (isUnopposedQuickAction) {
+        return state.phase === "intercept_window"
+          ? result(formMove(state), "skip_intercept", `「${sourceMove?.name}」是无对抗便行，直接进入成招。`)
+          : result(skipReact(state), "skip_react", `「${sourceMove?.name}」是无对抗便行，直接进入落果。`);
       }
-      if (state.phase === "react_window" && move && !move.hasReact) {
-        return result(
-          skipReact(state),
-          "skip_react",
-          `「${move.name}」没有应招窗口，直接进入落果。`,
-        );
-      }
-
       if (source?.id === target.id) {
         return state.phase === "intercept_window"
           ? result(formMove(state), "skip_intercept", `${target.name}不能截击自己的宣言，自动进入成招。`)

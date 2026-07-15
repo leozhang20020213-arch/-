@@ -34,8 +34,10 @@ export function startNewScene(
   state: CombatState,
   mode: SceneWorkspaceMode,
   roll: SceneRoll,
+  actorIds?: string[],
 ): CombatState {
   let next = structuredClone(state);
+  const eligibleActors = actorIds ? new Set(actorIds) : undefined;
   next.runtime = beginNewScene(next.runtime, next.scene.id, mode);
   next.encounterMode = "scene";
   next.phase = mode === "SCENE_FREE" ? "scene" : "declare";
@@ -44,7 +46,7 @@ export function startNewScene(
   next.turnPaused = false;
   next.actedActorIds = [];
   next.initiativeOrder = [];
-  next.dice = next.dice.map((die) => die.zone === "QI_POOL" && !die.temporary
+  next.dice = next.dice.map((die) => die.zone === "QI_POOL" && !die.temporary && (!eligibleActors || eligibleActors.has(die.ownerId))
     ? { ...die, zone: "QI_SEA" as QiZone, value: clampFace(roll(die.sides), die.sides) }
     : die);
   next.actors = next.actors.map((actor) => ({

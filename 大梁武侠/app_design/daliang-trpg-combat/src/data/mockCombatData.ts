@@ -11,7 +11,17 @@ import type { Actor, CombatState, DistanceRelation } from "../combat/types";
 import type { Combatant, CombatSide, DistanceEdge, SceneObjective, StageData } from "../types/combat";
 import { assignActorsToSlots, getAllSlots } from "../lib/combat/boardLayout";
 
-const DEFAULT_SCENE_TAGS = ["夜雨", "旧船棚", "水门", "药匣"];
+function sceneTags(state: CombatState): string[] {
+  const elementTags = state.scene.elements
+    .filter((element) => element.public)
+    .map((element) => element.name.trim())
+    .filter(Boolean);
+  const tags = [state.scene.timeWindow.trim(), ...elementTags]
+    .filter(Boolean)
+    .filter((tag, index, all) => all.indexOf(tag) === index)
+    .slice(0, 4);
+  return tags.length > 0 ? tags : state.tracks.filter((track) => !track.hidden).slice(0, 4).map((track) => track.name);
+}
 
 // ==========================================================================
 // Side normalization
@@ -84,11 +94,16 @@ export function tracksToObjectives(tracks: CombatState["tracks"]): SceneObjectiv
 }
 
 export function buildStageData(state: CombatState): StageData {
+  const activeActorIds = new Set(state.campaign.activeActorIds);
+  const actors = state.encounterMode === "combat" && activeActorIds.size > 0
+    ? state.actors.filter((actor) => activeActorIds.has(actor.id))
+    : state.actors;
+  const actorIdSet = new Set(actors.map((actor) => actor.id));
   return {
     sceneName: state.sceneName,
-    sceneTags: DEFAULT_SCENE_TAGS,
-    combatants: actorsToCombatants(state.actors),
-    distances: distancesToEdges(state.distances),
+    sceneTags: sceneTags(state),
+    combatants: actorsToCombatants(actors),
+    distances: distancesToEdges(state.distances.filter((relation) => actorIdSet.has(relation.fromActorId) && actorIdSet.has(relation.toActorId))),
     objectives: tracksToObjectives(state.tracks),
   };
 }

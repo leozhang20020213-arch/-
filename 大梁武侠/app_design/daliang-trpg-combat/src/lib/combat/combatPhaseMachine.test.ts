@@ -27,8 +27,8 @@ describe("toDisplayPhase", () => {
   it("maps outcome → 落果", () => {
     assert.equal(toDisplayPhase("outcome"), "落果");
   });
-  it("maps round_end → 轮末", () => {
-    assert.equal(toDisplayPhase("round_end"), "轮末");
+  it("maps the legacy round_end sentinel to the end of one actor's action", () => {
+    assert.equal(toDisplayPhase("round_end"), "出手结束");
   });
 });
 

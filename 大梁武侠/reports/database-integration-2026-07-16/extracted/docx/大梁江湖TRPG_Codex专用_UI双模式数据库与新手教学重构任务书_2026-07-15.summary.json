@@ -1,0 +1,775 @@
+{
+  "source": "D:\\trpg\\大梁武侠\\规则书\\大梁江湖TRPG_Codex专用_UI双模式数据库与新手教学重构任务书_2026-07-15.docx",
+  "paragraphCount": 196,
+  "headingCount": 87,
+  "headings": [
+    {
+      "index": 4,
+      "style": "Heading 1",
+      "text": "0. Codex 执行总令"
+    },
+    {
+      "index": 7,
+      "style": "Heading 2",
+      "text": "0.1 必须完成的九项结果"
+    },
+    {
+      "index": 17,
+      "style": "Heading 2",
+      "text": "0.2 明确禁止"
+    },
+    {
+      "index": 24,
+      "style": "Heading 2",
+      "text": "0.3 每阶段提交纪律"
+    },
+    {
+      "index": 31,
+      "style": "Heading 1",
+      "text": "目录"
+    },
+    {
+      "index": 49,
+      "style": "Heading 1",
+      "text": "1. 审查依据与当前截图结论"
+    },
+    {
+      "index": 50,
+      "style": "Heading 2",
+      "text": "1.1 规则与工程依据"
+    },
+    {
+      "index": 52,
+      "style": "Heading 2",
+      "text": "1.2 当前玩家情景桌面的问题"
+    },
+    {
+      "index": 56,
+      "style": "Heading 2",
+      "text": "1.3 当前响应与抽屉的问题"
+    },
+    {
+      "index": 62,
+      "style": "Heading 2",
+      "text": "1.4 当前DM端的问题"
+    },
+    {
+      "index": 66,
+      "style": "Heading 1",
+      "text": "2. 新的整体产品结构"
+    },
+    {
+      "index": 67,
+      "style": "Heading 2",
+      "text": "2.1 三个运行态，而不是两个换皮页面"
+    },
+    {
+      "index": 70,
+      "style": "Heading 2",
+      "text": "2.2 推荐前端模块边界"
+    },
+    {
+      "index": 73,
+      "style": "Heading 2",
+      "text": "2.3 数据对象分层"
+    },
+    {
+      "index": 75,
+      "style": "Heading 1",
+      "text": "3. 情景／战斗底层规则冻结"
+    },
+    {
+      "index": 76,
+      "style": "Heading 2",
+      "text": "3.1 模式切换与资源继承"
+    },
+    {
+      "index": 78,
+      "style": "Heading 2",
+      "text": "3.2 招式使用域冻结"
+    },
+    {
+      "index": 81,
+      "style": "Heading 2",
+      "text": "3.3 战斗行动时点冻结"
+    },
+    {
+      "index": 83,
+      "style": "Heading 2",
+      "text": "3.4 气骰七区与特殊动作"
+    },
+    {
+      "index": 85,
+      "style": "Heading 2",
+      "text": "3.5 响应额度"
+    },
+    {
+      "index": 87,
+      "style": "Heading 1",
+      "text": "4. 玩家情景模式重构"
+    },
+    {
+      "index": 88,
+      "style": "Heading 2",
+      "text": "4.1 情景桌面的视觉结构"
+    },
+    {
+      "index": 90,
+      "style": "Heading 2",
+      "text": "4.2 六类行为入口"
+    },
+    {
+      "index": 93,
+      "style": "Heading 2",
+      "text": "4.3 情景行动编辑器"
+    },
+    {
+      "index": 95,
+      "style": "Heading 2",
+      "text": "4.4 DM如何接收玩家情景意图"
+    },
+    {
+      "index": 98,
+      "style": "Heading 2",
+      "text": "4.5 结构化情景"
+    },
+    {
+      "index": 100,
+      "style": "Heading 1",
+      "text": "5. 玩家战斗模式与内嵌响应"
+    },
+    {
+      "index": 101,
+      "style": "Heading 2",
+      "text": "5.1 战斗工作区"
+    },
+    {
+      "index": 103,
+      "style": "Heading 2",
+      "text": "5.2 响应不得再开独立窗口"
+    },
+    {
+      "index": 105,
+      "style": "Heading 2",
+      "text": "5.3 响应高亮规则"
+    },
+    {
+      "index": 111,
+      "style": "Heading 2",
+      "text": "5.4 调息与返照的界面"
+    },
+    {
+      "index": 113,
+      "style": "Heading 2",
+      "text": "5.5 动画速度与跳过"
+    },
+    {
+      "index": 115,
+      "style": "Heading 1",
+      "text": "6. 招式分类与完整数据库生成"
+    },
+    {
+      "index": 116,
+      "style": "Heading 2",
+      "text": "6.1 数据库不再以“招式主表一张表”承载全部用法"
+    },
+    {
+      "index": 118,
+      "style": "Heading 2",
+      "text": "6.2 正式数据库规模下限"
+    },
+    {
+      "index": 120,
+      "style": "Heading 2",
+      "text": "6.3 外功家族分布"
+    },
+    {
+      "index": 122,
+      "style": "Heading 2",
+      "text": "6.4 法门分布与模式边界"
+    },
+    {
+      "index": 124,
+      "style": "Heading 2",
+      "text": "6.5 内容生成质量门槛"
+    },
+    {
+      "index": 132,
+      "style": "Heading 2",
+      "text": "6.6 建议文件组织"
+    },
+    {
+      "index": 134,
+      "style": "Heading 1",
+      "text": "7. 人物、装备与暗黑式背包界面"
+    },
+    {
+      "index": 135,
+      "style": "Heading 2",
+      "text": "7.1 不再使用窄右抽屉"
+    },
+    {
+      "index": 137,
+      "style": "Heading 2",
+      "text": "7.2 人物与装备页布局"
+    },
+    {
+      "index": 139,
+      "style": "Heading 2",
+      "text": "7.3 背包页布局"
+    },
+    {
+      "index": 141,
+      "style": "Heading 2",
+      "text": "7.4 拖拽与规则联动"
+    },
+    {
+      "index": 146,
+      "style": "Heading 1",
+      "text": "8. 其他抽屉与规则资料界面"
+    },
+    {
+      "index": 147,
+      "style": "Heading 2",
+      "text": "8.1 抽屉尺寸等级"
+    },
+    {
+      "index": 149,
+      "style": "Heading 2",
+      "text": "8.2 招式库"
+    },
+    {
+      "index": 151,
+      "style": "Heading 2",
+      "text": "8.3 规则资料库"
+    },
+    {
+      "index": 153,
+      "style": "Heading 2",
+      "text": "8.4 设置页"
+    },
+    {
+      "index": 155,
+      "style": "Heading 1",
+      "text": "9. 日志、语音与全员广播"
+    },
+    {
+      "index": 156,
+      "style": "Heading 2",
+      "text": "9.1 日志分成两层"
+    },
+    {
+      "index": 158,
+      "style": "Heading 2",
+      "text": "9.2 可读日志模板"
+    },
+    {
+      "index": 160,
+      "style": "Heading 2",
+      "text": "9.3 日志视觉与筛选"
+    },
+    {
+      "index": 166,
+      "style": "Heading 2",
+      "text": "9.4 语音输入与广播规则"
+    },
+    {
+      "index": 168,
+      "style": "Heading 1",
+      "text": "10. DM主持桌面与剧情／战斗编辑器"
+    },
+    {
+      "index": 169,
+      "style": "Heading 2",
+      "text": "10.1 两套DM界面"
+    },
+    {
+      "index": 171,
+      "style": "Heading 2",
+      "text": "10.2 运行桌面增加的可调空间"
+    },
+    {
+      "index": 173,
+      "style": "Heading 2",
+      "text": "10.3 创作工作台总体布局"
+    },
+    {
+      "index": 175,
+      "style": "Heading 2",
+      "text": "10.4 剧情结构编辑器"
+    },
+    {
+      "index": 178,
+      "style": "Heading 2",
+      "text": "10.5 场景编辑器"
+    },
+    {
+      "index": 184,
+      "style": "Heading 2",
+      "text": "10.6 战斗编辑器"
+    },
+    {
+      "index": 190,
+      "style": "Heading 2",
+      "text": "10.7 团包格式与版本"
+    },
+    {
+      "index": 192,
+      "style": "Heading 1",
+      "text": "11. 动画速度、反馈与可调设置"
+    },
+    {
+      "index": 193,
+      "style": "Heading 2",
+      "text": "11.1 动画速度档位"
+    },
+    {
+      "index": 196,
+      "style": "Heading 2",
+      "text": "11.2 统一动效原则"
+    },
+    {
+      "index": 203,
+      "style": "Heading 1",
+      "text": "12. 统一美术系统与资源映照表"
+    },
+    {
+      "index": 204,
+      "style": "Heading 2",
+      "text": "12.1 统一风格"
+    },
+    {
+      "index": 207,
+      "style": "Heading 2",
+      "text": "12.2 首批美术接入限制"
+    },
+    {
+      "index": 210,
+      "style": "Heading 2",
+      "text": "12.3 首批资源映照表"
+    },
+    {
+      "index": 212,
+      "style": "Heading 2",
+      "text": "12.4 资源包目录"
+    },
+    {
+      "index": 215,
+      "style": "Heading 1",
+      "text": "13. 新手教学关卡《白蘋渡失匣》"
+    },
+    {
+      "index": 216,
+      "style": "Heading 2",
+      "text": "13.1 替换原则"
+    },
+    {
+      "index": 218,
+      "style": "Heading 2",
+      "text": "13.2 故事概况"
+    },
+    {
+      "index": 220,
+      "style": "Heading 2",
+      "text": "13.3 快速角色"
+    },
+    {
+      "index": 222,
+      "style": "Heading 2",
+      "text": "13.4 场景结构"
+    },
+    {
+      "index": 224,
+      "style": "Heading 2",
+      "text": "13.5 场景对象与轨道"
+    },
+    {
+      "index": 226,
+      "style": "Heading 2",
+      "text": "13.6 教学提示系统"
+    },
+    {
+      "index": 232,
+      "style": "Heading 2",
+      "text": "13.7 结局与后续记录"
+    },
+    {
+      "index": 234,
+      "style": "Heading 1",
+      "text": "14. 分阶段实施顺序"
+    },
+    {
+      "index": 237,
+      "style": "Heading 1",
+      "text": "15. 测试矩阵与最终验收"
+    },
+    {
+      "index": 238,
+      "style": "Heading 2",
+      "text": "15.1 必测功能"
+    },
+    {
+      "index": 240,
+      "style": "Heading 2",
+      "text": "15.2 分辨率与缩放"
+    },
+    {
+      "index": 242,
+      "style": "Heading 2",
+      "text": "15.3 性能与同步"
+    },
+    {
+      "index": 248,
+      "style": "Heading 1",
+      "text": "16. 最终交付目录与不可妥协项"
+    },
+    {
+      "index": 249,
+      "style": "Heading 2",
+      "text": "16.1 最终交付"
+    },
+    {
+      "index": 251,
+      "style": "Heading 2",
+      "text": "16.2 十五项不可妥协"
+    },
+    {
+      "index": 267,
+      "style": "Heading 2",
+      "text": "16.3 Codex 最终执行语句"
+    }
+  ],
+  "tableCount": 66,
+  "tables": [
+    {
+      "index": 1,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 2,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 3,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 4,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 5,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 6,
+      "rows": 4,
+      "columns": 5
+    },
+    {
+      "index": 7,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 8,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 9,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 10,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 11,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 12,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 13,
+      "rows": 9,
+      "columns": 3
+    },
+    {
+      "index": 14,
+      "rows": 9,
+      "columns": 3
+    },
+    {
+      "index": 15,
+      "rows": 6,
+      "columns": 4
+    },
+    {
+      "index": 16,
+      "rows": 7,
+      "columns": 4
+    },
+    {
+      "index": 17,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 18,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 19,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 20,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 21,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 22,
+      "rows": 11,
+      "columns": 4
+    },
+    {
+      "index": 23,
+      "rows": 16,
+      "columns": 3
+    },
+    {
+      "index": 24,
+      "rows": 7,
+      "columns": 4
+    },
+    {
+      "index": 25,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 26,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 27,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 28,
+      "rows": 4,
+      "columns": 3
+    },
+    {
+      "index": 29,
+      "rows": 3,
+      "columns": 3
+    },
+    {
+      "index": 30,
+      "rows": 8,
+      "columns": 2
+    },
+    {
+      "index": 31,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 32,
+      "rows": 3,
+      "columns": 3
+    },
+    {
+      "index": 33,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 34,
+      "rows": 6,
+      "columns": 2
+    },
+    {
+      "index": 35,
+      "rows": 8,
+      "columns": 2
+    },
+    {
+      "index": 36,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 37,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 38,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 39,
+      "rows": 25,
+      "columns": 5
+    },
+    {
+      "index": 40,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 41,
+      "rows": 10,
+      "columns": 2
+    },
+    {
+      "index": 42,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 43,
+      "rows": 9,
+      "columns": 4
+    },
+    {
+      "index": 44,
+      "rows": 8,
+      "columns": 4
+    },
+    {
+      "index": 45,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 46,
+      "rows": 12,
+      "columns": 3
+    },
+    {
+      "index": 47,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 48,
+      "rows": 17,
+      "columns": 2
+    },
+    {
+      "index": 49,
+      "rows": 6,
+      "columns": 2
+    },
+    {
+      "index": 50,
+      "rows": 8,
+      "columns": 2
+    },
+    {
+      "index": 51,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 52,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 53,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 54,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 55,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 56,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 57,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 58,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 59,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 60,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 61,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 62,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 63,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 64,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 65,
+      "rows": 1,
+      "columns": 1
+    },
+    {
+      "index": 66,
+      "rows": 1,
+      "columns": 1
+    }
+  ]
+}

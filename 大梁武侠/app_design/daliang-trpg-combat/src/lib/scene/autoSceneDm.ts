@@ -6,6 +6,8 @@ import type {
   SceneActionType,
   SceneFact,
 } from "../../combat/types";
+import type { CampaignPack } from "../../data/campaign/campaignSchema";
+import { resolveCampaignSceneAction } from "../../data/campaign/campaignRuntime";
 
 export interface SceneActionDefinition {
   id: SceneActionType;
@@ -30,6 +32,7 @@ export interface NarrationProvider {
 export interface ResolveSceneOptions {
   now?: () => number;
   narrationProvider?: NarrationProvider;
+  campaignPack?: CampaignPack;
 }
 
 export type DmSceneRuling = "approved" | "modified" | "rejected";
@@ -209,6 +212,9 @@ export function resolveSceneAction(
   options: ResolveSceneOptions = {},
 ): CombatState {
   const now = options.now?.() ?? Date.now();
+  if (options.campaignPack && !options.campaignPack.tutorial) {
+    return resolveCampaignSceneAction(state, options.campaignPack, request, now);
+  }
   const definition = SCENE_ACTIONS.find((action) => action.id === request.actionType);
   const actor = state.actors.find((entry) => entry.id === request.actorId);
   const target = state.scene.elements.find((element) => element.id === request.targetId);

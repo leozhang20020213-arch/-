@@ -18,7 +18,7 @@ export type DisplayPhase =
   | "截击窗口"
   | "应招窗口"
   | "落果"
-  | "轮末"
+  | "出手结束"
   | "结束";
 
 /** Map engine phase → display phase */
@@ -37,7 +37,7 @@ export function toDisplayPhase(phase: CombatState["phase"]): DisplayPhase {
     case "outcome":
       return "落果";
     case "round_end":
-      return "轮末";
+      return "出手结束";
     default:
       return "未开始";
   }
@@ -189,10 +189,10 @@ export function getAvailablePhaseActions(input: ActionCheckInput): PhaseAction[]
       });
       break;
 
-    case "轮末":
+    case "出手结束":
       actions.push({
         type: "NEXT_ROUND",
-        label: "进入下一轮",
+        label: "推进下一位",
         visibleTo: "dm",
         enabled: input.isDM,
         disabledReason: !input.isDM ? "由 DM 操作" : "",
@@ -232,7 +232,7 @@ export function getPhaseHint(
       case "outcome":
         return "结算伤害与效果";
       case "round_end":
-        return "请确认势变化并推进轮次";
+        return "当前出手已结束，请推进下一行动者";
       default:
         return "准备开始";
     }
@@ -250,7 +250,7 @@ export function getPhaseHint(
     case "outcome":
       return "落果由主持人结算，可查看公开结果";
     case "round_end":
-      return "等待主持人推进下一轮";
+      return "等待主持人推进下一行动者";
     default:
       return "等待主持人推进";
   }

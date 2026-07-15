@@ -9,6 +9,7 @@ import {
   type StarterQiSource,
 } from "../data/character/characterCreation";
 import { RG001, RG002, RG009 } from "../data/seed";
+import { configureCampaignParty } from "../data/campaign/campaignRuntime";
 
 /* ===================================================================
    CharacterSelect — PoE-Style Dark Atmospheric Character Selection
@@ -368,7 +369,7 @@ function buildActor(
 
   const actor: Actor = {
     id, name, side: "player",
-    background: background.trim() || `${identity.name}出身，初次踏入白蘋渡。`,
+    background: background.trim() || `${identity.name}出身，初次踏入江湖。`,
     relationshipFacts: relationship.trim() ? [relationship.trim()] : [],
     portraitDataUrl,
     sixRoots: roots,
@@ -452,9 +453,10 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
 
   // Enter with existing character
   const handleEnterScene = useCallback((actor: Actor) => {
+    patch((current) => configureCampaignParty({ ...current, activeActorId: actor.id }, [actor.id]));
     setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player", playMode: "solo", autoDmEnabled: true }));
     go("playerScene", { identity: "player", gameMode: "scene", playMode: "solo", autoDmEnabled: true });
-  }, [setSession, go]);
+  }, [patch, setSession, go]);
 
   // Finalize creation
   const handleCreateConfirm = useCallback(() => {
@@ -470,13 +472,13 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
 
     patch((c) => {
       const starterDistances = cloneDistanceRelationsForActor(actor.id, "pc-shen-qing", c.distances);
-      return {
+      return configureCampaignParty({
         ...c,
         actors: [...c.actors, actor],
         dice: [...c.dice, ...starterDice],
         distances: [...c.distances, ...starterDistances],
         activeActorId: actor.id,
-      };
+      }, [actor.id]);
     });
     setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player", playMode: "solo", autoDmEnabled: true }));
     go("playerScene", { identity: "player", gameMode: "scene", playMode: "solo", autoDmEnabled: true });
@@ -577,7 +579,7 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
   // Main select screen
   return (
     <section className="cs-root">
-      {/* ART SLOT: home-bg — 1920×1080 白蘋渡雨后傍晚全景，水墨风格，画面下半部留暗 */}
+      {/* ART SLOT: campaign-bg — 1920×1080 当前团包开场景，水墨风格，画面下半部留暗 */}
       <div className="cs-background" />
 
       {/* Ambient overlay */}
@@ -588,8 +590,8 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
 
       {/* Scene title */}
       <div className="cs-scene-title">
-        <h1 className="cs-title-text">白蘋渡 · 雨后</h1>
-        <p className="cs-subtitle-text">夜渡将歇，一只失踪的药匣正等你追查。</p>
+        <h1 className="cs-title-text">{state.campaignName}</h1>
+        <p className="cs-subtitle-text">{state.sceneName} · {state.sceneGoal}</p>
       </div>
 
       {/* Character slots row */}
@@ -676,7 +678,7 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
                   <span className="cs-info-name">{actor.name}</span>
                   <span className="cs-info-dot">·</span>
                   <span className="cs-info-identity">{neigong?.tier ?? ""}·{neigong?.occupiedAcupoints?.join("") ?? ""}</span>
-                  <span className="cs-info-tagline">"{actor.publicNote.slice(0, 16)}"</span>
+                  <span className="cs-info-tagline" title={actor.publicNote}>{actor.publicNote}</span>
                 </div>
                 <div className="cs-info-roots">{rootsStr}</div>
                 <div className="cs-info-meta">

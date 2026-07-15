@@ -111,6 +111,7 @@ function mapLegacyTrigger(trigger: LegacyMoveTrigger, index: number, usageId: st
 }
 
 export function inferLegacyUsageScope(move: Move): MoveUsageScope {
+  if (move.actionType === "scene") return "SCENE_ONLY";
   if (move.timing === "整备/情景") return "SCENE_ONLY";
   if (move.timing === "截击" || move.timing === "应招" || move.timing === "正式出手") return "COMBAT_ONLY";
   if (move.category === "法门") return "BOTH";

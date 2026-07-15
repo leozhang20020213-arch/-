@@ -340,6 +340,7 @@
 .dm-takeover header { display: flex; align-items: baseline; justify-content: space-between; }
 .dm-takeover h3, .dm-ruling-box h3 { margin: 0 0 6px; color: #b99060; font-size: 12px; }
 .dm-takeover header small { color: #72695d; font-size: 9px; }
+.dm-takeover-reason { margin: 6px 0 0; color: #c58a74; font-size: 10px; line-height: 1.35; }
 .dm-move-rack { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 .dm-move-rack button { display: grid; min-height: 44px; padding: 5px; text-align: left; border-color: rgba(111, 80, 52, .38); background: #211e19; color: #a99b83; }
 .dm-move-rack button.selected { border-color: #bc9256; color: #e0c186; box-shadow: inset 0 0 0 1px #bc9256; }

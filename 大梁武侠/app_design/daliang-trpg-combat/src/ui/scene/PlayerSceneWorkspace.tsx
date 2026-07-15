@@ -87,6 +87,7 @@ export function PlayerSceneWorkspace(props: PlayerSceneWorkspaceProps) {
     && !props.pending
     && Boolean(selectedUsage)
     && Boolean(selectedTarget);
+  const isRoomPlay = props.session.playMode === "room";
   const privateDmAllowed = props.session.playMode !== "room" || props.session.room.allowPrivateDmMessages !== false;
 
   function chooseCategory(category: SceneBehaviorCategory) {
@@ -228,6 +229,25 @@ export function PlayerSceneWorkspace(props: PlayerSceneWorkspaceProps) {
         </aside>
       </main>
 
+      {props.state.scene.completed && props.state.scene.ending && !props.state.campaign.pendingSceneId && !props.state.campaign.pendingCombatSceneId ? (
+        <section className="campaign-ending-sheet" role="dialog" aria-modal="true" aria-labelledby="campaign-ending-title">
+          <div>
+            <small>团档收束 · {props.state.campaignName}</small>
+            <h2 id="campaign-ending-title">江湖有记</h2>
+            <p>{props.state.scene.ending}</p>
+            <dl>
+              <div><dt>完成场景</dt><dd>{props.state.campaign.completedSceneIds.length + 1}</dd></div>
+              <div><dt>事件记录</dt><dd>{props.state.campaign.completedEventIds.length}</dd></div>
+              <div><dt>奖励与结局</dt><dd>{props.state.campaign.earnedRewardIds.length}</dd></div>
+            </dl>
+            <div>
+              <button type="button" onClick={() => props.onOpenDrawer("logs")}>查看团档日志</button>
+              <button className="primary-action" type="button" onClick={props.onHome}>返回首页</button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <footer className="scene-behavior-dock">
         <nav className="scene-category-tabs" aria-label="情景行为分类">
           {visibleCategories.map((category) => (
@@ -285,15 +305,15 @@ export function PlayerSceneWorkspace(props: PlayerSceneWorkspaceProps) {
             />
             <div className="scene-intent-editor__tools">
               <div className="scene-audience-switch" role="group" aria-label="发送范围">
-                <button type="button" className={props.audience === "all" ? "active" : ""} onClick={() => props.onChangeAudience("all")}>全员广播</button>
-                <button type="button" className={props.audience === "dm" ? "active" : ""} onClick={() => props.onChangeAudience("dm")} disabled={!privateDmAllowed} title={privateDmAllowed ? "只发送给主持" : "房主未开放私密述意"}>仅DM</button>
+                <button type="button" className={props.audience === "all" ? "active" : ""} onClick={() => props.onChangeAudience("all")}>{isRoomPlay ? "全员可见" : "公开行动"}</button>
+                <button type="button" className={props.audience === "dm" ? "active" : ""} onClick={() => props.onChangeAudience("dm")} disabled={!privateDmAllowed} title={privateDmAllowed ? "只发送给主持" : "房主未开放私密述意"}>{isRoomPlay ? "仅主持" : "仅规则主持"}</button>
               </div>
-              <button className="scene-submit-intent" type="button" onClick={props.onSubmit} disabled={!canSubmit} title={!selectedTarget ? "请选择高亮目标" : props.pending ? "上一项请求等待裁定" : "发送行动述意"}>
-                {props.pending ? "等待裁定" : "发送述意"}
+              <button className="scene-submit-intent" type="button" onClick={props.onSubmit} disabled={!canSubmit} title={!selectedTarget ? "请选择高亮目标" : props.pending ? "上一项行动正在处理" : isRoomPlay ? "提交给真人主持" : "执行所选行动"}>
+                {props.pending ? (isRoomPlay ? "等待裁定" : "结算中") : (isRoomPlay ? "提交行动" : "执行行动")}
               </button>
             </div>
             <div className="scene-draft-status" aria-live="polite">
-              <span>{props.status || "补充说明为可选；仅DM选项只在房间许可时生效。"}</span>
+              <span>{props.status || (isRoomPlay ? "补充办法为可选；私密行动需房主许可。" : "补充办法为可选；选好用法与目标即可行动。")}</span>
               <small>{props.draft.length}/240</small>
             </div>
           </section>

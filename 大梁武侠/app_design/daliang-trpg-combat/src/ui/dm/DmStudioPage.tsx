@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { cloneCampaignPack, validateCampaignPack, type CampaignPack, type CampaignScene, type SceneElementKind } from "../../data/campaign/campaignSchema";
-import { tutorialCampaignPack } from "../../data/campaign/tutorialPack";
+import { CAMPAIGN_PACKS, DEFAULT_STORY_CAMPAIGN_ID, getCampaignPack } from "../../data/campaign/campaignRegistry";
 import { loadRuleTextCatalog, type RuleTextCatalog } from "../../data/rules/ruleTextCatalog";
 
 const elementKinds: Array<{ kind: SceneElementKind; label: string }> = [
@@ -17,9 +17,9 @@ function readPack(): CampaignPack {
     const browser = localStorage.getItem("daliang:campaign");
     if (browser) return JSON.parse(browser) as CampaignPack;
   } catch {
-    // Corrupt authoring drafts fall back to the validated tutorial pack.
+    // Corrupt authoring drafts fall back to the validated normal-play pack.
   }
-  return cloneCampaignPack(tutorialCampaignPack);
+  return cloneCampaignPack(getCampaignPack(DEFAULT_STORY_CAMPAIGN_ID));
 }
 
 function persistPack(pack: CampaignPack) {
@@ -28,7 +28,7 @@ function persistPack(pack: CampaignPack) {
   return Promise.resolve(true);
 }
 
-export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPreview: () => void }) {
+export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPreview: (pack: CampaignPack) => void }) {
   const [pack, setPack] = useState<CampaignPack>(readPack);
   const [selectedSceneId, setSelectedSceneId] = useState(pack.startSceneId);
   const [selectedElementId, setSelectedElementId] = useState<string>();
@@ -84,11 +84,20 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
     setStatus(issues.some((issue) => issue.severity === "error") ? "已保存草稿 · 尚未通过验证" : "已保存 · 可预览");
   }
 
+  function loadTemplate(packId: string) {
+    const next = cloneCampaignPack(getCampaignPack(packId));
+    setPack(next);
+    setSelectedSceneId(next.startSceneId);
+    setSelectedElementId(undefined);
+    setStatus(`已载入模板 · ${next.name}`);
+  }
+
   if (!selectedScene) return null;
   return (
     <main className="dm-studio" aria-label="DM剧情创作工作台">
       <header className="dm-studio__topbar">
         <div><small>大梁武侠 · 真人DM</small><h1>剧情创作工作台</h1></div>
+        <label>团包模板<select value={CAMPAIGN_PACKS.some((entry) => entry.pack.id === pack.id) ? pack.id : ""} onChange={(event) => loadTemplate(event.target.value)}><option value="" disabled>自定义草稿</option>{CAMPAIGN_PACKS.map((entry) => <option value={entry.pack.id} key={entry.pack.id}>{entry.pack.name}{entry.kind === "tutorial" ? " · 教学" : " · 正常故事"}</option>)}</select></label>
         <label>团包名<input value={pack.name} onChange={(event) => setPack((current) => ({ ...current, name: event.target.value }))} /></label>
         <span className="dm-studio__status">{status}</span>
         <button type="button" onClick={onBack}>返回首页</button>
@@ -169,7 +178,7 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
       <footer className="dm-studio__footer">
         <div><strong>规则验证</strong><span>{issues.filter((issue) => issue.severity === "error").length} 错误 · {issues.filter((issue) => issue.severity === "warning").length} 提醒 · {catalog?.entryCount ?? "…"} 条资料</span>{issues[0] ? <small>{issues[0].path}：{issues[0].message}</small> : <small>引用、模式、目标与场景连接均通过；资料引用不绕过可执行规则。</small>}</div>
         <button type="button" onClick={() => setStatus("模拟完成 · 未修改权威存档")}>模拟一轮</button>
-        <button type="button" onClick={onPreview}>玩家视图预览</button>
+        <button type="button" disabled={issues.some((issue) => issue.severity === "error")} title={issues.some((issue) => issue.severity === "error") ? "先修复阻断级团包错误" : "以当前草稿启动独立预览，不覆盖已保存团档"} onClick={() => onPreview(pack)}>玩家视图预览</button>
         <button className="primary-action" type="button" onClick={save}>保存草稿</button>
       </footer>
     </main>

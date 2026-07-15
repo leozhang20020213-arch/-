@@ -8,7 +8,8 @@ import {
   skipReact,
 } from "../combat/combatEngine";
 import type { AppSession, CombatState } from "../combat/types";
-import { transitionToCampaignScene } from "../data/campaign/campaignRuntime";
+import { initializeCampaignState, resolveCampaignSceneAction, transitionToCampaignScene } from "../data/campaign/campaignRuntime";
+import { standardCampaignPack } from "../data/campaign/standardCampaignPack";
 import { tutorialCampaignPack } from "../data/campaign/tutorialPack";
 import { createSeedState } from "../data/seed";
 import { advanceAutoDm } from "../lib/combat/autoDm";
@@ -26,6 +27,43 @@ function rolledState(seed: number): CombatState {
 }
 
 describe("large audit simulations", () => {
+  it("runs twelve normal-story outings across four protagonists and three endings", () => {
+    const protagonists = ["pc-shen-qing", "pc-tang-he", "pc-xu-zhou", "pc-ye-wen"];
+    const endingActions = [
+      ["msl-final-ledger", "take"],
+      ["msl-final-clerk", "negotiate"],
+      ["msl-final-households", "use-item"],
+    ] as const;
+    for (let run = 0; run < 12; run += 1) {
+      const actorId = protagonists[run % protagonists.length];
+      let state = initializeCampaignState(rolledState(run), standardCampaignPack, { playerActorId: actorId, now: 5_000 + run });
+      state.dice = state.dice.map((die, index) => die.ownerId === actorId ? { ...die, zone: "QI_SEA", value: 1 + ((run + index) % die.sides) } : die);
+      const faces = new Map(state.dice.filter((die) => die.ownerId === actorId).map((die) => [die.id, die.value]));
+      let action = 0;
+      const doAction = (targetId: string, actionType: "observe" | "investigate" | "move" | "use-item" | "negotiate" | "take") => {
+        action += 1;
+        state = resolveCampaignSceneAction(state, standardCampaignPack, { id: `audit-normal-${run}-${action}`, actorId, targetId, actionType, audience: "all", createdAt: 6_000 + run * 20 + action });
+      };
+      doAction("msl-gate-permits", "observe");
+      doAction("msl-broken-cart", "investigate");
+      state = transitionToCampaignScene(state, standardCampaignPack, "msl-reed-road", [actorId, "pc-wei", "enemy-porter"]);
+      doAction("msl-witness-lin", "use-item");
+      doAction("msl-broken-bridge", "move");
+      doAction("msl-mist-bells", "observe");
+      state = transitionToCampaignScene(state, standardCampaignPack, "msl-salt-yard-parley");
+      doAction("msl-salt-ledger", "investigate");
+      doAction("msl-household-roll", "investigate");
+      doAction("msl-deputy-zhou", "negotiate");
+      doAction("msl-deputy-zhou", "negotiate");
+      doAction("msl-deputy-zhou", "negotiate");
+      state = transitionToCampaignScene(state, standardCampaignPack, "msl-county-ledger");
+      doAction(endingActions[run % endingActions.length][0], endingActions[run % endingActions.length][1]);
+      assert.equal(state.scene.completed, true, `run ${run}: normal story did not settle`);
+      assert.ok(state.campaign.endingId, `run ${run}: missing ending id`);
+      for (const [dieId, face] of faces) assert.equal(state.dice.find((die) => die.id === dieId)?.value, face, `run ${run}: ${dieId} rerolled`);
+    }
+  });
+
   it("runs the complete authored scene path twenty times without rerolling or exceeding tracks", () => {
     for (let run = 0; run < 20; run += 1) {
       let state = rolledState(run);

@@ -1,0 +1,3417 @@
+﻿[
+  {
+    "source": "D:/trpg/大梁武侠/规则书/大梁武侠_规则文字库详设包_2026年7月16日/大梁武侠_规则文字库详设_2026年7月16日.xlsx",
+    "sheets": [
+      {
+        "name": "00_说明",
+        "rows": 12,
+        "columns": 2,
+        "dataRows": 11,
+        "formattedBlankRows": 0,
+        "headers": [
+          "项目",
+          "内容"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "01_外功招式详设",
+        "rows": 241,
+        "columns": 22,
+        "dataRows": 240,
+        "formattedBlankRows": 0,
+        "headers": [
+          "招式ID",
+          "名称",
+          "门类",
+          "定位",
+          "层级",
+          "式位",
+          "阴阳路数",
+          "武学释义",
+          "动作路数",
+          "适用局面",
+          "宣言条件",
+          "基础效果",
+          "主槽触发",
+          "合值触发",
+          "差值风险",
+          "成招后势",
+          "响应挂载",
+          "资源去向",
+          "规则边界",
+          "学习与流传",
+          "玩家卡面长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 544,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 2,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 17,
+            "tokens": [
+              "one_status_or_distance_change"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 18,
+            "tokens": [
+              "regular_qi",
+              "temporary_qi"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 11,
+            "tokens": [
+              "TURN_READY"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "02_内功详设",
+        "rows": 121,
+        "columns": 20,
+        "dataRows": 120,
+        "formattedBlankRows": 0,
+        "headers": [
+          "内功ID",
+          "名称",
+          "类别",
+          "层级",
+          "阴阳标签",
+          "占窍",
+          "占窍数",
+          "读取六根",
+          "最高重数",
+          "功法纲要",
+          "行功方法",
+          "表属性运算详解",
+          "取气结构",
+          "重数成长",
+          "被动与循环",
+          "风险与并行限制",
+          "散功与沉淀",
+          "学习门槛与来源",
+          "玩家规则说明",
+          "DM投放建议"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 186,
+        "rawTokenSamples": [
+          {
+            "row": 31,
+            "column": 16,
+            "tokens": [
+              "aperture_slots",
+              "ROUND_END",
+              "STATUS_ADD",
+              "status_id",
+              "SCENE_EXIT",
+              "RELATION_FACT"
+            ]
+          },
+          {
+            "row": 32,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 32,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 33,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 33,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 34,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 34,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 35,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 35,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 36,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 36,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 37,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 37,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 38,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 38,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 39,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 39,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 40,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 40,
+            "column": 19,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          },
+          {
+            "row": 41,
+            "column": 15,
+            "tokens": [
+              "FORM_CHECK"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "03_情景法门详设",
+        "rows": 121,
+        "columns": 17,
+        "dataRows": 120,
+        "formattedBlankRows": 0,
+        "headers": [
+          "法门ID",
+          "名称",
+          "类别",
+          "层级",
+          "阴阳标签",
+          "法门释义",
+          "具体操作过程",
+          "适用对象与局面",
+          "使用条件",
+          "基础效果",
+          "主槽触发",
+          "合值触发",
+          "差值风险",
+          "资源去向",
+          "规则边界",
+          "玩家卡面长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 240,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 2,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 9,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 9,
+            "tokens": [
+              "SCENE_FREE",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 9,
+            "tokens": [
+              "TURN_READY"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 14,
+            "tokens": [
+              "regular_qi"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "04_装备详设",
+        "rows": 181,
+        "columns": 19,
+        "dataRows": 180,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "名称",
+          "大类",
+          "小类",
+          "层级",
+          "部位/手位",
+          "持握/穿戴",
+          "形制与材质",
+          "具体使用方式",
+          "实战定位",
+          "数值与表属性",
+          "气骰与临时资源",
+          "招式/法门许可",
+          "装备状态与关闭条件",
+          "损耗与修复",
+          "情景用途",
+          "携行与合法性",
+          "玩家说明长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "05_药物详设",
+        "rows": 61,
+        "columns": 14,
+        "dataRows": 60,
+        "formattedBlankRows": 0,
+        "headers": [
+          "药物ID",
+          "名称",
+          "类别",
+          "层级",
+          "剂型与使用方法",
+          "使用条件",
+          "明确效果",
+          "副作用与临时气骰",
+          "适用伤势/状态",
+          "重复使用与药性冲突",
+          "规则边界",
+          "获取来源",
+          "玩家说明长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 144,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 2,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 6,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 13,
+            "tokens": [
+              "TURN_READY",
+              "SCENE_ACTION"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "06_状态详设",
+        "rows": 65,
+        "columns": 13,
+        "dataRows": 64,
+        "formattedBlankRows": 0,
+        "headers": [
+          "状态ID",
+          "名称",
+          "分组",
+          "状态释义与表现",
+          "层数规则",
+          "生效与持续时点",
+          "明确规则效果",
+          "解除入口",
+          "公开性",
+          "互斥/冲突",
+          "规则边界",
+          "玩家说明长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 64,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 12,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 13,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 14,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT",
+              "ROUND_END"
+            ]
+          },
+          {
+            "row": 15,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 16,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 17,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 18,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 19,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 20,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          },
+          {
+            "row": 21,
+            "column": 6,
+            "tokens": [
+              "OUTCOME_COMMIT"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "07_谱本详设",
+        "rows": 61,
+        "columns": 10,
+        "dataRows": 60,
+        "formattedBlankRows": 0,
+        "headers": [
+          "谱本ID",
+          "名称",
+          "门类",
+          "层级",
+          "谱本形制与内容",
+          "明确收录条目",
+          "阅读与学习流程",
+          "整理进度与风险",
+          "玩家说明长文",
+          "DM投放提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 120,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 2,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 7,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 9,
+            "tokens": [
+              "time_units",
+              "teacher_or_annotation",
+              "permission_required",
+              "on_complete"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "08_坐骑载具详设",
+        "rows": 41,
+        "columns": 11,
+        "dataRows": 40,
+        "formattedBlankRows": 0,
+        "headers": [
+          "资源ID",
+          "名称",
+          "类别",
+          "层级",
+          "资源释义",
+          "旅行/追逐规则",
+          "许可与地形",
+          "状态与损耗",
+          "维护成本",
+          "玩家说明长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [
+          {
+            "row": 2,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 3,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 4,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 5,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 6,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 7,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 8,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 9,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 10,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 11,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 12,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 13,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 14,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 15,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 16,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 17,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 18,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 19,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 20,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 21,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 22,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 23,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 24,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 25,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 26,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 27,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 28,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 29,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 30,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 31,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 32,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 33,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 34,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 35,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 36,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 37,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 38,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 39,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 40,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 41,
+            "column": 9,
+            "value": "[object Object]"
+          }
+        ],
+        "rawTokenCellCount": 40,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 12,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 13,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 14,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 15,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 16,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 17,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 18,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 19,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 20,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          },
+          {
+            "row": 21,
+            "column": 10,
+            "tokens": [
+              "cost_per_scene"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "09_文书资源详设",
+        "rows": 121,
+        "columns": 12,
+        "dataRows": 120,
+        "formattedBlankRows": 0,
+        "headers": [
+          "物品ID",
+          "名称",
+          "类别",
+          "层级",
+          "物品释义与制度用途",
+          "使用条件",
+          "明确效果",
+          "查验与伪造",
+          "消耗/状态",
+          "规则边界",
+          "玩家说明长文",
+          "DM裁定提示"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 240,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 2,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 6,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 11,
+            "tokens": [
+              "SCENE_ONLY",
+              "SCENE_ACTION"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "source": "D:/trpg/大梁武侠/规则书/大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日/03_数据库/01_大小样库.xlsx",
+    "sheets": [
+      {
+        "name": "00_总目录",
+        "rows": 51,
+        "columns": 7,
+        "dataRows": 47,
+        "formattedBlankRows": 3,
+        "headers": [
+          "大梁江湖TRPG 大小样库",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "duplicateIds": [
+          [
+            "库名",
+            2
+          ],
+          [
+            "内功",
+            7
+          ],
+          [
+            "招式",
+            6
+          ],
+          [
+            "装备",
+            9
+          ],
+          [
+            "药物",
+            7
+          ],
+          [
+            "坐骑",
+            7
+          ],
+          [
+            "文书",
+            7
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "00_全局口径",
+        "rows": 11,
+        "columns": 2,
+        "dataRows": 10,
+        "formattedBlankRows": 0,
+        "headers": [
+          "规则对象",
+          "确定口径"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "内功_01_总览",
+        "rows": 7,
+        "columns": 13,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "内功ID",
+          "内功名",
+          "层级",
+          "阴阳标签",
+          "占窍",
+          "占窍数",
+          "读取六根组",
+          "重数上限",
+          "被动摘要",
+          "散功处理",
+          "并行限制",
+          "获取来源",
+          "玩家可见说明"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "内功_02_表属性运算",
+        "rows": 76,
+        "columns": 12,
+        "dataRows": 75,
+        "formattedBlankRows": 0,
+        "headers": [
+          "内功ID",
+          "内功名",
+          "重数",
+          "读取六根",
+          "转入表属性",
+          "六根值变量",
+          "示例六根值",
+          "乘数",
+          "加值",
+          "运算式",
+          "示例贡献",
+          "口径说明"
+        ],
+        "duplicateIds": [
+          [
+            "NG001",
+            18
+          ],
+          [
+            "NG002",
+            12
+          ],
+          [
+            "NG003",
+            12
+          ],
+          [
+            "NG004",
+            18
+          ],
+          [
+            "NG005",
+            6
+          ],
+          [
+            "NG006",
+            9
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "内功_03_取气运算",
+        "rows": 76,
+        "columns": 14,
+        "dataRows": 75,
+        "formattedBlankRows": 0,
+        "headers": [
+          "内功ID",
+          "内功名",
+          "重数",
+          "读取六根",
+          "气性",
+          "六根值变量",
+          "示例六根值",
+          "乘数",
+          "加值",
+          "取气值公式",
+          "示例取气值",
+          "映射表ID",
+          "映射产出",
+          "备注"
+        ],
+        "duplicateIds": [
+          [
+            "NG001",
+            18
+          ],
+          [
+            "NG002",
+            12
+          ],
+          [
+            "NG003",
+            12
+          ],
+          [
+            "NG004",
+            18
+          ],
+          [
+            "NG005",
+            6
+          ],
+          [
+            "NG006",
+            9
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 75,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 12,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 13,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 14,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 15,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 16,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 17,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 18,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 19,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 20,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 21,
+            "column": 12,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "内功_04_取气映射",
+        "rows": 11,
+        "columns": 6,
+        "dataRows": 10,
+        "formattedBlankRows": 0,
+        "headers": [
+          "映射表ID",
+          "取气值下限",
+          "取气值区间",
+          "产出气骰",
+          "玩家可见说明",
+          "开发者警戒"
+        ],
+        "duplicateIds": [
+          [
+            "QMAP_STD",
+            5
+          ],
+          [
+            "QMAP_RISK",
+            5
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 10,
+        "rawTokenSamples": [
+          {
+            "row": 2,
+            "column": 1,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 3,
+            "column": 1,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 4,
+            "column": 1,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 5,
+            "column": 1,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 6,
+            "column": 1,
+            "tokens": [
+              "QMAP_STD"
+            ]
+          },
+          {
+            "row": 7,
+            "column": 1,
+            "tokens": [
+              "QMAP_RISK"
+            ]
+          },
+          {
+            "row": 8,
+            "column": 1,
+            "tokens": [
+              "QMAP_RISK"
+            ]
+          },
+          {
+            "row": 9,
+            "column": 1,
+            "tokens": [
+              "QMAP_RISK"
+            ]
+          },
+          {
+            "row": 10,
+            "column": 1,
+            "tokens": [
+              "QMAP_RISK"
+            ]
+          },
+          {
+            "row": 11,
+            "column": 1,
+            "tokens": [
+              "QMAP_RISK"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "内功_05_被动",
+        "rows": 13,
+        "columns": 9,
+        "dataRows": 12,
+        "formattedBlankRows": 0,
+        "headers": [
+          "内功ID",
+          "内功名",
+          "重数/阶段",
+          "被动文本",
+          "触发时点",
+          "限制",
+          "是否沉淀保留",
+          "沉淀弱化文本",
+          "设计轴"
+        ],
+        "duplicateIds": [
+          [
+            "NG001",
+            2
+          ],
+          [
+            "NG002",
+            2
+          ],
+          [
+            "NG003",
+            2
+          ],
+          [
+            "NG004",
+            2
+          ],
+          [
+            "NG005",
+            2
+          ],
+          [
+            "NG006",
+            2
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "内功_06_开发者平衡",
+        "rows": 7,
+        "columns": 15,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "内功ID",
+          "内功名",
+          "设计强度档",
+          "预期阶段",
+          "占窍数",
+          "读取六根数量",
+          "层级",
+          "重数上限",
+          "预期表属性贡献",
+          "预期取气规模",
+          "取气上限警戒",
+          "骰阶上限警戒",
+          "并行限制",
+          "超模风险",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "招式_01_招式主视图",
+        "rows": 24,
+        "columns": 21,
+        "dataRows": 23,
+        "formattedBlankRows": 0,
+        "headers": [
+          "招式ID",
+          "招式名",
+          "大类",
+          "子类",
+          "层级",
+          "设计档",
+          "阴阳路数标签",
+          "时点/行动",
+          "式位",
+          "最低投入",
+          "气性门槛",
+          "势门槛",
+          "前置门槛",
+          "对象/距离/装备",
+          "基础效果",
+          "主槽触发",
+          "合值触发",
+          "差值/风险",
+          "成招后转势",
+          "资源去向",
+          "设计备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "招式_02_槽值触发明细",
+        "rows": 43,
+        "columns": 9,
+        "dataRows": 42,
+        "formattedBlankRows": 0,
+        "headers": [
+          "招式ID",
+          "招式名",
+          "触发类型",
+          "触发条件",
+          "触发效果",
+          "是否读取表属性",
+          "读取表属性",
+          "资源/状态限制",
+          "开发备注"
+        ],
+        "duplicateIds": [
+          [
+            "WG001",
+            3
+          ],
+          [
+            "WG002",
+            3
+          ],
+          [
+            "WG003",
+            3
+          ],
+          [
+            "WG004",
+            3
+          ],
+          [
+            "WG005",
+            3
+          ],
+          [
+            "WG006",
+            3
+          ],
+          [
+            "WG007",
+            3
+          ],
+          [
+            "WG008",
+            3
+          ],
+          [
+            "WG009",
+            3
+          ],
+          [
+            "FM001",
+            3
+          ],
+          [
+            "FM002",
+            3
+          ],
+          [
+            "FM003",
+            3
+          ],
+          [
+            "FM004",
+            3
+          ],
+          [
+            "FM005",
+            3
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "招式_03_便行与随手便行",
+        "rows": 10,
+        "columns": 10,
+        "dataRows": 9,
+        "formattedBlankRows": 0,
+        "headers": [
+          "动作ID",
+          "名称",
+          "类型",
+          "消耗",
+          "默认效果",
+          "不能做的事",
+          "是否改变记录",
+          "是否触发响应",
+          "资源去向",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "招式_04_强度标尺",
+        "rows": 10,
+        "columns": 6,
+        "dataRows": 9,
+        "formattedBlankRows": 0,
+        "headers": [
+          "强度轴",
+          "玩家可见/开发者",
+          "低强度表现",
+          "中强度表现",
+          "高强度表现",
+          "设计备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "招式_05_数据字典",
+        "rows": 10,
+        "columns": 4,
+        "dataRows": 9,
+        "formattedBlankRows": 0,
+        "headers": [
+          "字段/枚举",
+          "取值",
+          "说明",
+          "是否玩家可见"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_01_装备主表",
+        "rows": 20,
+        "columns": 14,
+        "dataRows": 19,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "装备大类",
+          "装备小类",
+          "层级",
+          "阴阳标签",
+          "武器手位/装备部位",
+          "持握/穿戴方式",
+          "可用距离",
+          "佩饰限制",
+          "玩家可见说明",
+          "资源状态",
+          "获取来源",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_02_表属性贡献",
+        "rows": 12,
+        "columns": 7,
+        "dataRows": 11,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "表属性",
+          "贡献值",
+          "生效条件",
+          "停止条件",
+          "玩家可见"
+        ],
+        "duplicateIds": [
+          [
+            "EQ-A002",
+            2
+          ],
+          [
+            "EQ-A003",
+            2
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_03_常规气骰",
+        "rows": 4,
+        "columns": 11,
+        "dataRows": 3,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "气骰名",
+          "气性",
+          "骰阶",
+          "数量",
+          "进入区域",
+          "生效条件",
+          "停止/移除条件",
+          "是否可调息",
+          "来源记录"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_04_临时气骰",
+        "rows": 5,
+        "columns": 11,
+        "dataRows": 4,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "临时气骰名",
+          "气性",
+          "骰阶",
+          "数量",
+          "触发时点",
+          "使用限制",
+          "使用后去向",
+          "恢复条件",
+          "是否可调息"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_05_装备许可",
+        "rows": 17,
+        "columns": 7,
+        "dataRows": 16,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "许可类型",
+          "许可对象",
+          "许可文本",
+          "生效条件",
+          "关闭条件"
+        ],
+        "duplicateIds": [
+          [
+            "EQ-W001",
+            2
+          ],
+          [
+            "EQ-W004",
+            2
+          ],
+          [
+            "EQ-T004",
+            2
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_06_被动与状态",
+        "rows": 7,
+        "columns": 7,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "被动/状态名",
+          "触发时点",
+          "规则文本",
+          "限制",
+          "是否磨损/消耗"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_07_开发者平衡",
+        "rows": 12,
+        "columns": 11,
+        "dataRows": 11,
+        "formattedBlankRows": 0,
+        "headers": [
+          "装备ID",
+          "装备名",
+          "设计强度档",
+          "预期阶段",
+          "表属性价值",
+          "常规气骰价值",
+          "临时气骰价值",
+          "许可价值",
+          "限制/代价",
+          "超模风险",
+          "调整备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "装备_08_字典",
+        "rows": 14,
+        "columns": 3,
+        "dataRows": 13,
+        "formattedBlankRows": 0,
+        "headers": [
+          "类别",
+          "取值",
+          "说明"
+        ],
+        "duplicateIds": [
+          [
+            "装备大类",
+            4
+          ],
+          [
+            "武器手位",
+            3
+          ],
+          [
+            "护甲部位",
+            2
+          ],
+          [
+            "气骰类型",
+            2
+          ]
+        ],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "药物_01_药物主表",
+        "rows": 14,
+        "columns": 11,
+        "dataRows": 13,
+        "formattedBlankRows": 0,
+        "headers": [
+          "药物ID",
+          "药物名",
+          "类别",
+          "层级",
+          "使用时点",
+          "对象",
+          "消耗",
+          "玩家可见效果",
+          "不能做的事",
+          "获取来源",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "药物_02_效果明细",
+        "rows": 14,
+        "columns": 9,
+        "dataRows": 13,
+        "formattedBlankRows": 0,
+        "headers": [
+          "药物ID",
+          "药物名",
+          "效果类型",
+          "生效时点",
+          "明确落果",
+          "数值/层数",
+          "落果位置",
+          "是否消耗",
+          "限制"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "药物_03_临时气骰",
+        "rows": 4,
+        "columns": 10,
+        "dataRows": 3,
+        "formattedBlankRows": 0,
+        "headers": [
+          "药物ID",
+          "药物名",
+          "气性",
+          "骰阶",
+          "数量",
+          "进入区域",
+          "触发时点",
+          "使用后去向",
+          "是否可调息",
+          "限制"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "药物_04_代价限制",
+        "rows": 5,
+        "columns": 6,
+        "dataRows": 4,
+        "formattedBlankRows": 0,
+        "headers": [
+          "药物ID",
+          "药物名",
+          "代价触发条件",
+          "明确代价",
+          "落果位置",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "药物_05_开发者平衡",
+        "rows": 14,
+        "columns": 10,
+        "dataRows": 13,
+        "formattedBlankRows": 0,
+        "headers": [
+          "药物ID",
+          "药物名",
+          "设计强度档",
+          "预期阶段",
+          "恢复价值",
+          "状态处理价值",
+          "临时气骰价值",
+          "代价",
+          "超模风险",
+          "调整备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "药物_06_口径字典",
+        "rows": 8,
+        "columns": 2,
+        "dataRows": 7,
+        "formattedBlankRows": 0,
+        "headers": [
+          "字段/术语",
+          "采用口径"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "坐骑_01_坐骑载具主表",
+        "rows": 11,
+        "columns": 12,
+        "dataRows": 10,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "类别",
+          "层级",
+          "使用方式",
+          "载重",
+          "适用场景",
+          "基础许可",
+          "玩家可见效果",
+          "状态",
+          "获取来源",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "坐骑_02_效果明细",
+        "rows": 11,
+        "columns": 8,
+        "dataRows": 10,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "效果类型",
+          "触发时点",
+          "明确效果",
+          "数值/层数",
+          "限制",
+          "落果位置"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "坐骑_03_临时气骰",
+        "rows": 3,
+        "columns": 10,
+        "dataRows": 2,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "气性",
+          "骰阶",
+          "数量",
+          "进入区域",
+          "触发时点",
+          "使用限制",
+          "使用后去向",
+          "是否可调息"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "坐骑_04_状态规则",
+        "rows": 7,
+        "columns": 4,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "状态",
+          "触发条件",
+          "明确影响",
+          "修复/恢复方式"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "坐骑_05_开发者平衡",
+        "rows": 11,
+        "columns": 10,
+        "dataRows": 10,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "设计强度档",
+          "预期阶段",
+          "移动价值",
+          "载重价值",
+          "遮蔽价值",
+          "临时气骰价值",
+          "限制/代价",
+          "超模风险"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "坐骑_06_口径字典",
+        "rows": 5,
+        "columns": 2,
+        "dataRows": 4,
+        "formattedBlankRows": 0,
+        "headers": [
+          "术语",
+          "口径"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "文书_01_文书物品主表",
+        "rows": 13,
+        "columns": 11,
+        "dataRows": 12,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "类别",
+          "层级",
+          "使用时点",
+          "对象/场景",
+          "玩家可见效果",
+          "消耗/保留",
+          "限制",
+          "获取来源",
+          "备注"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "文书_02_效果明细",
+        "rows": 13,
+        "columns": 8,
+        "dataRows": 12,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "效果类型",
+          "触发时点",
+          "明确落果",
+          "数值/许可",
+          "落果位置",
+          "限制"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "文书_03_查验限制",
+        "rows": 7,
+        "columns": 5,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "查验/识破条件",
+          "失败或暴露的明确落果",
+          "落果位置"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "文书_04_资源状态",
+        "rows": 7,
+        "columns": 3,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "资源状态",
+          "规则影响",
+          "恢复/处理"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "文书_05_开发者平衡",
+        "rows": 13,
+        "columns": 9,
+        "dataRows": 12,
+        "formattedBlankRows": 0,
+        "headers": [
+          "ID",
+          "名称",
+          "设计强度档",
+          "预期阶段",
+          "许可价值",
+          "危机/解密价值",
+          "资源价值",
+          "限制",
+          "超模风险"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "文书_06_口径字典",
+        "rows": 6,
+        "columns": 2,
+        "dataRows": 5,
+        "formattedBlankRows": 0,
+        "headers": [
+          "术语",
+          "口径"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "00_统计",
+        "rows": 7,
+        "columns": 4,
+        "dataRows": 6,
+        "formattedBlankRows": 0,
+        "headers": [
+          "库名",
+          "工作表数",
+          "总数据行数",
+          "说明"
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      }
+    ]
+  },
+  {
+    "source": "D:/trpg/大梁武侠/规则书/大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日/03_数据库/02_招式库小样本_响应挂载与势前置修订.xlsx",
+    "sheets": [
+      {
+        "name": "00_修订说明",
+        "rows": 200,
+        "columns": 26,
+        "dataRows": 8,
+        "formattedBlankRows": 191,
+        "headers": [
+          "招式库小样本：响应挂载与势前置修订",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "01_招式主表",
+        "rows": 200,
+        "columns": 26,
+        "dataRows": 14,
+        "formattedBlankRows": 185,
+        "headers": [
+          "招式ID",
+          "招式名",
+          "大类",
+          "子类",
+          "层级",
+          "设计档",
+          "阴阳路数标签",
+          "主用法时点",
+          "式位",
+          "最低投入",
+          "气性门槛",
+          "势条件类型",
+          "允许势范围",
+          "硬前置说明",
+          "对象/距离/装备许可",
+          "基础效果",
+          "主槽触发",
+          "合值触发",
+          "差值/风险",
+          "成招后转势",
+          "资源去向",
+          "挂载截击",
+          "挂载应招",
+          "设计备注",
+          "",
+          ""
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "02_响应挂载明细",
+        "rows": 200,
+        "columns": 26,
+        "dataRows": 15,
+        "formattedBlankRows": 184,
+        "headers": [
+          "挂载ID",
+          "招式ID",
+          "招式名",
+          "响应类型",
+          "可单独调用",
+          "响应时点",
+          "最低投入",
+          "气性门槛",
+          "势条件类型",
+          "允许势范围",
+          "装备/对象许可",
+          "基础响应效果",
+          "主槽触发",
+          "合值触发",
+          "差值/风险",
+          "响应后转势",
+          "资源去向",
+          "限制说明",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "03_势生态表",
+        "rows": 200,
+        "columns": 26,
+        "dataRows": 7,
+        "formattedBlankRows": 192,
+        "headers": [
+          "强度/类型",
+          "势条件类型",
+          "推荐允许势范围",
+          "前置招式使用",
+          "最低投入建议",
+          "设计说明",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "04_便行表",
+        "rows": 200,
+        "columns": 26,
+        "dataRows": 9,
+        "formattedBlankRows": 190,
+        "headers": [
+          "便行ID",
+          "名称",
+          "类型",
+          "时点",
+          "最低投入",
+          "气性门槛",
+          "势条件",
+          "对象/许可",
+          "明确效果",
+          "限制",
+          "资源去向",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      },
+      {
+        "name": "05_字段字典",
+        "rows": 200,
+        "columns": 26,
+        "dataRows": 10,
+        "formattedBlankRows": 189,
+        "headers": [
+          "字段",
+          "所在表",
+          "口径",
+          "示例/枚举",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "duplicateIds": [],
+        "blankIdRows": [],
+        "formulaCount": 0,
+        "errorCells": [],
+        "objectObjectCells": [],
+        "rawTokenCellCount": 0,
+        "rawTokenSamples": []
+      }
+    ]
+  }
+]

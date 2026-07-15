@@ -147,6 +147,12 @@ export interface Move {
   resourceDestination: string;     // 资源去向
   hasIntercept: boolean;           // 是否挂载截击
   hasReact: boolean;               // 是否挂载应招
+  /**
+   * Compatibility discriminator while the runtime is migrated to the
+   * MoveDefinition/MoveUsage catalog.  It prevents authored scene usages from
+   * leaking into the combat hand without duplicating rules in UI components.
+   */
+  actionType?: "formal" | "scene" | "quick" | "response";
 }
 
 // === Response Attachment (响应挂载) ===
@@ -420,9 +426,36 @@ export interface CombatFeedbackEvent {
   createdAt: number;
 }
 
+export type CampaignFlagValue = string | number | boolean;
+
+/**
+ * Durable progress for an authored campaign pack.  Scene state remains the
+ * immediate play surface; this record is the cross-scene ledger used by
+ * normal stories, hosted rooms, save migration and ending settlement.
+ */
+export interface CampaignRuntimeProgress {
+  packId: string;
+  packVersion: string;
+  currentSceneId: string;
+  completedSceneIds: string[];
+  completedEventIds: string[];
+  earnedRewardIds: string[];
+  partyActorIds: string[];
+  /** Actors currently placed in this authored scene/encounter. */
+  activeActorIds: string[];
+  flags: Record<string, CampaignFlagValue>;
+  pendingSceneId?: string;
+  pendingCombatSceneId?: string;
+  endingId?: string;
+  startedAt: number;
+  updatedAt: number;
+}
+
 export interface CombatState {
   /** 双模式运行壳；旧顶层 round/phase/order 在迁移期保持为 UI 兼容镜像。 */
   runtime: RuntimeSessionState;
+  /** Versioned campaign ledger. Older saves are migrated from scene/campaignName. */
+  campaign: CampaignRuntimeProgress;
   campaignName: string;
   sceneName: string;
   sceneGoal: string;
@@ -478,6 +511,8 @@ export interface AppSession {
   /** Local-only helper that advances enemy responses and DM settlement for solo testing. */
   autoDmEnabled: boolean;
   playMode: "solo" | "room";
+  /** Last selected single-player pack; independent from the hosted room pack. */
+  soloCampaignId: string;
   roomCode: string;
   playerName: string;
   preferences: {

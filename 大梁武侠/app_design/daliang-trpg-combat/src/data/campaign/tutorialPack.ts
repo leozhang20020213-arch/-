@@ -108,6 +108,7 @@ export const tutorialCampaignPack: CampaignPack = {
         { id: "catch-runner", name: "截住胡五", conditions: [{ id: "pursuit-three", kind: "track_threshold", sourceId: "pursuit-progress", operator: "at_least", value: 3 }], effects: [{ kind: "end_scene", targetId: "old-boathouse-standoff" }], once: true, publicText: "你在旧船棚门前截住胡五，他把药匣挡在身后。" },
         { id: "reach-boathouse", name: "三轮到期", conditions: [{ id: "round-three", kind: "round", operator: "at_least", value: 3 }], effects: [{ kind: "end_scene", targetId: "old-boathouse-standoff" }], once: true, publicText: "胡五撞进旧船棚，接应者从货架后现身。" },
       ],
+      sequenceActorIds: ["pc-shen-qing", "pc-wei", "enemy-porter"],
       rewardIds: [],
       nextSceneIds: ["old-boathouse-standoff"],
     },

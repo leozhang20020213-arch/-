@@ -15,7 +15,7 @@ const PHASE_HINTS: Record<string, { player: string; dm: string }> = {
   intercept_window: { player: "等待 DM 裁定截击", dm: "可裁定截击" },
   react_window: { player: "等待应招裁定", dm: "可裁定应招" },
   outcome: { player: "等待落果", dm: "结算伤害与效果" },
-  round_end: { player: "等待下一轮", dm: "判定轮次结束" },
+  round_end: { player: "等待下一位行动", dm: "推进至下一行动者" },
 };
 
 /**

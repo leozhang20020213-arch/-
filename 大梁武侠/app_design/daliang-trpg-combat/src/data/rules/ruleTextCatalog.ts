@@ -139,7 +139,7 @@ export function reviewStatusLabel(status: RuleReviewStatus): string {
 
 export function reviewStatusDescription(status: RuleReviewStatus): string {
   if (status === "REFERENCE") return "文字资料通过自动审计；尚未转换为可执行规则。";
-  if (status === "REVIEW_REQUIRED") return "存在数值、门槛或结构冲突，不能直接交给自动DM。";
+  if (status === "REVIEW_REQUIRED") return "存在数值、门槛或结构冲突，不能直接进入权威结算。";
   return "源数据关键参数缺失，已从团包选择和自动结算中隔离。";
 }
 

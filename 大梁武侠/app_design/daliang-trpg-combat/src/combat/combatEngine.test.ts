@@ -50,6 +50,11 @@ function createSeedState(): CombatState {
   };
 }
 
+function enterCombatFixture(): CombatState {
+  const state = prepareCombatRound(enterScene(createSeedState(), fixedRoll));
+  return { ...state, phase: "declare", activeActorId: "pc-shen-qing" };
+}
+
 function addFixtureItem(state: CombatState, item: InventoryItem): CombatState {
   return {
     ...state,
@@ -306,7 +311,7 @@ describe("combat engine", () => {
   });
 
   it("requires yin and yang slots for formal moves but not quick actions", () => {
-    let state = enterScene(createSeedState(), fixedRoll);
+    let state = enterCombatFixture();
     // Formal move without yang slot
     let availability = canDeclareAction(state, "pc-shen-qing", "WG001", { yinSlotDiceIds: ["pc-d1"] });
     assert.equal(availability.allowed, false);
@@ -593,7 +598,7 @@ describe("combat engine", () => {
   });
 
   it("allows declaration when momentum is in allowed range", () => {
-    const state = enterScene(createSeedState(), fixedRoll);
+    const state = enterCombatFixture();
     // 沈青 has momentum "合势". WG001 allows: 阴盛/阳盛/合势/失势
     const availability = canDeclareAction(state, "pc-shen-qing", "WG001", {
       yinSlotDiceIds: ["pc-d1"],
@@ -912,7 +917,7 @@ describe("combat engine", () => {
   });
 
   it("equipment permission blocks move without required weapon", () => {
-    const state = enterScene(createSeedState(), fixedRoll);
+    const state = enterCombatFixture();
     // WG001 requires "主手刀" — 沈青 has 环首刀 equipped (contains "刀")
     let availability = canDeclareAction(state, "pc-shen-qing", "WG001", {
       yinSlotDiceIds: ["pc-d1"],
@@ -1012,5 +1017,18 @@ describe("combat engine", () => {
       before,
     );
     assert.equal(next.logs.some((entry) => /放弃出手/.test(entry.message)), true);
+  });
+
+  it("blocks a scene-only authored usage from combat declarations", () => {
+    const combat = prepareCombatRound(createSeedState());
+    const state = { ...combat, activeActorId: "pc-shen-qing", phase: "declare" as const };
+    const availability = canDeclareAction(state, "pc-shen-qing", "FM001", {
+      yinSlotDiceIds: [],
+      yangSlotDiceIds: [],
+    });
+
+    assert.equal(availability.allowed, false);
+    assert.equal(availability.reasons.includes("该招式仅限情景使用"), true);
+    assert.equal(availability.availability.checks.some((check) => check.dimension === "mode" && check.status === "fail"), true);
   });
 });

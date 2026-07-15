@@ -1,5 +1,5 @@
 import { createInitialCombatState, createSeedState } from "../data/seed";
-import type { AppSession, CombatState, InnerArt, InventoryItem, MoveTiming, SixRoots, StatusEffect } from "./types";
+import type { AppSession, CombatState, InnerArt, InventoryItem, MoveTiming, QiDie, SixRoots, StatusEffect } from "./types";
 import { normalizeResponseBudget, normalizeRuntimeSession } from "../domain/session/runtime";
 
 const STORAGE_KEY = "daliang-trpg-combat:v1";
@@ -31,6 +31,7 @@ export function createDefaultSession(): AppSession {
     developerMode: false,
     autoDmEnabled: false,
     playMode: "solo",
+    soloCampaignId: "campaign-mist-salt-ledger",
     roomCode: "LAN-BP01",
     playerName: "沈青玩家",
     preferences: {
@@ -49,9 +50,9 @@ export function createDefaultSession(): AppSession {
       { id: "seat-3", label: "玩家3", ready: false },
     ],
     room: {
-      roomName: "白蘋渡失匣",
+      roomName: "雾岭盐引",
       hostName: "试跑DM",
-      campaignId: "tutorial-white-duckweed-ferry",
+      campaignId: "campaign-mist-salt-ledger",
       mode: "local",
       allowSpectators: true,
       allowPrivateDmMessages: true,
@@ -167,8 +168,19 @@ export function clearAppSession(): AppSession {
 
 export function normalizeCombatState(value: Partial<CombatState>): CombatState {
   const seed = createSeedState();
-  const actors = (value.actors ?? seed.actors).map((actor, index) => {
-    const seedActor = seed.actors[index] ?? seed.actors[0];
+  const storedActors = value.actors ?? seed.actors;
+  const storedActorIds = new Set(storedActors.map((actor) => actor.id));
+  const actorInputs = [
+    ...storedActors,
+    // A content update may add reviewed preset actors. They must become
+    // available to old profiles without replacing or reordering user-created
+    // actors already present in the save.
+    ...seed.actors.filter((actor) => !storedActorIds.has(actor.id)),
+  ];
+  const seedActorsById = new Map(seed.actors.map((actor) => [actor.id, actor]));
+  const actors = actorInputs.map((actor) => {
+    // Stable ids, never array indexes, define actor identity across versions.
+    const seedActor = seedActorsById.get(actor.id) ?? seed.actors[0];
     // Cast to unknown first, then to a record so we can access arbitrary legacy keys
     const rawActor = actor as unknown as Record<string, unknown>;
     const rawSeed = seedActor as unknown as Record<string, unknown> | undefined;
@@ -306,11 +318,40 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
         },
       }
     : runtime;
+  const storedCampaign = value.campaign;
+  const now = Date.now();
+  const campaign = storedCampaign && typeof storedCampaign === "object"
+    ? {
+        ...seed.campaign,
+        ...storedCampaign,
+        packId: storedCampaign.packId || seed.campaign.packId,
+        packVersion: storedCampaign.packVersion || seed.campaign.packVersion,
+        currentSceneId: storedCampaign.currentSceneId || value.scene?.id || seed.scene.id,
+        completedSceneIds: Array.isArray(storedCampaign.completedSceneIds) ? [...new Set(storedCampaign.completedSceneIds)] : [],
+        completedEventIds: Array.isArray(storedCampaign.completedEventIds) ? [...new Set(storedCampaign.completedEventIds)] : [],
+        earnedRewardIds: Array.isArray(storedCampaign.earnedRewardIds) ? [...new Set(storedCampaign.earnedRewardIds)] : [],
+        partyActorIds: Array.isArray(storedCampaign.partyActorIds)
+          ? [...new Set(storedCampaign.partyActorIds)].filter((id) => actorIds.has(id))
+          : actors.filter((actor) => actor.side === "player").slice(0, 1).map((actor) => actor.id),
+        activeActorIds: Array.isArray(storedCampaign.activeActorIds)
+          ? [...new Set(storedCampaign.activeActorIds)].filter((id) => actorIds.has(id))
+          : actors.map((actor) => actor.id),
+        flags: storedCampaign.flags && typeof storedCampaign.flags === "object" ? { ...storedCampaign.flags } : {},
+        startedAt: Number.isFinite(storedCampaign.startedAt) ? storedCampaign.startedAt : now,
+        updatedAt: Number.isFinite(storedCampaign.updatedAt) ? storedCampaign.updatedAt : now,
+      }
+    : {
+        ...seed.campaign,
+        currentSceneId: value.scene?.id || seed.scene.id,
+        startedAt: now,
+        updatedAt: now,
+      };
 
   return {
     ...seed,
     ...value,
     runtime: cleanedRuntime,
+    campaign,
     actors,
     initiativeOrder,
     actedActorIds,
@@ -359,6 +400,7 @@ export function normalizeAppSession(value: Partial<AppSession>): AppSession {
     developerMode: value.developerMode ?? false,
     autoDmEnabled: value.autoDmEnabled ?? false,
     playMode: value.playMode ?? "solo",
+    soloCampaignId: value.soloCampaignId ?? seed.soloCampaignId,
     roomCode: value.roomCode ?? seed.roomCode,
     preferences: { ...seed.preferences, ...value.preferences },
     seats: value.seats ?? seed.seats,
@@ -379,13 +421,15 @@ function normalizeDice(
   seedDice: CombatState["dice"],
 ): CombatState["dice"] {
   const seeds = new Map(seedDice.map((die) => [die.id, die]));
-  return dice.map((die) => {
+  const normalized = dice.map((die) => {
     const rawNature = String((die as unknown as Record<string, unknown>).nature ?? "raw");
-    const nature = rawNature === "yin" || rawNature === "yang"
+    const nature: QiDie["nature"] = rawNature === "yin" || rawNature === "yang"
       ? rawNature
       : "raw";
     return { ...seeds.get(die.id), ...die, nature };
   });
+  const storedIds = new Set(normalized.map((die) => die.id));
+  return [...normalized, ...seedDice.filter((die) => !storedIds.has(die.id))];
 }
 
 function normalizeMoves(raw: unknown, seedMoves: CombatState["actors"][number]["moves"]): CombatState["actors"][number]["moves"] {

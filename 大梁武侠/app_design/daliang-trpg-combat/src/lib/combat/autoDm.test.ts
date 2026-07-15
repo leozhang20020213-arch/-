@@ -164,21 +164,31 @@ describe("test auto DM", () => {
     assert.equal(waitingIntercept.state.phase, "intercept_window");
 
     const reactWindow = formMove(interceptWindow);
-    const authoredReactWindow: CombatState = {
-      ...reactWindow,
-      actors: reactWindow.actors.map((actor) => actor.id === ENEMY_ID
-        ? { ...actor, moves: actor.moves.map((move) => move.id === "WG002" ? { ...move, hasReact: true } : move) }
-        : actor),
-    };
-    const waitingReact = advanceAutoDm(authoredReactWindow, PLAYER_ID);
+    const waitingReact = advanceAutoDm(reactWindow, PLAYER_ID);
 
     assert.equal(waitingReact.decision, "waiting_player");
-    assert.strictEqual(waitingReact.state, authoredReactWindow);
+    assert.strictEqual(waitingReact.state, reactWindow);
     assert.equal(waitingReact.state.phase, "react_window");
     assert.equal(
       waitingReact.state.actors.find((actor) => actor.id === PLAYER_ID)?.responseQuotaUsed,
       0,
     );
+  });
+
+  it("reads response attachments from the defender rather than the incoming move", () => {
+    const declared = enemyDeclaration();
+    const sourceWithoutResponseFlags: CombatState = {
+      ...declared,
+      actors: declared.actors.map((actor) => actor.id === ENEMY_ID
+        ? { ...actor, moves: actor.moves.map((move) => move.id === "WG002" ? { ...move, hasIntercept: false, hasReact: false } : move) }
+        : actor),
+    };
+
+    const intercept = advanceAutoDm(sourceWithoutResponseFlags, PLAYER_ID);
+    assert.equal(intercept.decision, "waiting_player");
+    const reactWindow = formMove(sourceWithoutResponseFlags);
+    const react = advanceAutoDm(reactWindow, PLAYER_ID);
+    assert.equal(react.decision, "waiting_player");
   });
 
   it("does not pause on a player response window after the response quota is spent", () => {

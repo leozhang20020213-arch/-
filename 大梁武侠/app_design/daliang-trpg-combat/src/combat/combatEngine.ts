@@ -15,6 +15,7 @@ import type {
   ShiState,
   ShiCondition,
 } from "./types";
+import { isUsageAvailableInMode, legacyMoveToDefinitionAndUsage } from "../data/schema/moves";
 import { deriveTargetState } from "../lib/combat/targetValidation";
 import { createAvailabilityResult, type AvailabilityCheck, type AvailabilityResult } from "../data/schema/availability";
 import { computeTurnOrder } from "../lib/combat/turnOrder";
@@ -639,12 +640,20 @@ export function canDeclareAction(
     return { allowed: false, reasons: availability.reasons, availability };
   }
 
+  const moveUsage = legacyMoveToDefinitionAndUsage(move).usage;
+  const availableInMode = isUsageAvailableInMode(moveUsage, state.runtime.mode);
   const checks: AvailabilityCheck[] = [
-    { dimension: "mode", status: "pass" },
+    availableInMode
+      ? { dimension: "mode", status: "pass" }
+      : { dimension: "mode", status: "fail", reason: state.runtime.mode === "COMBAT" ? "该招式仅限情景使用" : "该招式不能在当前情景使用" },
     { dimension: "distance", status: "not_evaluated", reason: "选择目标后检查距离" },
     { dimension: "target", status: "not_evaluated", reason: "选择目标后检查对象" },
     { dimension: "response_budget", status: "not_applicable" },
   ];
+
+  if (!availableInMode) {
+    reasons.push(state.runtime.mode === "COMBAT" ? "该招式仅限情景使用" : "该招式不能在当前情景使用");
+  }
 
   if (state.activeActorId !== actorId) {
     reasons.push("不是当前行动者");
@@ -730,7 +739,8 @@ export function prepareCombatRound(state: CombatState): CombatState {
 
 export function confirmInitiative(state: CombatState): CombatState {
   let next = cloneState(state);
-  const ordered = computeTurnOrder(next).filter((entry) => !entry.isDying);
+  const activeActorIds = new Set(next.campaign.activeActorIds);
+  const ordered = computeTurnOrder(next).filter((entry) => !entry.isDying && (activeActorIds.size === 0 || activeActorIds.has(entry.actorId)));
   const firstActor = ordered[0];
   next.initiativeOrder = ordered.map((entry) => entry.actorId);
   next.actedActorIds = [];
@@ -801,7 +811,8 @@ export function enterScene(state: CombatState, roll: RollFn = defaultRoll): Comb
   // Decay statuses with "每轮结束-1层" rule
   next = decayStatusesInternal(next, "每轮结束-1层");
 
-  const order = computeTurnOrder(next).filter((entry) => !entry.isDying);
+  const activeActorIds = new Set(next.campaign.activeActorIds);
+  const order = computeTurnOrder(next).filter((entry) => !entry.isDying && (activeActorIds.size === 0 || activeActorIds.has(entry.actorId)));
   next.initiativeOrder = order.map((entry) => entry.actorId);
   if (order[0]) next.activeActorId = order[0].actorId;
   next.phase = "declare";
@@ -2056,12 +2067,13 @@ export function endRound(state: CombatState): CombatState {
   next.turnPaused = false;
   const livingOrder = next.initiativeOrder.filter((actorId) =>
     next.actors.some((actor) => actor.id === actorId && actor.hp > 0));
+  const activeActorIds = new Set(next.campaign.activeActorIds);
   // A structured scene owns an authored participant list. Appending every
   // living combat actor here leaks future enemies into pursuits and talks.
   const missingLiving = next.encounterMode === "scene" && next.runtime.mode === "SCENE_STRUCTURED"
     ? []
     : next.actors
-      .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
+      .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id) && (activeActorIds.size === 0 || activeActorIds.has(actor.id)))
       .map((actor) => actor.id);
   next.initiativeOrder = [...livingOrder, ...missingLiving];
   next.activeActorId = next.initiativeOrder[0] ?? next.activeActorId;
@@ -2093,10 +2105,11 @@ export function advanceTurn(state: CombatState): CombatState {
   let next = cloneState(state);
   const livingOrder = next.initiativeOrder.filter((actorId) =>
     next.actors.some((actor) => actor.id === actorId && actor.hp > 0));
+  const activeActorIds = new Set(next.campaign.activeActorIds);
   const missingLiving = next.encounterMode === "scene" && next.runtime.mode === "SCENE_STRUCTURED"
     ? []
     : next.actors
-      .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
+      .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id) && (activeActorIds.size === 0 || activeActorIds.has(actor.id)))
       .map((actor) => actor.id);
   next.initiativeOrder = [...livingOrder, ...missingLiving];
 

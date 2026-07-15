@@ -76,6 +76,22 @@
   overflow: visible !important;
 }
 
+.dm-combat-settlement {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(154, 116, 69, .38);
+  background: rgba(24, 20, 16, .72);
+}
+
+.dm-combat-settlement h3,
+.dm-combat-settlement p { margin: 0; }
+.dm-combat-settlement h3 { color: #d5b77e; font-size: 13px; }
+.dm-combat-settlement p { color: #858078; font-size: 10px; line-height: 1.45; }
+.dm-combat-settlement > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.dm-combat-settlement button { min-height: 30px; padding: 4px 6px; font-size: 10px; }
+
 /* Hide legacy round-timeline (replaced by RoundStatusBar) */
 .round-timeline,
 .timepoint-strip {

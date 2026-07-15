@@ -142,6 +142,36 @@
   gap: 14px;
 }
 
+.support-pack-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.support-pack-entry {
+  display: grid;
+  gap: 10px;
+  min-height: 170px;
+  padding: 15px;
+  border: 1px solid rgba(145, 119, 76, 0.32);
+  background: linear-gradient(145deg, rgba(42, 35, 27, 0.96), rgba(22, 25, 22, 0.98));
+}
+
+.support-pack-entry.is-current {
+  border-color: rgba(198, 164, 103, 0.76);
+  box-shadow: inset 3px 0 #b99459;
+}
+
+.support-pack-entry header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; }
+.support-pack-entry header > span { color: #a98d61; font-size: 10px; letter-spacing: .08em; }
+.support-pack-entry header > strong { color: #ead9ba; font: 700 19px var(--font-display); }
+.support-pack-entry header > b { padding: 3px 7px; border: 1px solid #5e7c70; color: #9fc1b4; font-size: 9px; }
+.support-pack-entry > p { margin: 0; color: #aba294; font-size: 12px; line-height: 1.65; }
+.support-pack-entry dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: auto 0 0; }
+.support-pack-entry dl > div { padding: 7px; border-top: 1px solid rgba(132, 111, 78, .25); }
+.support-pack-entry dt { color: #716d65; font-size: 9px; }
+.support-pack-entry dd { margin: 3px 0 0; color: #c9bca7; font-size: 11px; }
+
 .support-pack-card__title {
   display: flex;
   align-items: flex-start;

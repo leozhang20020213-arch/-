@@ -76,7 +76,7 @@ const SHORT_PHASE_MAP: Record<CombatState["phase"], string> = {
   intercept_window: "等待截击",
   react_window: "等待应招",
   outcome: "结算中",
-  round_end: "轮次结束",
+  round_end: "出手结束",
 };
 
 /**

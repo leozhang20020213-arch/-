@@ -197,3 +197,33 @@
   .scene-usage-card { flex-basis: 124px; }
   .scene-intent-editor__tools { grid-template-columns: 76px minmax(130px,1fr) 82px; gap: 3px; }
 }
+
+.campaign-ending-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: radial-gradient(circle at center, rgba(64, 48, 31, .38), rgba(6, 8, 7, .88));
+  backdrop-filter: blur(5px);
+}
+
+.campaign-ending-sheet > div {
+  width: min(620px, 92vw);
+  padding: 34px 40px;
+  border: 1px solid #9f7b48;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .65), inset 0 0 0 5px rgba(184, 143, 78, .08);
+  color: #d9ccb5;
+  background: linear-gradient(155deg, #30261d 0%, #171a16 72%);
+  text-align: center;
+}
+
+.campaign-ending-sheet small { color: #9e835c; letter-spacing: .12em; }
+.campaign-ending-sheet h2 { margin: 8px 0 16px; color: #ead5ad; font: 700 32px var(--font-display); }
+.campaign-ending-sheet p { color: #c4b6a0; font-size: 15px; line-height: 1.8; }
+.campaign-ending-sheet dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
+.campaign-ending-sheet dl > div { padding: 10px; border: 1px solid rgba(158, 126, 79, .28); background: rgba(8, 11, 9, .28); }
+.campaign-ending-sheet dt { color: #77736b; font-size: 10px; }
+.campaign-ending-sheet dd { margin: 4px 0 0; color: #ddc8a2; font-size: 18px; }
+.campaign-ending-sheet > div > div { display: flex; justify-content: center; gap: 10px; }

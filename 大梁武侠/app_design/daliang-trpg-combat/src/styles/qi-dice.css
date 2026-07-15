@@ -1229,3 +1229,14 @@
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+.dice-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  place-items: center;
+  color: #d8c299;
+  background: rgba(8, 10, 9, .9);
+  font: 600 14px var(--font-display);
+  letter-spacing: .12em;
+}

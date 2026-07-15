@@ -51,3 +51,15 @@ test("旧存档的重复装备标志以权威装备槽为准", () => {
     ["item-ring-saber"],
   );
 });
+
+test("内容更新按稳定角色标识迁移并补入新增预设角色与气骰", () => {
+  const seed = createSeedState();
+  const legacyActorIds = new Set(["pc-shen-qing", "pc-wei", "enemy-short-blade", "enemy-porter", "enemy-lookout", "enemy-archer"]);
+  const legacyActors = seed.actors.filter((actor) => legacyActorIds.has(actor.id));
+  const legacyDice = seed.dice.filter((die) => legacyActorIds.has(die.ownerId));
+  const migrated = normalizeCombatState({ ...seed, actors: legacyActors, dice: legacyDice });
+  assert.equal(migrated.actors.find((actor) => actor.id === "pc-wei")?.name, "魏长兴");
+  assert.equal(migrated.actors.find((actor) => actor.id === "pc-tang-he")?.name, "唐禾");
+  assert.ok(migrated.dice.some((die) => die.ownerId === "pc-tang-he"));
+  assert.equal(new Set(migrated.actors.map((actor) => actor.id)).size, migrated.actors.length);
+});

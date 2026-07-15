@@ -1,4 +1,5 @@
 import type { MoveUsageMode } from "../schema/moves";
+import type { Actor } from "../../combat/types";
 
 export const CAMPAIGN_PACK_SCHEMA_VERSION = 1 as const;
 
@@ -61,6 +62,18 @@ export interface CampaignEnding {
   records: string[];
 }
 
+/**
+ * Story-specific intent layered over the reusable actor registry. Combat
+ * statistics and learned moves stay authoritative in the actor database;
+ * only narrative purpose and automatic-DM preferences belong to the pack.
+ */
+export interface CampaignActorProfile {
+  actorId: string;
+  hiddenGoal?: string;
+  behaviorHint?: string;
+  aiProfile?: Actor["aiProfile"];
+}
+
 export interface SceneElement {
   id: string;
   kind: SceneElementKind;
@@ -104,7 +117,7 @@ export interface CampaignEvent {
   name: string;
   conditions: TriggerCondition[];
   effects: Array<{
-    kind: "reveal" | "track" | "permission" | "resource" | "relationship" | "start_combat" | "end_scene" | "reward";
+    kind: "reveal" | "track" | "permission" | "resource" | "relationship" | "flag" | "start_combat" | "end_scene" | "reward";
     targetId: string;
     value?: string | number | boolean;
   }>;
@@ -139,6 +152,8 @@ export interface CampaignScene {
     insightLayers?: Array<{ level: number; summary: string; dmContent?: string }>;
   }>;
   events: CampaignEvent[];
+  /** Explicit lightweight queue for structured scenes; never inferred from every actor in the registry. */
+  sequenceActorIds?: string[];
   combat?: CombatSetup;
   rewardIds: string[];
   nextSceneIds: string[];
@@ -159,6 +174,7 @@ export interface CampaignPack {
   quickStartCharacters?: QuickStartCharacter[];
   tutorial?: TutorialDefinition;
   endings?: CampaignEnding[];
+  actorProfiles?: CampaignActorProfile[];
   referencedMoveIds: string[];
   referencedActorIds: string[];
   updatedAt: string;
@@ -216,6 +232,16 @@ export function validateCampaignPack(pack: CampaignPack): CampaignValidationIssu
   const sceneIds = new Set(pack.scenes.map((scene) => scene.id));
   const rewardIds = new Set(pack.rewards.map((reward) => reward.id));
   const actorIds = new Set(pack.referencedActorIds);
+  const actorProfileIds = new Set<string>();
+  pack.actorProfiles?.forEach((profile, index) => {
+    if (!actorIds.has(profile.actorId)) {
+      issues.push({ severity: "error", path: `actorProfiles[${index}].actorId`, message: `行为档案人物 ${profile.actorId} 未列入团包人物引用。` });
+    }
+    if (actorProfileIds.has(profile.actorId)) {
+      issues.push({ severity: "error", path: `actorProfiles[${index}].actorId`, message: `人物 ${profile.actorId} 的团包行为档案重复。` });
+    }
+    actorProfileIds.add(profile.actorId);
+  });
   if (!sceneIds.has(pack.startSceneId)) issues.push({ severity: "error", path: "startSceneId", message: "起始场景不存在。" });
   pack.chapters.forEach((chapter, chapterIndex) => chapter.sceneIds.forEach((id) => {
     if (!sceneIds.has(id)) issues.push({ severity: "error", path: `chapters[${chapterIndex}].sceneIds`, message: `章节引用的场景 ${id} 不存在。` });
@@ -230,7 +256,11 @@ export function validateCampaignPack(pack: CampaignPack): CampaignValidationIssu
     const localIds = new Set([...scene.elements.map((element) => element.id), ...scene.tracks.map((track) => track.id)]);
     scene.events.forEach((event, eventIndex) => {
       event.conditions.forEach((condition, conditionIndex) => {
-        if (condition.sourceId && condition.kind !== "dm" && !localIds.has(condition.sourceId)) {
+        if (
+          condition.sourceId
+          && ["interaction", "track_threshold", "distance"].includes(condition.kind)
+          && !localIds.has(condition.sourceId)
+        ) {
           issues.push({ severity: "error", path: `scenes[${sceneIndex}].events[${eventIndex}].conditions[${conditionIndex}]`, message: `触发来源 ${condition.sourceId} 不在当前场景。` });
         }
       });
@@ -239,7 +269,7 @@ export function validateCampaignPack(pack: CampaignPack): CampaignValidationIssu
           ? sceneIds.has(effect.targetId) || scene.combat?.id === effect.targetId
           : effect.kind === "reward"
             ? rewardIds.has(effect.targetId)
-            : effect.kind === "permission" || effect.kind === "resource" || effect.kind === "relationship"
+            : effect.kind === "permission" || effect.kind === "resource" || effect.kind === "relationship" || effect.kind === "flag"
               ? Boolean(effect.targetId.trim())
               : localIds.has(effect.targetId);
         if (!validTarget) issues.push({ severity: "error", path: `scenes[${sceneIndex}].events[${eventIndex}].effects[${effectIndex}]`, message: `事件效果目标 ${effect.targetId} 不存在或类型不匹配。` });
@@ -247,6 +277,9 @@ export function validateCampaignPack(pack: CampaignPack): CampaignValidationIssu
     });
     scene.combat?.participantIds.forEach((id) => {
       if (!actorIds.has(id)) issues.push({ severity: "error", path: `scenes[${sceneIndex}].combat.participantIds`, message: `参战者 ${id} 未列入团包人物引用。` });
+    });
+    scene.sequenceActorIds?.forEach((id) => {
+      if (!actorIds.has(id)) issues.push({ severity: "error", path: `scenes[${sceneIndex}].sequenceActorIds`, message: `结构化情景角色 ${id} 未列入团包人物引用。` });
     });
   });
 

@@ -25,6 +25,33 @@ interface NavBtn {
   icon: string;
 }
 
+export function visibleTurnEntries(
+  state: CombatState,
+  order: TurnOrderEntry[],
+): TurnOrderEntry[] {
+  if (state.runtime.mode === "SCENE_FREE") return [];
+  const byId = new Map(order.map((entry) => [entry.actorId, entry]));
+  if (state.runtime.mode === "SCENE_STRUCTURED") {
+    const sequence = state.runtime.scene.sequence;
+    if (!sequence) return [];
+    return sequence.initiativeOrder.flatMap((actorId) => {
+      const entry = byId.get(actorId);
+      return entry ? [{
+        ...entry,
+        isCurrent: actorId === sequence.activeActorId,
+        hasActed: sequence.actedActorIds.includes(actorId),
+      }] : [];
+    });
+  }
+  const authoritativeOrder = state.initiativeOrder.length > 0
+    ? state.initiativeOrder
+    : state.campaign.activeActorIds;
+  return authoritativeOrder.flatMap((actorId) => {
+    const entry = byId.get(actorId);
+    return entry ? [entry] : [];
+  });
+}
+
 const PLAYER_NAV: NavBtn[] = [
   { id: "character", label: "人物", icon: "侠" },
   { id: "inventory", label: "背包", icon: "囊" },
@@ -59,7 +86,7 @@ const MOMENTUM_CLASS: Record<string, string> = {
 /**
  * A single actor chip in the turn order queue.
  */
-const TurnChip: FC<{ entry: TurnOrderEntry }> = ({ entry }) => {
+const TurnChip: FC<{ entry: TurnOrderEntry; position: number }> = ({ entry, position }) => {
   let chipClass = "turn-chip";
   if (entry.isCurrent) chipClass += " current";
   if (entry.hasActed) chipClass += " acted";
@@ -69,13 +96,13 @@ const TurnChip: FC<{ entry: TurnOrderEntry }> = ({ entry }) => {
   return (
     <span
       className={chipClass}
-      title={`${entry.name} · 先后${entry.initiative} · 势${entry.momentum}${entry.hasActed ? " · 已行动" : ""}${entry.canRespond ? " · 可响应" : ""}${entry.isDying ? " · 濒死" : ""}`}
+      title={`${entry.name} · 顺位${position} · 势${entry.momentum}${entry.hasActed ? " · 已行动" : ""}${entry.canRespond ? " · 可响应" : ""}${entry.isDying ? " · 濒死" : ""}`}
     >
       <span className="turn-chip-avatar">
         {entry.name.charAt(0)}
       </span>
       <span className="turn-chip-name">{entry.name}</span>
-      <span className="turn-chip-init">{entry.initiative}</span>
+      <span className="turn-chip-init" aria-label={`顺位${position}`}>{position}</span>
       {entry.hasActed && <span className="turn-chip-check">✓</span>}
       {entry.canRespond && <span className="turn-chip-respond-dot" />}
     </span>
@@ -115,20 +142,10 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
     ? state.runtime.scene.sequence
     : undefined;
   const isFreeScene = state.runtime.mode === "SCENE_FREE";
-  const turnEntries = useMemo(() => {
-    if (isFreeScene) return [];
-    if (!sceneSequence) return turnState.order;
-    const byId = new Map(turnState.order.map((entry) => [entry.actorId, entry]));
-    return sceneSequence.initiativeOrder.flatMap((actorId) => {
-      const entry = byId.get(actorId);
-      if (!entry) return [];
-      return [{
-        ...entry,
-        isCurrent: actorId === sceneSequence.activeActorId,
-        hasActed: sceneSequence.actedActorIds.includes(actorId),
-      }];
-    });
-  }, [isFreeScene, sceneSequence, turnState.order]);
+  const turnEntries = useMemo(
+    () => visibleTurnEntries(state, turnState.order),
+    [state, turnState.order],
+  );
   const roundLabel = isFreeScene
     ? "自由情景"
     : `第${sceneSequence?.round ?? turnState.round}轮`;
@@ -166,7 +183,7 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
       >
         {turnEntries.map((entry, i) => (
           <span key={entry.actorId} className="turn-chip-wrapper" role="listitem">
-            <TurnChip entry={entry} />
+            <TurnChip entry={entry} position={i + 1} />
             {i < turnEntries.length - 1 && (
               <span className="turn-arrow" aria-hidden="true">→</span>
             )}

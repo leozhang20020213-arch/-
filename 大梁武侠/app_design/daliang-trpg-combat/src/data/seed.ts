@@ -28,7 +28,7 @@ import { createResponseBudget, createRuntimeSession } from "../domain/session/ru
 // Engine compat: moves need `actionType` for legacy slot checks.
 // `timing` is the canonical field; `actionType` is a bridge.
 interface SeedMove extends Move {
-  actionType?: string;
+  actionType?: Move["actionType"];
   trackDelta?: number;
   baseDamage?: number;
 }
@@ -526,7 +526,7 @@ const BX006: QuickAction = {
 };
 
 // Quick action wrappers as SeedMove (for engine compat)
-function quickAsMove(qa: QuickAction, actionType: string): SeedMove {
+function quickAsMove(qa: QuickAction, actionType: NonNullable<Move["actionType"]>): SeedMove {
   return {
     id: qa.id,
     name: qa.name,
@@ -724,6 +724,76 @@ const actorWei: Actor = {
   publicNote: "预设队友。",
 };
 
+function createPresetPlayer(
+  id: string,
+  name: string,
+  roots: Actor["sixRoots"],
+  moves: Move[],
+  responses: ResponseAttachment[],
+  publicNote: string,
+  preferredRange: "近身" | "短距" | "中距",
+): Actor {
+  const weaponId = `${id}-ring-saber`;
+  const armorId = `${id}-cloth-armor`;
+  return {
+    ...actorShenQing,
+    id,
+    name,
+    sixRoots: roots,
+    innerArts: structuredClone(actorShenQing.innerArts),
+    tableAttrs: { ...actorShenQing.tableAttrs, 观照: roots.目窍 + 3, 身势: roots.步根 },
+    moves: structuredClone(moves),
+    responses: structuredClone(responses),
+    quickActions: structuredClone([BX001, BX002, BX004, BX006]),
+    inventory: [
+      { ...actorShenQing.inventory[0], id: weaponId, sourceId: `${name}·环首刀`, equipped: true },
+      { ...actorShenQing.inventory[1], id: armorId, sourceId: `${name}·厚布短褂`, equipped: true },
+      { ...actorShenQing.inventory[2], id: `${id}-medicine`, sourceId: `${name}·金疮药`, equipped: false },
+      { ...actorShenQing.inventory[3], id: `${id}-fire-starter`, sourceId: `${name}·火折`, equipped: false },
+    ],
+    equippedWeapon: weaponId,
+    equippedArmorUpper: armorId,
+    equippedArmorLower: undefined,
+    equippedAccessory: undefined,
+    responseQuotaUsed: 0,
+    statuses: [],
+    hiddenStatuses: [],
+    aiProfile: { role: "support", preferredRange, retreatHpRatio: 0.2, objective: "护住证人与团包任务目标" },
+    publicWeakness: "预设人物仍需根据场景距离与装备许可选择招式。",
+    publicNote,
+  };
+}
+
+const actorTangHe = createPresetPlayer(
+  "pc-tang-he",
+  "唐禾",
+  { 顶门: 4, 目窍: 5, 心口: 5, 丹田: 4, 命门: 3, 步根: 3 },
+  [WG001, WG006, FM001],
+  [RG002],
+  "预设玩家角色。擅长查探、护送与为同伴应招。",
+  "短距",
+);
+
+const actorXuZhou = createPresetPlayer(
+  "pc-xu-zhou",
+  "许舟",
+  { 顶门: 5, 目窍: 3, 心口: 5, 丹田: 4, 命门: 4, 步根: 3 },
+  [WG001, WG002, FM001],
+  [RG001, RG002, RG003],
+  "预设玩家角色。擅长正面承接、查探与稳定阵线。",
+  "近身",
+);
+
+const actorYeWen = createPresetPlayer(
+  "pc-ye-wen",
+  "叶闻",
+  { 顶门: 3, 目窍: 5, 心口: 3, 丹田: 4, 命门: 4, 步根: 5 },
+  [WG006, WG008, FM001],
+  [RG009],
+  "预设玩家角色。擅长轻身、追逐与干扰持械目标。",
+  "中距",
+);
+
 const actorLookout: Actor = {
   id: "enemy-lookout",
   name: "望风探子",
@@ -820,6 +890,21 @@ const weiDice: QiDie[] = [
   die("wei-d2", "魏长兴·本命·阳", "pc-wei", "yang", 6),
 ];
 
+function presetDice(id: string, name: string): QiDie[] {
+  return [
+    die(`${id}-d1`, `${name}·本命·元`, id, "raw", 6),
+    die(`${id}-d2`, `${name}·本命·阴一`, id, "yin", 6),
+    die(`${id}-d3`, `${name}·本命·阴二`, id, "yin", 4),
+    die(`${id}-d4`, `${name}·本命·阳一`, id, "yang", 6),
+    die(`${id}-d5`, `${name}·本命·阳二`, id, "yang", 4),
+    die(`${id}-d6`, `${name}·本命·元二`, id, "raw", 6),
+  ];
+}
+
+const tangHeDice = presetDice("pc-tang-he", "唐禾");
+const xuZhouDice = presetDice("pc-xu-zhou", "许舟");
+const yeWenDice = presetDice("pc-ye-wen", "叶闻");
+
 const lookoutDice: QiDie[] = [
   die("lo-d1", "望风探子·本命·中", "enemy-lookout", "raw", 6),
 ];
@@ -847,13 +932,29 @@ const distances = [
 // ============================================================
 
 export function createSeedState(): CombatState {
-  const actors = structuredClone([actorShenQing, actorWei, actorShortBlade, actorPorter, actorLookout, actorArcher] as Actor[])
+  const actors = structuredClone([actorShenQing, actorTangHe, actorXuZhou, actorYeWen, actorWei, actorShortBlade, actorPorter, actorLookout, actorArcher] as Actor[])
     .map((actor) => ({
       ...actor,
       responseBudget: createResponseBudget(actor.maxResponseQuota, actor.maxResponseQuota),
     }));
   return {
     runtime: createRuntimeSession(initialScene.id, "SCENE_FREE"),
+    campaign: {
+      packId: tutorialCampaignPack.id,
+      packVersion: tutorialCampaignPack.version,
+      currentSceneId: tutorialCampaignPack.startSceneId,
+      completedSceneIds: [],
+      completedEventIds: [],
+      earnedRewardIds: [],
+      partyActorIds: ["pc-shen-qing"],
+      // Keep the original reviewed encounter active in the bare engine seed.
+      // Additional preset heroes are registry choices, not surprise entrants.
+      // A concrete campaign scene narrows/replaces this list when initialized.
+      activeActorIds: ["pc-shen-qing", "pc-wei", "enemy-short-blade", "enemy-porter", "enemy-lookout", "enemy-archer"],
+      flags: {},
+      startedAt: Date.now(),
+      updatedAt: Date.now(),
+    },
     campaignName: tutorialCampaignPack.name,
     sceneName: authoredOpening.campaignScene.name,
     sceneGoal: authoredOpening.campaignScene.objective,
@@ -865,7 +966,7 @@ export function createSeedState(): CombatState {
     encounterMode: "scene",
     turnPaused: false,
     actors,
-    dice: structuredClone([...shenQingDice, ...shortBladeDice, ...porterDice, ...weiDice, ...lookoutDice, ...archerDice]),
+    dice: structuredClone([...shenQingDice, ...tangHeDice, ...xuZhouDice, ...yeWenDice, ...shortBladeDice, ...porterDice, ...weiDice, ...lookoutDice, ...archerDice]),
     tracks: structuredClone(tutorialTracks),
     scene: structuredClone(initialScene),
     distances: structuredClone(distances),

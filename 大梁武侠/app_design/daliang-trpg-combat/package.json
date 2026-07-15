@@ -69,7 +69,8 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "public/assets/icons/png512/005_world_世界.png"
+      "icon": "public/assets/icons/png512/005_world_世界.png",
+      "executableName": "大梁武侠"
     },
     "nsis": {
       "oneClick": false,

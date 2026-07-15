@@ -40,8 +40,8 @@ export const PlayerPromptBar: FC<PlayerPromptBarProps> = ({ state }) => {
       case "落果":
         return "等待主持人结算落果；玩家只能查看公开结果。";
 
-      case "轮末":
-        return "等待主持人推进下一轮。";
+      case "出手结束":
+        return "当前出手已结束，等待下一位行动。";
 
       case "结束":
         return "场景已结束。";
