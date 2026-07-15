@@ -1,5 +1,14 @@
 import { useMemo, useState, useCallback } from "react";
 import type { Actor, AppSession, CombatState, InnerArt, InventoryItem, Move, QuickAction, ResponseAttachment, ShiState, SixRoots, SixRootName, StatusEffect, TableAttrs } from "../combat/types";
+import {
+  CHARACTER_CREATION_LIMITS,
+  cloneDistanceRelationsForActor,
+  createStarterQiDice,
+  responsesForMoveIds,
+  validateCharacterCreation,
+  type StarterQiSource,
+} from "../data/character/characterCreation";
+import { RG001, RG002, RG009 } from "../data/seed";
 
 /* ===================================================================
    CharacterSelect — PoE-Style Dark Atmospheric Character Selection
@@ -39,10 +48,11 @@ const BX004: QuickAction = {
 const BX006: QuickAction = {
   id: "BX006", name: "调息", type: "出手便行", timing: "自己回合", minDice: 1,
   qiNatureThreshold: "任意", shiCondition: "无势",
-  permission: "息库有可回收常规气骰", effect: "按规则从息库取回常规气骰，重掷入气海",
+  permission: "息库有可回收常规气骰", effect: "支付息引，从息库取回常规气骰并保持原点数",
   limit: "只回气骰，不治疗、不清状态、不改势", resourceDestination: "息引入息库；取回气骰入气海",
 };
 const QUICK_ACTIONS = [BX001, BX002, BX004, BX006];
+const CREATOR_RESPONSE_CATALOG: ResponseAttachment[] = [RG001, RG002, RG009];
 
 /* -------------------------------------------------------------------
    Moves available in creator
@@ -159,6 +169,7 @@ interface CreatorInnerArt {
   readRoots: string[];
   passive: string;
   attrPreview: Partial<TableAttrs>;
+  initialDice: StarterQiSource[];
 }
 
 const CREATOR_INNER_ARTS: CreatorInnerArt[] = [
@@ -167,30 +178,57 @@ const CREATOR_INNER_ARTS: CreatorInnerArt[] = [
     occupiedAcupoints: ["丹田"], readRoots: ["顶门", "目窍", "心口", "丹田", "命门", "步根"],
     passive: "读全六根，一重。调息时可多取回1枚气骰。",
     attrPreview: { 气血: 6, 护体: 1, 爆发: 3, 回气: 4, 观照: 9, 身势: 4 },
+    initialDice: [
+      { label: "小周天·顶门", nature: "raw", sides: 6, count: 1 },
+      { label: "小周天·丹田", nature: "raw", sides: 6, count: 1 },
+      { label: "小周天·命门", nature: "yang", sides: 6, count: 1 },
+      { label: "小周天·心口", nature: "yang", sides: 4, count: 1 },
+      { label: "小周天·目窍", nature: "yin", sides: 6, count: 1 },
+      { label: "小周天·步根", nature: "yin", sides: 6, count: 1 },
+    ],
   },
   {
     id: "neigong-yangjin", name: "阳劲入门功", tier: "俗家",
     occupiedAcupoints: ["丹田"], readRoots: ["心口", "丹田"],
     passive: "气海中阳骰点数+1（最高不超过骰阶上限）。",
     attrPreview: { 气血: 6, 护体: 0, 爆发: 7, 回气: 1, 观照: 3, 身势: 3 },
+    initialDice: [
+      { label: "阳劲·心口", nature: "yang", sides: 6, count: 2 },
+      { label: "阳劲·丹田", nature: "raw", sides: 4, count: 2 },
+      { label: "本命气", nature: "raw", sides: 6, count: 1 },
+    ],
   },
   {
     id: "neigong-zhaoying", name: "照影观微诀", tier: "行家",
     occupiedAcupoints: ["目窍"], readRoots: ["顶门", "目窍", "步根"],
     passive: "查探法门投骰时阴值+1；医药法门最低投入-1。",
     attrPreview: { 气血: 3, 护体: 2, 爆发: 2, 回气: 5, 观照: 11, 身势: 5 },
+    initialDice: [
+      { label: "照影·目窍", nature: "yin", sides: 6, count: 2 },
+      { label: "照影·顶门", nature: "raw", sides: 4, count: 2 },
+      { label: "本命气", nature: "raw", sides: 6, count: 1 },
+    ],
   },
   {
     id: "neigong-cold-river", name: "寒江夜行功", tier: "俗家",
     occupiedAcupoints: ["步根"], readRoots: ["目窍", "步根", "丹田"],
     passive: "潜行或夜间行动时身势判定+1；隐匿法门最低投入-1。",
     attrPreview: { 气血: 4, 护体: 1, 爆发: 3, 回气: 4, 观照: 10, 身势: 7 },
+    initialDice: [
+      { label: "寒江·原始", nature: "raw", sides: 4, count: 1 },
+      { label: "寒江·行气", nature: "raw", sides: 6, count: 3 },
+      { label: "寒江·夜行", nature: "raw", sides: 8, count: 1 },
+    ],
   },
   {
     id: "neigong-tieyi", name: "铁衣伏虎劲", tier: "行家",
     occupiedAcupoints: ["命门"], readRoots: ["丹田", "命门", "心口"],
     passive: "护体值+2；被击中时自动消耗1枚息库骰减免1点气血损失。",
     attrPreview: { 气血: 8, 护体: 5, 爆发: 4, 回气: 2, 观照: 3, 身势: 3 },
+    initialDice: [
+      { label: "铁衣·阳劲", nature: "yang", sides: 4, count: 2 },
+      { label: "铁衣·伏虎", nature: "yang", sides: 6, count: 2 },
+    ],
   },
 ];
 
@@ -217,7 +255,7 @@ const IDENTITIES: Identity[] = [
     bonus: "气血↑", tagline: "刀快话不多",
     defaultRoots: { 顶门: 3, 目窍: 3, 心口: 5, 丹田: 5, 命门: 4, 步根: 4 },
     defaultName: "沈青",
-    availableInnerArts: ["neigong-xiao-zhoutian", "neigong-yangjin", "neigong-tieyi"],
+    availableInnerArts: ["neigong-xiao-zhoutian", "neigong-yangjin", "neigong-cold-river"],
     availableMoves: ["WG001", "WG006", "FM001", "WG008"],
   },
   {
@@ -226,7 +264,7 @@ const IDENTITIES: Identity[] = [
     defaultRoots: { 顶门: 5, 目窍: 6, 心口: 3, 丹田: 4, 命门: 3, 步根: 3 },
     defaultName: "云苓",
     availableInnerArts: ["neigong-xiao-zhoutian", "neigong-zhaoying", "neigong-cold-river"],
-    availableMoves: ["FM002", "FM001", "FM003", "WG_QINGLONG"],
+    availableMoves: ["FM002", "FM001", "FM003", "WG_QINGLONG", "WG001"],
   },
   {
     id: "spy", name: "密探线人", subtitle: "暗夜行走", icon: "影",
@@ -280,6 +318,9 @@ function buildActor(
   roots: SixRoots,
   neigong: CreatorInnerArt,
   moves: Move[],
+  background: string,
+  relationship: string,
+  portraitDataUrl?: string,
 ): Actor {
   const innerArt = buildNeigongFromCreator(neigong);
   const id = "pc-custom-" + Date.now().toString(36);
@@ -327,6 +368,9 @@ function buildActor(
 
   const actor: Actor = {
     id, name, side: "player",
+    background: background.trim() || `${identity.name}出身，初次踏入白蘋渡。`,
+    relationshipFacts: relationship.trim() ? [relationship.trim()] : [],
+    portraitDataUrl,
     sixRoots: roots,
     innerArts: [innerArt],
     tableAttrs: {
@@ -341,7 +385,7 @@ function buildActor(
     hp: (neigong.attrPreview.气血 ?? 5) * 3,
     momentum: "合势" as ShiState,
     moves,
-    responses: [],
+    responses: responsesForMoveIds(moves.map((move) => move.id), CREATOR_RESPONSE_CATALOG),
     quickActions: QUICK_ACTIONS,
     inventory,
     equippedWeapon,
@@ -350,7 +394,7 @@ function buildActor(
     maxResponseQuota: 1,
     statuses: [] as StatusEffect[],
     publicWeakness: "初入江湖，尚需历练。",
-    publicNote: "自定义创建的角色。",
+    publicNote: background.trim() || "自定义创建的角色。",
   };
   return actor;
 }
@@ -390,6 +434,9 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
   const [creatorNeigongId, setCreatorNeigongId] = useState<string | null>(null);
   const [creatorSelectedMoves, setCreatorSelectedMoves] = useState<string[]>([]);
   const [creatorName, setCreatorName] = useState("");
+  const [creatorBackground, setCreatorBackground] = useState("");
+  const [creatorRelationship, setCreatorRelationship] = useState("");
+  const [creatorPortrait, setCreatorPortrait] = useState<string | undefined>();
 
   // Total 5 slots: fill first N with existing actors, rest empty
   const filledCount = Math.min(playerActors.length, 5);
@@ -415,15 +462,25 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
     const neigong = CREATOR_INNER_ARTS.find((n) => n.id === creatorNeigongId);
     if (!neigong) return;
     const moves = MOVE_POOL.filter((m) => creatorSelectedMoves.includes(m.id));
+    const responses = responsesForMoveIds(moves.map((move) => move.id), CREATOR_RESPONSE_CATALOG);
+    if (validateCharacterCreation({ roots: creatorRoots, moves, responses, starterQi: neigong.initialDice }).length > 0) return;
     const name = creatorName.trim() || creatorIdentity.defaultName;
-    const actor = buildActor(name, creatorIdentity, creatorRoots, neigong, moves);
+    const actor = buildActor(name, creatorIdentity, creatorRoots, neigong, moves, creatorBackground, creatorRelationship, creatorPortrait);
+    const starterDice = createStarterQiDice(actor.id, actor.name, neigong.initialDice);
 
     patch((c) => {
-      return { ...c, actors: [...c.actors, actor] };
+      const starterDistances = cloneDistanceRelationsForActor(actor.id, "pc-shen-qing", c.distances);
+      return {
+        ...c,
+        actors: [...c.actors, actor],
+        dice: [...c.dice, ...starterDice],
+        distances: [...c.distances, ...starterDistances],
+        activeActorId: actor.id,
+      };
     });
     setSession((c) => ({ ...c, selectedActorId: actor.id, identity: "player", playMode: "solo", autoDmEnabled: true }));
     go("playerScene", { identity: "player", gameMode: "scene", playMode: "solo", autoDmEnabled: true });
-  }, [creatorIdentity, creatorNeigongId, creatorSelectedMoves, creatorRoots, creatorName, patch, setSession, go]);
+  }, [creatorIdentity, creatorNeigongId, creatorSelectedMoves, creatorRoots, creatorName, creatorBackground, creatorRelationship, creatorPortrait, patch, setSession, go]);
 
   // Creator helpers
   const handleOpenCreator = useCallback((slotIndex: number) => {
@@ -434,6 +491,9 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
     setCreatorNeigongId(null);
     setCreatorSelectedMoves([]);
     setCreatorName("");
+    setCreatorBackground("");
+    setCreatorRelationship("");
+    setCreatorPortrait(undefined);
   }, []);
 
   const handleCloseCreator = useCallback(() => {
@@ -465,7 +525,15 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
       case 1: return creatorIdentity !== null;
       case 2: return totalRoots(creatorRoots) === 24;
       case 3: return creatorNeigongId !== null;
-      case 4: return creatorSelectedMoves.length >= 2 && creatorSelectedMoves.length <= 3;
+      case 4: {
+        const moves = MOVE_POOL.filter((move) => creatorSelectedMoves.includes(move.id));
+        const responses = responsesForMoveIds(creatorSelectedMoves, CREATOR_RESPONSE_CATALOG);
+        return moves.length >= CHARACTER_CREATION_LIMITS.minimumMoves
+          && moves.length <= CHARACTER_CREATION_LIMITS.maximumMoves
+          && moves.some((move) => move.category === "外功")
+          && moves.some((move) => move.category === "法门")
+          && responses.length > 0;
+      }
       case 5: return true;
       default: return false;
     }
@@ -482,13 +550,19 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
           neigongId={creatorNeigongId}
           selectedMoves={creatorSelectedMoves}
           name={creatorName}
+          background={creatorBackground}
+          relationship={creatorRelationship}
+          portraitDataUrl={creatorPortrait}
           onSelectIdentity={handleSelectIdentity}
           onRootChange={handleRootChange}
           onSelectNeigong={setCreatorNeigongId}
           onToggleMove={(id) => setCreatorSelectedMoves((prev) =>
-            prev.includes(id) ? prev.filter((m) => m !== id) : prev.length < 3 ? [...prev, id] : prev
+            prev.includes(id) ? prev.filter((m) => m !== id) : prev.length < CHARACTER_CREATION_LIMITS.maximumMoves ? [...prev, id] : prev
           )}
           onNameChange={setCreatorName}
+          onBackgroundChange={setCreatorBackground}
+          onRelationshipChange={setCreatorRelationship}
+          onPortraitChange={setCreatorPortrait}
           onNext={() => canAdvanceStep(creatorStep) && setCreatorStep((s) => Math.min(s + 1, 5))}
           onPrev={() => setCreatorStep((s) => Math.max(s - 1, 1))}
           onConfirm={handleCreateConfirm}
@@ -503,7 +577,7 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
   // Main select screen
   return (
     <section className="cs-root">
-      {/* ART SLOT: home-bg — 1920×1080 白蘋渡晨雾全景，水墨风格，画面下半部留暗 */}
+      {/* ART SLOT: home-bg — 1920×1080 白蘋渡雨后傍晚全景，水墨风格，画面下半部留暗 */}
       <div className="cs-background" />
 
       {/* Ambient overlay */}
@@ -514,8 +588,8 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
 
       {/* Scene title */}
       <div className="cs-scene-title">
-        <h1 className="cs-title-text">白蘋渡 · 晨雾</h1>
-        <p className="cs-subtitle-text">一只失踪的药匣。你为何而来？</p>
+        <h1 className="cs-title-text">白蘋渡 · 雨后</h1>
+        <p className="cs-subtitle-text">夜渡将歇，一只失踪的药匣正等你追查。</p>
       </div>
 
       {/* Character slots row */}
@@ -534,9 +608,9 @@ export function CharacterSelect({ state, session, setSession, go, patch }: Chara
               >
                 {/* ART SLOT: portrait-{name} — 140×200px 角色立绘，半身，面向镜头 */}
                 <div className="cs-portrait">
-                  <span className="cs-portrait-placeholder">
-                    {actor.name.charAt(0)}
-                  </span>
+                  {actor.portraitDataUrl
+                    ? <img src={actor.portraitDataUrl} alt={`${actor.name}头像`} />
+                    : <span className="cs-portrait-placeholder">{actor.name.charAt(0)}</span>}
                 </div>
                 <div className="cs-slot-info">
                   <span className="cs-slot-name">{actor.name}</span>
@@ -649,11 +723,17 @@ interface CreatorWizardProps {
   neigongId: string | null;
   selectedMoves: string[];
   name: string;
+  background: string;
+  relationship: string;
+  portraitDataUrl?: string;
   onSelectIdentity: (id: Identity) => void;
   onRootChange: (root: SixRootName, delta: number) => void;
   onSelectNeigong: (id: string) => void;
   onToggleMove: (id: string) => void;
   onNameChange: (name: string) => void;
+  onBackgroundChange: (value: string) => void;
+  onRelationshipChange: (value: string) => void;
+  onPortraitChange: (value: string | undefined) => void;
   onNext: () => void;
   onPrev: () => void;
   onConfirm: () => void;
@@ -662,14 +742,15 @@ interface CreatorWizardProps {
 }
 
 function CreatorWizard({
-  step, identity, roots, neigongId, selectedMoves, name,
+  step, identity, roots, neigongId, selectedMoves, name, background, relationship, portraitDataUrl,
   onSelectIdentity, onRootChange, onSelectNeigong, onToggleMove,
-  onNameChange, onNext, onPrev, onConfirm, onClose, canAdvance,
+  onNameChange, onBackgroundChange, onRelationshipChange, onPortraitChange,
+  onNext, onPrev, onConfirm, onClose, canAdvance,
 }: CreatorWizardProps) {
   return (
     <div className="cs-creator-overlay">
       <div className="cs-creator-bg" />
-      {/* ART SLOT: creator-bg — 1920×1080 白蘋渡茶棚内景，晨雾，窗外栈桥 */}
+      {/* ART SLOT: creator-bg — 1920×1080 白蘋渡水棚内景，雨后傍晚，窗外栈桥 */}
       <div className="cs-creator-card">
         {/* Header */}
         <div className="cs-creator-header">
@@ -710,7 +791,13 @@ function CreatorWizard({
               neigong={CREATOR_INNER_ARTS.find((n) => n.id === neigongId)!}
               moves={MOVE_POOL.filter((m) => selectedMoves.includes(m.id))}
               name={name}
+              background={background}
+              relationship={relationship}
+              portraitDataUrl={portraitDataUrl}
               onNameChange={onNameChange}
+              onBackgroundChange={onBackgroundChange}
+              onRelationshipChange={onRelationshipChange}
+              onPortraitChange={onPortraitChange}
             />
           )}
         </div>
@@ -967,17 +1054,26 @@ function Step4Moves({ identity, selectedMoves, onToggle }: {
   onToggle: (id: string) => void;
 }) {
   const moves = MOVE_POOL.filter((m) => identity.availableMoves.includes(m.id));
+  const selected = MOVE_POOL.filter((move) => selectedMoves.includes(move.id));
+  const hasExternal = selected.some((move) => move.category === "外功");
+  const hasScene = selected.some((move) => move.category === "法门");
+  const hasResponse = responsesForMoveIds(selectedMoves, CREATOR_RESPONSE_CATALOG).length > 0;
   return (
     <div className="cs-step-content">
       <h3 className="cs-step-heading">选择初始武艺</h3>
       <p className="cs-step-desc">
-        选择 2-3 条武艺。建议至少1条常用外功 + 1条法门。
-        已选：{selectedMoves.length}/3
+        选择 3-5 条武艺，并同时保留外功、情景法门和明确响应入口。
+        已选：{selectedMoves.length}/{CHARACTER_CREATION_LIMITS.maximumMoves}
       </p>
+      <div className="cs-build-checks" aria-label="开卡武艺检查">
+        <span className={hasExternal ? "ok" : "missing"}>外功</span>
+        <span className={hasScene ? "ok" : "missing"}>情景法门</span>
+        <span className={hasResponse ? "ok" : "missing"}>截击／应招</span>
+      </div>
       <div className="cs-moves-grid">
         {moves.map((move) => {
           const isSelected = selectedMoves.includes(move.id);
-          const atLimit = selectedMoves.length >= 3 && !isSelected;
+          const atLimit = selectedMoves.length >= CHARACTER_CREATION_LIMITS.maximumMoves && !isSelected;
           return (
             <button
               key={move.id}
@@ -1007,13 +1103,22 @@ function Step4Moves({ identity, selectedMoves, onToggle }: {
    Step 5: Confirm
    ------------------------------------------------------------------- */
 
-function Step5Confirm({ identity, roots, neigong, moves, name, onNameChange }: {
+function Step5Confirm({
+  identity, roots, neigong, moves, name, background, relationship, portraitDataUrl,
+  onNameChange, onBackgroundChange, onRelationshipChange, onPortraitChange,
+}: {
   identity: Identity;
   roots: SixRoots;
   neigong: CreatorInnerArt;
   moves: Move[];
   name: string;
+  background: string;
+  relationship: string;
+  portraitDataUrl?: string;
   onNameChange: (n: string) => void;
+  onBackgroundChange: (value: string) => void;
+  onRelationshipChange: (value: string) => void;
+  onPortraitChange: (value: string | undefined) => void;
 }) {
   const rootsStr = ROOT_NAMES.map((r) => `${r}${roots[r]}`).join(" · ");
   const movesStr = moves.map((m) => m.name).join(" · ");
@@ -1023,7 +1128,27 @@ function Step5Confirm({ identity, roots, neigong, moves, name, onNameChange }: {
       <div className="cs-confirm-card">
         {/* ART SLOT: portrait-final — 140×200px 角色立绘预览 */}
         <div className="cs-confirm-portrait">
-          <span className="cs-confirm-portrait-icon">{identity.icon}</span>
+          {portraitDataUrl
+            ? <img src={portraitDataUrl} alt={`${name || identity.defaultName}头像`} />
+            : <span className="cs-confirm-portrait-icon">{identity.icon}</span>}
+          <label className="cs-portrait-import">
+            导入头像
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (!file) return;
+                if (file.size > 2 * 1024 * 1024) {
+                  event.currentTarget.value = "";
+                  return;
+                }
+                const reader = new FileReader();
+                reader.addEventListener("load", () => onPortraitChange(typeof reader.result === "string" ? reader.result : undefined), { once: true });
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
         </div>
         <div className="cs-confirm-details">
           <input
@@ -1057,6 +1182,14 @@ function Step5Confirm({ identity, roots, neigong, moves, name, onNameChange }: {
               回{neigong.attrPreview.回气} 观{neigong.attrPreview.观照} 身{neigong.attrPreview.身势}
             </span>
           </div>
+          <label className="cs-confirm-text-field">
+            <span>人物背景（选填）</span>
+            <textarea value={background} onChange={(event) => onBackgroundChange(event.target.value)} maxLength={180} placeholder="从哪里来、靠什么立足、为何与同伴同行" />
+          </label>
+          <label className="cs-confirm-text-field">
+            <span>开局关系（选填）</span>
+            <input value={relationship} onChange={(event) => onRelationshipChange(event.target.value)} maxLength={60} placeholder="例如：欠回春堂一份人情" />
+          </label>
         </div>
       </div>
     </div>
@@ -1358,6 +1491,13 @@ const csStyles = `
   color: #a09488;
   font-weight: 600;
   letter-spacing: 0.03em;
+}
+.cs-portrait > img,
+.cs-confirm-portrait > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 .cs-info-meta {
   display: flex;
@@ -1837,6 +1977,19 @@ const csStyles = `
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
+.cs-build-checks {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cs-build-checks span {
+  padding: 4px 9px;
+  border: 1px solid rgba(107,75,45,0.35);
+  border-radius: 999px;
+  font-size: 11px;
+}
+.cs-build-checks .ok { color: #86b9a5; border-color: rgba(108,168,154,0.55); }
+.cs-build-checks .missing { color: #b87765; border-color: rgba(168,74,67,0.55); }
 .cs-move-card {
   display: flex;
   flex-direction: column;
@@ -1906,9 +2059,21 @@ const csStyles = `
     linear-gradient(180deg, #2a2218, #1a1410);
   border: 1px solid rgba(107,75,45,0.2);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+.cs-confirm-portrait > img { min-height: 0; flex: 1; }
+.cs-portrait-import {
+  width: 100%;
+  padding: 6px 0;
+  text-align: center;
+  font-size: 10px;
+  color: #c5ad8a;
+  cursor: pointer;
+  background: rgba(20,15,11,0.85);
+}
+.cs-portrait-import input { display: none; }
 .cs-confirm-portrait-icon {
   font-size: 40px;
   font-weight: 700;
@@ -1955,6 +2120,28 @@ const csStyles = `
   font-weight: 700;
   min-width: 45px;
 }
+.cs-confirm-text-field {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: start;
+  gap: 8px;
+  color: #5a5044;
+  font-size: 12px;
+  font-weight: 700;
+}
+.cs-confirm-text-field input,
+.cs-confirm-text-field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(107,75,45,0.35);
+  border-radius: 6px;
+  background: rgba(20,15,11,0.65);
+  color: #d4c8b8;
+  font: inherit;
+  font-weight: 400;
+  resize: vertical;
+}
+.cs-confirm-text-field textarea { min-height: 56px; max-height: 96px; }
 
 /* ---- Responsive ---- */
 @media (max-width: 860px) {

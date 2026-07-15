@@ -2056,9 +2056,13 @@ export function endRound(state: CombatState): CombatState {
   next.turnPaused = false;
   const livingOrder = next.initiativeOrder.filter((actorId) =>
     next.actors.some((actor) => actor.id === actorId && actor.hp > 0));
-  const missingLiving = next.actors
-    .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
-    .map((actor) => actor.id);
+  // A structured scene owns an authored participant list. Appending every
+  // living combat actor here leaks future enemies into pursuits and talks.
+  const missingLiving = next.encounterMode === "scene" && next.runtime.mode === "SCENE_STRUCTURED"
+    ? []
+    : next.actors
+      .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
+      .map((actor) => actor.id);
   next.initiativeOrder = [...livingOrder, ...missingLiving];
   next.activeActorId = next.initiativeOrder[0] ?? next.activeActorId;
 
@@ -2089,9 +2093,11 @@ export function advanceTurn(state: CombatState): CombatState {
   let next = cloneState(state);
   const livingOrder = next.initiativeOrder.filter((actorId) =>
     next.actors.some((actor) => actor.id === actorId && actor.hp > 0));
-  const missingLiving = next.actors
-    .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
-    .map((actor) => actor.id);
+  const missingLiving = next.encounterMode === "scene" && next.runtime.mode === "SCENE_STRUCTURED"
+    ? []
+    : next.actors
+      .filter((actor) => actor.hp > 0 && !livingOrder.includes(actor.id))
+      .map((actor) => actor.id);
   next.initiativeOrder = [...livingOrder, ...missingLiving];
 
   const acted = new Set(next.actedActorIds);
@@ -2226,14 +2232,34 @@ export function equipItem(
   const actor = requireActor(next, actorId);
   const item = requireItem(actor, itemId);
 
+  if (!(["weapon", "armor", "accessory"] as InventoryItem["category"][]).includes(item.category)) {
+    throw new Error("该物品不是可装备类别。");
+  }
+  const currentSlotId = item.category === "weapon"
+    ? actor.equippedWeapon
+    : item.category === "armor"
+      ? actor.equippedArmorUpper
+      : actor.equippedAccessory;
+  if (currentSlotId === itemId && item.equipped) return state;
+  const previousItem = currentSlotId
+    ? actor.inventory.find((stored) => stored.id === currentSlotId)
+    : undefined;
+
+  if (previousItem?.qiDice) {
+    const previousSourceId = previousItem.sourceId ?? previousItem.id;
+    next.dice = next.dice.filter((die) => !(die.sourceId === previousSourceId && die.zone === "QI_POOL"));
+  }
+
   next.actors = next.actors.map((entry) => {
     if (entry.id !== actorId) return entry;
 
     let updatedEntry = {
       ...entry,
-      inventory: entry.inventory.map((stored) =>
-        stored.id === itemId ? { ...stored, equipped: true } : stored,
-      ),
+      inventory: entry.inventory.map((stored) => stored.id === itemId
+        ? { ...stored, equipped: true }
+        : stored.category === item.category
+          ? { ...stored, equipped: false }
+          : stored),
       inventoryEvents: [
         { itemId, actorId, eventType: "equip" as const, createdAt: Date.now() },
         ...(entry.inventoryEvents ?? []),
@@ -2244,24 +2270,30 @@ export function equipItem(
     if (item.category === "weapon") {
       updatedEntry = { ...updatedEntry, equippedWeapon: itemId };
     }
+    if (item.category === "armor") {
+      updatedEntry = { ...updatedEntry, equippedArmorUpper: itemId };
+    }
+    if (item.category === "accessory") {
+      updatedEntry = { ...updatedEntry, equippedAccessory: itemId };
+    }
 
     // Apply attr bonuses
-    if (item.attrBonus) {
+    if (item.attrBonus || previousItem?.attrBonus) {
       updatedEntry = {
         ...updatedEntry,
         tableAttrs: {
-          气血: updatedEntry.tableAttrs.气血 + (item.attrBonus.气血 ?? 0),
-          护体: updatedEntry.tableAttrs.护体 + (item.attrBonus.护体 ?? 0),
-          爆发: updatedEntry.tableAttrs.爆发 + (item.attrBonus.爆发 ?? 0),
-          回气: updatedEntry.tableAttrs.回气 + (item.attrBonus.回气 ?? 0),
-          观照: updatedEntry.tableAttrs.观照 + (item.attrBonus.观照 ?? 0),
-          身势: updatedEntry.tableAttrs.身势 + (item.attrBonus.身势 ?? 0),
+          气血: Math.max(0, updatedEntry.tableAttrs.气血 - (previousItem?.attrBonus?.气血 ?? 0) + (item.attrBonus?.气血 ?? 0)),
+          护体: Math.max(0, updatedEntry.tableAttrs.护体 - (previousItem?.attrBonus?.护体 ?? 0) + (item.attrBonus?.护体 ?? 0)),
+          爆发: Math.max(0, updatedEntry.tableAttrs.爆发 - (previousItem?.attrBonus?.爆发 ?? 0) + (item.attrBonus?.爆发 ?? 0)),
+          回气: Math.max(0, updatedEntry.tableAttrs.回气 - (previousItem?.attrBonus?.回气 ?? 0) + (item.attrBonus?.回气 ?? 0)),
+          观照: Math.max(0, updatedEntry.tableAttrs.观照 - (previousItem?.attrBonus?.观照 ?? 0) + (item.attrBonus?.观照 ?? 0)),
+          身势: Math.max(0, updatedEntry.tableAttrs.身势 - (previousItem?.attrBonus?.身势 ?? 0) + (item.attrBonus?.身势 ?? 0)),
         },
       };
     }
 
     // Add qi dice from equipment to QI_POOL
-    if (item.qiDice && item.qiDice.zone === "QI_POOL") {
+    if (item.qiDice && item.qiDice.zone === "QI_POOL" && !next.dice.some((die) => die.sourceId === (item.sourceId ?? itemId) && die.zone === "QI_POOL")) {
       const newDice: QiDie[] = Array.from(
         { length: item.qiDice.count },
         (_, index) => ({
@@ -2298,6 +2330,7 @@ export function unequipItem(
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
   const item = requireItem(actor, itemId);
+  if (!item.equipped) return state;
 
   next.actors = next.actors.map((entry) => {
     if (entry.id !== actorId) return entry;
@@ -2316,6 +2349,15 @@ export function unequipItem(
     // Clear equipped weapon if this was it
     if (entry.equippedWeapon === itemId) {
       updatedEntry = { ...updatedEntry, equippedWeapon: undefined };
+    }
+    if (entry.equippedArmorUpper === itemId) {
+      updatedEntry = { ...updatedEntry, equippedArmorUpper: undefined };
+    }
+    if (entry.equippedArmorLower === itemId) {
+      updatedEntry = { ...updatedEntry, equippedArmorLower: undefined };
+    }
+    if (entry.equippedAccessory === itemId) {
+      updatedEntry = { ...updatedEntry, equippedAccessory: undefined };
     }
 
     // Remove attr bonuses

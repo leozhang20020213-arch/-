@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { isEntrySafeForCampaign, validateRuleTextCatalog, type RuleTextCatalog } from "./ruleTextCatalog";
+import { tutorialCampaignPack } from "../campaign/tutorialPack";
 
 const catalogUrl = new URL("../../../public/data/rules/rule-text-catalog-v2026-07-16.json", import.meta.url);
 
@@ -40,4 +41,22 @@ test("玩家显示文本已经去除原始开发令牌与对象占位", async ()
   assert.equal(visibleText.includes("[object Object]"), false);
   assert.equal(visibleText.includes("TURN_READY"), false);
   assert.equal(visibleText.includes("regular_qi"), false);
+});
+
+test("教学团包只引用7月16日文字库中已通过审校的条目", async () => {
+  const catalog = JSON.parse(await readFile(catalogUrl, "utf8")) as RuleTextCatalog;
+  const byId = new Map(catalog.entries.map((entry) => [entry.id, entry]));
+  const references = new Set<string>([
+    ...tutorialCampaignPack.referencedMoveIds,
+    ...(tutorialCampaignPack.quickStartCharacters ?? []).flatMap((character) => character.catalogReferenceIds),
+    ...tutorialCampaignPack.scenes.flatMap((scene) => scene.elements.flatMap((element) => element.ruleReferenceIds ?? [])),
+    ...(tutorialCampaignPack.tutorial?.steps.flatMap((step) => step.ruleReferenceIds ?? []) ?? []),
+  ]);
+  assert.ok(references.size > 0);
+  for (const id of references) {
+    const entry = byId.get(id);
+    assert.ok(entry, `missing catalog entry ${id}`);
+    assert.equal(entry.review.status, "REFERENCE", `${id} must not bypass review isolation`);
+    assert.equal(isEntrySafeForCampaign(entry), true);
+  }
 });

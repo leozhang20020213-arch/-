@@ -17,6 +17,8 @@ import type {
   FormPosition,
   MoveTiming,
 } from "../combat/types";
+import { projectCampaignScene } from "./campaign/campaignRuntime";
+import { tutorialCampaignPack } from "./campaign/tutorialPack";
 import { createResponseBudget, createRuntimeSession } from "../domain/session/runtime";
 
 // ============================================================
@@ -320,7 +322,7 @@ const SCN_ARROW: SeedMove = {
 // RESPONSE ATTACHMENTS (from rulebook, mounted on moves)
 // ============================================================
 
-const RG001: ResponseAttachment = {
+export const RG001: ResponseAttachment = {
   id: "RG001",
   moveId: "WG001",
   moveName: "破浪横刀",
@@ -342,7 +344,7 @@ const RG001: ResponseAttachment = {
   constraints: "只处理锁气与基础效果，不自动造成主用法伤害",
 };
 
-const RG002: ResponseAttachment = {
+export const RG002: ResponseAttachment = {
   id: "RG002",
   moveId: "WG001",
   moveName: "破浪横刀",
@@ -386,7 +388,7 @@ const RG003: ResponseAttachment = {
   constraints: "中级截击要求较窄势范围",
 };
 
-const RG009: ResponseAttachment = {
+export const RG009: ResponseAttachment = {
   id: "RG009",
   moveId: "WG008",
   moveName: "截腕挑锋",
@@ -625,17 +627,13 @@ const actorShenQing: Actor = {
     { id: "item-golden-ointment", name: "金疮药", category: "medicine", quantity: 2, sourceId: "金疮药", catalogId: "MED-001", healHp: 4, repeatUseStatus: "药性冲突", publicNote: "自己或接触同伴使用，消耗1份并恢复4点气血；同场景再次使用会产生药性冲突。" },
     { id: "item-fire-starter", name: "火折", category: "tool", quantity: 1, sourceId: "火折", catalogId: "EQ-T-001", publicNote: "提供点火与照明许可；本身不直接产生伤害落果。" },
     { id: "item-bureau-token", name: "镖局信物", category: "tool", quantity: 1, sourceId: "镖局信物", publicNote: "可用于情景交涉，向镖局或水会证明身份。" },
-    // Legacy items for backward test compatibility
-    { id: "item-bamboo-sword", name: "青竹短剑", category: "weapon", quantity: 1, equipped: true, sourceId: "沈青·青竹短剑", publicNote: "轻便短剑。" },
-    { id: "item-breath-pill", name: "行气丸", category: "medicine", quantity: 2, sourceId: "行气丸临气", grantsTempQi: { nature: "raw", sides: 6, count: 1 }, publicNote: "使用后生成1枚原始临时气骰。" },
-    { id: "item-expire-demo", name: "打落短兵", category: "tool", quantity: 1, expiresSourceId: "短兵客·雨步", publicNote: "触发短兵客·雨步来源失效。" },
   ] as InventoryItem[],
   equippedWeapon: "item-ring-saber",
   equippedArmorUpper: "item-thick-shirt",
   responseQuotaUsed: 0,
   maxResponseQuota: 1,
   statuses: [] as StatusEffect[],
-  aiProfile: { role: "assault", preferredRange: "近身", retreatHpRatio: 0.2, objective: "夺回镖箱并查清内应" },
+  aiProfile: { role: "assault", preferredRange: "近身", retreatHpRatio: 0.2, objective: "保住失匣并查明偷匣缘由" },
   publicWeakness: "擅长刀法，但在拥挤场地需要明确目标线。",
   publicNote: "玩家预设角色。镖局刀客，适合测试气骰、宣言和应招。",
 };
@@ -665,10 +663,10 @@ const actorShortBlade: Actor = {
   statuses: [] as StatusEffect[],
   hiddenStatuses: [] as StatusEffect[],
   publicWeakness: "怕被长兵封距；失去短刀后威胁下降。",
-  hiddenGoal: "拖延时间，让同伙转移木箱",
+  hiddenGoal: "拖延时间，让同伙把药匣送上接应船",
   behaviorHint: "优先截击持刀者；气血低于5时尝试逃跑",
-  aiProfile: { role: "skirmish", preferredRange: "近身", retreatHpRatio: 0.25, conserveResponsesBelowDice: 2, objective: "拖住追兵并保护撤箱路线" },
-  entryCondition: "玩家接近旧堤仓时从暗处现身",
+  aiProfile: { role: "skirmish", preferredRange: "近身", retreatHpRatio: 0.25, conserveResponsesBelowDice: 2, objective: "拖住追兵并保护药匣撤离路线" },
+  entryCondition: "玩家接近旧船棚时从暗处现身",
   lootOrClue: "可掉落买主线索、短刀、带泥的布条。",
   publicNote: "样例敌人。怕长兵封距，若失去短刀主动作关闭。",
   dmNote: "隐藏弱点：被缴械后不再能使用短刀近身；优先拖到巡检注意升高。",
@@ -688,7 +686,7 @@ const actorPorter: Actor = {
   responses: [RG010],
   quickActions: [BX001, BX004],
   inventory: [
-    { id: "enemy-rope", name: "绳索", category: "tool", quantity: 1, sourceId: "脚夫·绳索", publicNote: "腰间有粗麻绳。", dmNote: "用于捆绑木箱或绊索截击。" },
+    { id: "enemy-rope", name: "绳索", category: "tool", quantity: 1, sourceId: "脚夫·绳索", publicNote: "腰间有粗麻绳。", dmNote: "用于捆绑药匣或绊索截击。" },
     { id: "enemy-sack", name: "麻袋", category: "tool", quantity: 1, sourceId: "脚夫·麻袋", publicNote: "可装运散落物品。", dmNote: "用于快速打包转移。" },
   ] as InventoryItem[],
   responseQuotaUsed: 0,
@@ -696,13 +694,13 @@ const actorPorter: Actor = {
   statuses: [] as StatusEffect[],
   hiddenStatuses: [] as StatusEffect[],
   publicWeakness: "气血低，受伤后优先逃跑。",
-  hiddenGoal: "趁乱将木箱搬上船",
-  behaviorHint: "不主动攻击；有人接近木箱时才出手；木箱上船后立即撤退",
-  aiProfile: { role: "objective", preferredRange: "中距", retreatHpRatio: 0.45, objective: "把镖箱送往后门" },
-  entryCondition: "玩家进入旧堤仓时已在场",
+  hiddenGoal: "趁乱将药匣搬上船",
+  behaviorHint: "不主动攻击；有人接近药匣时才出手；药匣上船后立即撤退",
+  aiProfile: { role: "objective", preferredRange: "中距", retreatHpRatio: 0.45, objective: "把药匣送往水门接应船" },
+  entryCondition: "玩家进入旧船棚时已在场",
   lootOrClue: "水会香口记号、湿脚印方向。",
   publicNote: "低气血集群敌人。不主动攻击，优先完成搬运目标。",
-  dmNote: "隐藏目标：趁乱将木箱搬上船；木箱上船后立即撤退。3人集群共享气血。",
+  dmNote: "隐藏目标：趁乱将药匣搬上船；药匣上船后立即撤退。3人集群共享气血。",
 };
 
 const actorWei: Actor = {
@@ -722,7 +720,7 @@ const actorWei: Actor = {
   responseQuotaUsed: 0,
   maxResponseQuota: 1,
   statuses: [] as StatusEffect[],
-  aiProfile: { role: "guard", preferredRange: "近身", protectActorIds: ["pc-shen-qing"], retreatHpRatio: 0.15, objective: "护住沈青并夺回镖箱" },
+  aiProfile: { role: "guard", preferredRange: "近身", protectActorIds: ["pc-shen-qing"], retreatHpRatio: 0.15, objective: "护住沈青并保住失匣" },
   publicNote: "预设队友。",
 };
 
@@ -748,7 +746,7 @@ const actorLookout: Actor = {
   hiddenGoal: "发现异常时吹哨报信",
   behaviorHint: "优先维持距离，被发现后尝试逃跑报信",
   aiProfile: { role: "support", preferredRange: "中距", retreatHpRatio: 0.5, objective: "提高危机并为同伴示警" },
-  entryCondition: "旧堤仓屋顶或高处",
+  entryCondition: "旧船棚屋顶或高处",
   publicNote: "集群敌人。单独放哨，被近身后慌乱。",
   dmNote: "吹哨会触发巡检注意+3。",
 };
@@ -773,67 +771,20 @@ const actorArcher: Actor = {
   hiddenStatuses: [] as StatusEffect[],
   publicWeakness: "近战极弱，被近身即失去威胁。",
   hiddenGoal: "掩护同伙撤离时放冷箭",
-  behaviorHint: "始终保持中远距，优先射击接近木箱者",
-  aiProfile: { role: "skirmish", preferredRange: "远距", retreatHpRatio: 0.3, objective: "从高处掩护撤箱" },
-  entryCondition: "玩家进入旧堤仓后2轮登场",
+  behaviorHint: "始终保持中远距，优先射击接近药匣者",
+  aiProfile: { role: "skirmish", preferredRange: "远距", retreatHpRatio: 0.3, objective: "从高处掩护药匣撤离" },
+  entryCondition: "玩家进入旧船棚后2轮登场",
   lootOrClue: "箭筒上有水会标记",
   publicNote: "远程敌人。近战极弱，被近身即失去威胁。",
-  dmNote: "2轮后从暗处出现，优先射击接近木箱的玩家。",
+  dmNote: "2轮后从暗处出现，优先射击接近药匣的玩家。",
 };
 
-// ============================================================
-// SCENE TRACKS
-// ============================================================
-
-const trackClue: SceneTrack = {
-  id: "track-clue", name: "解密值", value: 0, max: 8,
-  kind: "insight",
-  description: "调查白蘋渡药匣去向。达到8时查明全部线索。",
-  insightLayers: [
-    { level: 1, summary: "系舟石旁的封签被利器整齐挑开。", dmContent: "封签来自被调换的药匣。" },
-    { level: 2, summary: "替换药匣的重量与船账不符。", dmContent: "真匣已由搬匣人带往苇岸。" },
-    { level: 3, summary: "有人熟悉渡口药材交接规矩。", dmContent: "内应提前改写了当日船账。" },
-    { level: 4, summary: "苇岸的小舟是接应路线，也是非战斗谈判的筹码。" },
-  ],
-};
-
-const trackPatrol: SceneTrack = {
-  id: "track-patrol", name: "巡检注意", value: 2, max: 10, hidden: true,
-  kind: "crisis",
-  description: "渡口众人受到惊扰会封锁去路。达到10时官差介入。",
-  growthConditions: ["发出明显响动", "亮出兵刃", "在仓外留下目击者"],
-  triggerOutcome: "达到10时官差封锁白蘋渡，追查转入公开盘问。",
-  reductionConditions: ["转移注意", "取得巡检通行许可", "及时收束场景"],
-};
-
-const trackEscape: SceneTrack = {
-  id: "track-escape", name: "危机值", value: 0, max: 8,
-  kind: "crisis",
-  description: "雾散与开船时机。达到8时搬匣人抵达苇岸接应点。",
-  growthConditions: ["拖延行动", "搜查失败", "敌人完成搬箱"],
-  triggerOutcome: "达到8时搬匣人带药匣转入苇岸追逐。",
-  reductionConditions: ["控制仓门", "夺回镖箱", "压制望风探子"],
-};
-
-const initialScene: SceneRuntimeState = {
-  id: "white-duckweed-ferry",
-  act: 1,
-  location: "白蘋渡·晨雾",
-  timeWindow: "晨雾散尽至渡船开行",
-  boundary: "茶棚、栈桥、系舟石与渡船候客处；进入窄巷将切换场景。",
-  narration: "雨刚停，白蘋浮在渡口缓流间。栈桥木板残留着被刻意清理过的水痕，系舟石旁压着一角带血封签。",
-  turn: 1,
-  permissions: [],
-  resources: [],
-  elements: [
-    { id: "warehouse-door", name: "雾中栈桥", kind: "environment", description: "湿滑木板上残留着被刻意清理过的水痕。", public: true, interactionIds: ["observe", "investigate", "move"] },
-    { id: "blood-seal", name: "带血封签", kind: "object", description: "药匣封签的一角压在系舟石旁。", public: true, interactionIds: ["observe", "investigate", "take"] },
-    { id: "porter-shadow", name: "雾中人影", kind: "person", description: "有人攥着相同封签向渡口窄巷退去。", public: true, interactionIds: ["observe", "negotiate", "move"] },
-    { id: "hidden-archer", name: "苇岸接应者", kind: "person", description: "尚未公开的接应者，守着离岸小舟。", public: false, interactionIds: ["observe"] },
-  ],
-  combatUnlocked: false,
-  completed: false,
-};
+// The default runtime opening is projected from the authored campaign pack.
+// This prevents the tutorial editor and actual player scene from drifting into
+// two different versions of 白蘋渡.
+const authoredOpening = projectCampaignScene(tutorialCampaignPack, tutorialCampaignPack.startSceneId);
+const initialScene: SceneRuntimeState = authoredOpening.scene;
+const tutorialTracks: SceneTrack[] = authoredOpening.tracks;
 
 // ============================================================
 // QI DICE (12 total)
@@ -903,9 +854,9 @@ export function createSeedState(): CombatState {
     }));
   return {
     runtime: createRuntimeSession(initialScene.id, "SCENE_FREE"),
-    campaignName: "白蘋渡失匣",
-    sceneName: "白蘋渡",
-    sceneGoal: "查明药匣去向，在开船前取得追查许可",
+    campaignName: tutorialCampaignPack.name,
+    sceneName: authoredOpening.campaignScene.name,
+    sceneGoal: authoredOpening.campaignScene.objective,
     round: 1,
     phase: "setup",
     activeActorId: "pc-shen-qing",
@@ -915,7 +866,7 @@ export function createSeedState(): CombatState {
     turnPaused: false,
     actors,
     dice: structuredClone([...shenQingDice, ...shortBladeDice, ...porterDice, ...weiDice, ...lookoutDice, ...archerDice]),
-    tracks: structuredClone([trackClue, trackPatrol, trackEscape]),
+    tracks: structuredClone(tutorialTracks),
     scene: structuredClone(initialScene),
     distances: structuredClone(distances),
     pendingAction: undefined,

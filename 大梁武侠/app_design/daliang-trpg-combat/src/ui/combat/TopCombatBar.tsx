@@ -108,8 +108,37 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
     [state, actedActorIds],
   );
 
-  // Separator dots between turn chips (not after the last one)
-  const turnEntries = turnState.order;
+  // Scene desks must use the authored scene sequence, not the combat roster.
+  // Free scenes intentionally have no queue. This prevents unrevealed enemies
+  // from leaking into the top bar before the encounter begins.
+  const sceneSequence = state.runtime.mode === "SCENE_STRUCTURED"
+    ? state.runtime.scene.sequence
+    : undefined;
+  const isFreeScene = state.runtime.mode === "SCENE_FREE";
+  const turnEntries = useMemo(() => {
+    if (isFreeScene) return [];
+    if (!sceneSequence) return turnState.order;
+    const byId = new Map(turnState.order.map((entry) => [entry.actorId, entry]));
+    return sceneSequence.initiativeOrder.flatMap((actorId) => {
+      const entry = byId.get(actorId);
+      if (!entry) return [];
+      return [{
+        ...entry,
+        isCurrent: actorId === sceneSequence.activeActorId,
+        hasActed: sceneSequence.actedActorIds.includes(actorId),
+      }];
+    });
+  }, [isFreeScene, sceneSequence, turnState.order]);
+  const roundLabel = isFreeScene
+    ? "自由情景"
+    : `第${sceneSequence?.round ?? turnState.round}轮`;
+  const phaseLabel = isFreeScene
+    ? "无固定轮次"
+    : sceneSequence
+      ? (sceneSequence.activeActorId
+        ? `${state.actors.find((actor) => actor.id === sceneSequence.activeActorId)?.name ?? "当前人物"}行动`
+        : "轮次结束")
+      : turnState.shortPhase;
   const budgetActor = state.actors.find((actor) => actor.id === (session.selectedActorId ?? state.activeActorId));
   const responseBudget = budgetActor
     ? normalizeResponseBudget(budgetActor.responseBudget, budgetActor.responseQuotaUsed, budgetActor.maxResponseQuota)
@@ -125,15 +154,15 @@ export const TopCombatBar: FC<TopCombatBarProps> = ({
       {/* Center-left: Round + phase. Current actor is the highlighted queue chip. */}
       <div className="combat-topbar__round-phase">
         <span className="scene-badge" title={state.sceneName}>{state.sceneName}</span>
-        <span className="round-badge">第{turnState.round}轮</span>
-        <span className="phase-badge">{turnState.shortPhase}</span>
+        <span className="round-badge">{roundLabel}</span>
+        <span className="phase-badge">{phaseLabel}</span>
       </div>
 
       {/* Center: Turn order queue */}
       <div
         className="combat-topbar__queue"
         role="list"
-        aria-label={`行动顺序：${turnEntries.map((e) => e.name).join(" → ")}`}
+        aria-label={turnEntries.length > 0 ? `行动顺序：${turnEntries.map((e) => e.name).join(" → ")}` : "自由情景：无固定行动顺序"}
       >
         {turnEntries.map((entry, i) => (
           <span key={entry.actorId} className="turn-chip-wrapper" role="listitem">

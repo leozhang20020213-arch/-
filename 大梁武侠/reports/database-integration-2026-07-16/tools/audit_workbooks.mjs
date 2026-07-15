@@ -27,19 +27,27 @@ function summarizeSheet(sheet) {
   const rows = values.length;
   const columns = Math.max(0, ...values.map((row) => row.length));
   const headers = (values[0] ?? []).map(cellText);
-  const ids = values.slice(1).map((row) => cellText(row[0])).filter(Boolean);
+  // Spreadsheet formatting often extends to row 200. Only rows containing a
+  // real value belong to the data grain; styled blank rows must not inflate
+  // counts or be reported as missing identifiers.
+  const meaningfulRows = values.slice(1)
+    .map((row, index) => ({ row, rowNumber: index + 2 }))
+    .filter(({ row }) => row.some((value) => cellText(value)));
+  const ids = meaningfulRows.map(({ row }) => cellText(row[0])).filter(Boolean);
   const idCounts = new Map();
   for (const id of ids) idCounts.set(id, (idCounts.get(id) ?? 0) + 1);
   const duplicateIds = [...idCounts.entries()].filter(([, count]) => count > 1);
-  const blankIdRows = values.slice(1).filter((row) => row.some((v) => cellText(v)) && !cellText(row[0])).length;
+  const blankIdRows = meaningfulRows.filter(({ row }) => !cellText(row[0])).map(({ rowNumber }) => rowNumber);
   const formulaCount = formulas.flat().filter((formula) => cellText(formula)).length;
   const errorCells = [];
   const rawTokenCells = [];
+  const objectObjectCells = [];
   const tokenPattern = /\b(?:[A-Z][A-Z0-9_]{2,}|[a-z]+_[a-z_]+)\b/g;
   const errorPattern = /#(?:REF!|DIV\/0!|VALUE!|NAME\?|N\/A)/;
   values.forEach((row, r) => row.forEach((value, c) => {
     const text = cellText(value);
     if (errorPattern.test(text)) errorCells.push({ row: r + 1, column: c + 1, value: text });
+    if (/\[object Object\]/i.test(text)) objectObjectCells.push({ row: r + 1, column: c + 1, value: text });
     const matches = text.match(tokenPattern) ?? [];
     const suspicious = [...new Set(matches)].filter((token) =>
       token.includes("_") || ["TURN_READY", "SCENE_ACTION", "FORM_CHECK", "ROUND_END", "SCENE_EXIT", "PENDING_OUTCOME"].includes(token),
@@ -50,12 +58,14 @@ function summarizeSheet(sheet) {
     name: sheet.name,
     rows,
     columns,
-    dataRows: Math.max(0, rows - 1),
+    dataRows: meaningfulRows.length,
+    formattedBlankRows: Math.max(0, rows - 1 - meaningfulRows.length),
     headers,
     duplicateIds,
     blankIdRows,
     formulaCount,
     errorCells,
+    objectObjectCells,
     rawTokenCellCount: rawTokenCells.length,
     rawTokenSamples: rawTokenCells.slice(0, 20),
   };

@@ -4,6 +4,16 @@ import { normalizeResponseBudget, normalizeRuntimeSession } from "../domain/sess
 
 const STORAGE_KEY = "daliang-trpg-combat:v1";
 const SESSION_KEY = "daliang-trpg-session:v1";
+export type CombatStorageScope = "solo" | "room";
+type DesktopCombatStorageKey = "combat-solo" | "combat-room";
+
+export function combatStorageKey(scope: CombatStorageScope): string {
+  return `${STORAGE_KEY}:${scope}`;
+}
+
+function desktopCombatStorageKey(scope: CombatStorageScope): DesktopCombatStorageKey {
+  return `combat-${scope}`;
+}
 const INVALID_PLACEHOLDER_STATUSES = new Set(["雨夜视线受限", "阴偏", "雨幕遮身", "搬箱奔逃", "等待撤离", "买主接应"]);
 const VALID_MOVE_TIMINGS = new Set<MoveTiming>([
   "正式出手",
@@ -50,45 +60,56 @@ export function createDefaultSession(): AppSession {
   };
 }
 
-export function loadCombatState(): CombatState {
+export function loadCombatState(scope: CombatStorageScope = "solo"): CombatState {
   if (typeof window === "undefined") {
     return createSeedState(); // SSR/test: return raw seed (no auto-enter)
   }
 
   try {
-    const desktopValue = window.daliangDesktop?.storage.read("combat") as Partial<CombatState> | undefined;
+    const desktopKey = desktopCombatStorageKey(scope);
+    const desktopValue = window.daliangDesktop?.storage.read(desktopKey) as Partial<CombatState> | undefined;
     if (desktopValue) return normalizeCombatState(desktopValue);
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(combatStorageKey(scope));
     // If saved state exists, normalize it. Otherwise use initial state with pre-rolled dice.
-    if (!raw) return createInitialCombatState();
-    const migrated = normalizeCombatState(JSON.parse(raw) as Partial<CombatState>);
-    void window.daliangDesktop?.storage.write("combat", migrated);
+    if (raw) return normalizeCombatState(JSON.parse(raw) as Partial<CombatState>);
+
+    // One-time migration: the legacy build had a single shared slot. Move it
+    // into the currently active play mode, then remove the ambiguous source so
+    // it cannot be imported into both solo play and a hosted room.
+    const legacyDesktop = window.daliangDesktop?.storage.read("combat") as Partial<CombatState> | undefined;
+    const legacyRaw = window.localStorage.getItem(STORAGE_KEY);
+    if (!legacyDesktop && !legacyRaw) return createInitialCombatState();
+    const migrated = normalizeCombatState(legacyDesktop ?? JSON.parse(legacyRaw!) as Partial<CombatState>);
+    void window.daliangDesktop?.storage.write(desktopKey, migrated);
+    void window.daliangDesktop?.storage.clear("combat");
+    window.localStorage.setItem(combatStorageKey(scope), JSON.stringify(migrated));
+    window.localStorage.removeItem(STORAGE_KEY);
     return migrated;
   } catch {
     return createInitialCombatState();
   }
 }
 
-export function saveCombatState(state: CombatState): void {
+export function saveCombatState(state: CombatState, scope: CombatStorageScope = "solo"): void {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
     if (window.daliangDesktop) {
-      void window.daliangDesktop.storage.write("combat", { ...state, lastSavedAt: Date.now() });
+      void window.daliangDesktop.storage.write(desktopCombatStorageKey(scope), { ...state, lastSavedAt: Date.now() });
       return;
     }
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, lastSavedAt: Date.now() }));
+    window.localStorage.setItem(combatStorageKey(scope), JSON.stringify({ ...state, lastSavedAt: Date.now() }));
   } catch {
     // Local storage can be unavailable in restricted browser contexts.
   }
 }
 
-export function clearCombatState(): CombatState {
+export function clearCombatState(scope: CombatStorageScope = "solo"): CombatState {
   if (typeof window !== "undefined") {
-    window.localStorage.removeItem(STORAGE_KEY);
-    void window.daliangDesktop?.storage.clear("combat");
+    window.localStorage.removeItem(combatStorageKey(scope));
+    void window.daliangDesktop?.storage.clear(desktopCombatStorageKey(scope));
   }
   return createInitialCombatState();
 }
@@ -191,13 +212,37 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
     // Merge all statuses: normalized from new format, plus converted from old public/hidden
     const allStatuses = mergeStatusEffects([...normalizedStatuses, ...publicStatEffs, ...hiddenStatEffs]);
 
+    const inventory = (rawActor.inventory as InventoryItem[]) ?? seedActor?.inventory ?? [];
+    const equippedWeapon = typeof rawActor.equippedWeapon === "string"
+      ? rawActor.equippedWeapon
+      : seedActor?.equippedWeapon;
+    const equippedArmorUpper = typeof rawActor.equippedArmorUpper === "string"
+      ? rawActor.equippedArmorUpper
+      : seedActor?.equippedArmorUpper;
+    const equippedArmorLower = typeof rawActor.equippedArmorLower === "string"
+      ? rawActor.equippedArmorLower
+      : seedActor?.equippedArmorLower;
+    const equippedAccessory = typeof rawActor.equippedAccessory === "string"
+      ? rawActor.equippedAccessory
+      : seedActor?.equippedAccessory;
+    const normalizedInventory = inventory.map((item) => {
+      if (item.category === "weapon") return { ...item, equipped: item.id === equippedWeapon };
+      if (item.category === "armor") return { ...item, equipped: item.id === equippedArmorUpper || item.id === equippedArmorLower };
+      if (item.category === "accessory") return { ...item, equipped: item.id === equippedAccessory };
+      return item.equipped ? { ...item, equipped: false } : item;
+    });
+
     return {
       ...seedActor,
       ...actor,
       sixRoots: normalizedSixRoots,
       innerArts: normalizedInnerArts,
       statuses: allStatuses,
-      inventory: (rawActor.inventory as InventoryItem[]) ?? seedActor?.inventory ?? [],
+      inventory: normalizedInventory,
+      equippedWeapon,
+      equippedArmorUpper,
+      equippedArmorLower,
+      equippedAccessory,
       moves: normalizeMoves(rawActor.moves, seedActor?.moves ?? []),
       responseBudget: normalizeResponseBudget(
         rawActor.responseBudget,
@@ -212,30 +257,64 @@ export function normalizeCombatState(value: Partial<CombatState>): CombatState {
   const storedOrder = Array.isArray(valueRec.initiativeOrder)
     ? valueRec.initiativeOrder.filter((id): id is string => typeof id === "string" && actorIds.has(id))
     : [];
-  const initiativeOrder = [
+  const legacyOrder = [
     ...storedOrder,
     ...actors.map((actor) => actor.id).filter((id) => !storedOrder.includes(id)),
   ];
-  const actedActorIds = Array.isArray(valueRec.actedActorIds)
+  const legacyActedActorIds = Array.isArray(valueRec.actedActorIds)
     ? valueRec.actedActorIds.filter((id): id is string => typeof id === "string" && actorIds.has(id))
     : [];
+  const runtime = normalizeRuntimeSession(valueRec.runtime, {
+    sceneId: value.scene?.id ?? seed.scene.id,
+    encounterMode: value.encounterMode,
+    round: value.round,
+    phase: value.phase,
+    activeActorId: value.activeActorId,
+    initiativeOrder: legacyOrder,
+    actedActorIds: legacyActedActorIds,
+    turnPaused: value.turnPaused,
+  });
+  const runtimeSequence = runtime.mode === "COMBAT"
+    ? runtime.combat
+    : runtime.mode === "SCENE_STRUCTURED"
+      ? runtime.scene.sequence
+      : undefined;
+  // Authored structured scenes may deliberately include only a subset of the
+  // actor registry. Never append every stored NPC during migration: doing so
+  // silently inserts future enemies into a chase or negotiation sequence.
+  const initiativeOrder = runtimeSequence?.initiativeOrder.filter((id) => actorIds.has(id)) ?? [];
+  const actedActorIds = runtimeSequence?.actedActorIds.filter((id) => actorIds.has(id)) ?? [];
+  const storedActiveActorId = typeof valueRec.activeActorId === "string" ? valueRec.activeActorId : undefined;
+  const activeActorId = runtimeSequence?.activeActorId && initiativeOrder.includes(runtimeSequence.activeActorId)
+    ? runtimeSequence.activeActorId
+    : storedActiveActorId && (initiativeOrder.length === 0 || initiativeOrder.includes(storedActiveActorId))
+      ? storedActiveActorId
+      : initiativeOrder[0] ?? seed.activeActorId;
+  const cleanedRuntime = runtime.mode === "SCENE_STRUCTURED" && runtime.scene.sequence
+    ? {
+        ...runtime,
+        scene: {
+          ...runtime.scene,
+          sequence: {
+            ...runtime.scene.sequence,
+            activeActorId: initiativeOrder.includes(runtime.scene.sequence.activeActorId ?? "")
+              ? runtime.scene.sequence.activeActorId
+              : undefined,
+            initiativeOrder,
+            actedActorIds,
+          },
+        },
+      }
+    : runtime;
 
   return {
     ...seed,
     ...value,
-    runtime: normalizeRuntimeSession(valueRec.runtime, {
-      sceneId: value.scene?.id ?? seed.scene.id,
-      encounterMode: value.encounterMode,
-      round: value.round,
-      phase: value.phase,
-      activeActorId: value.activeActorId,
-      initiativeOrder,
-      actedActorIds,
-      turnPaused: value.turnPaused,
-    }),
+    runtime: cleanedRuntime,
     actors,
     initiativeOrder,
     actedActorIds,
+    activeActorId,
     encounterMode: value.encounterMode === "combat" ? "combat" : "scene",
     turnPaused: Boolean(value.turnPaused),
     dice: normalizeDice(

@@ -68,6 +68,29 @@ function withTrackDelta(state: CombatState, id: string, delta: number): CombatSt
   };
 }
 
+function commitApprovedSceneAction(
+  state: CombatState,
+  request: SceneActionRequest,
+  definition: SceneActionDefinition,
+  narration: string,
+  changes: string[],
+  nextPrompt: string,
+  now: number,
+): CombatState {
+  const resolution = createResolution(request, "approved", narration, definition.ruleEntry, changes, nextPrompt, now);
+  const next = {
+    ...state,
+    scene: {
+      ...state.scene,
+      narration,
+      turn: state.scene.turn + 1,
+      pendingRequest: undefined,
+      lastResolution: resolution,
+    },
+  };
+  return appendSceneLog(next, `${definition.name}｜${narration}｜${changes.join("；")}`, now, request.audience !== "dm");
+}
+
 function createResolution(
   request: SceneActionRequest,
   ruling: SceneActionResolution["ruling"],
@@ -194,7 +217,7 @@ export function resolveSceneAction(
     const resolution = createResolution(
       request,
       "rejected",
-      "这个办法暂时找不到可执行的规则入口。雨声仍压在仓檐上，局势没有改变。",
+      "这个办法暂时找不到可执行的规则入口。河风仍从西栈穿过，局势没有改变。",
       "情景行动必须有合法行动者、公开目标与互动入口。",
       [],
       "请改选高亮的行动或目标。",
@@ -211,18 +234,75 @@ export function resolveSceneAction(
   let next = structuredClone(state);
   const changes: string[] = [];
   let narration = "";
-  let nextPrompt = "继续调查，或在证据足够后逼近仓内黑影。";
+  let nextPrompt = "继续查验西栈，拼合药匣去向。";
+
+  if (state.scene.id === "pier-pursuit") {
+    const progressDelta = request.actionType === "investigate" ? 1 : ["move", "negotiate", "observe", "use-item"].includes(request.actionType) ? 1 : 0;
+    const riskDelta = request.actionType === "investigate" ? 1 : 0;
+    next = withTrackDelta(next, "pursuit-progress", progressDelta);
+    next = withTrackDelta(next, "pursuit-risk", riskDelta);
+    if (progressDelta) changes.push("追及 +1");
+    if (riskDelta) changes.push("药匣受险 +1");
+    narration = request.actionType === "negotiate"
+      ? `${actor.name}越过人群喊明利害，胡五脚步一滞，追兵趁机缩短了距离。`
+      : request.actionType === "observe"
+        ? `${actor.name}看准湿板、鱼篓与人流之间的空隙，提前截向胡五的必经之路。`
+        : request.actionType === "use-item"
+          ? `${actor.name}借手边器物封住一段栈桥，迫使胡五改道。`
+          : request.actionType === "investigate"
+            ? `${actor.name}停步辨认胡五留下的湿痕，找准了去路，但这片刻拖延让药匣更靠近桥沿。`
+            : `${actor.name}沿栈桥追身，绕过倾倒鱼篓，把胡五逼向旧船棚门前。`;
+    const progress = next.tracks.find((track) => track.id === "pursuit-progress")?.value ?? 0;
+    const expires = next.scene.turn >= 3;
+    if (progress >= 3 || expires) {
+      next.scene.combatUnlocked = true;
+      changes.push(progress >= 3 ? "追及完成：截住胡五" : "三轮到期：抵达旧船棚");
+      nextPrompt = "追逐已经收束，转入旧船棚对峙；气骰保持原点数。";
+    } else {
+      nextPrompt = `还需 ${3 - progress} 点追及；避免把胡五逼向桥沿。`;
+    }
+    return commitApprovedSceneAction(next, request, definition, narration, changes, nextPrompt, now);
+  }
+
+  if (state.scene.id === "old-boathouse-standoff") {
+    const trustDelta = ["negotiate", "investigate", "observe", "use-item"].includes(request.actionType) ? 1 : 0;
+    next = withTrackDelta(next, "standoff-trust", trustDelta);
+    if (trustDelta) changes.push("交匣意愿 +1");
+    narration = request.actionType === "negotiate"
+      ? `${actor.name}没有亮兵刃，而是把药钱、巡检和伤者的后果一一说清。胡五抱匣的手略微松开。`
+      : request.actionType === "investigate"
+        ? `${actor.name}核对欠药账页与药匣封绳，确认胡五偷匣是为家中急病，并非受雇劫货。`
+        : request.actionType === "use-item"
+          ? `${actor.name}取出药物先处理胡五的伤口，用实际行动换来片刻信任。`
+          : request.actionType === "observe"
+            ? `${actor.name}看出袁葫芦只守水门、不主动逼近；他们想脱身，不想杀人。`
+            : `${actor.name}逼近药匣，袁葫芦横刀封路，谈判转为非致命交锋。`;
+    const trust = next.tracks.find((track) => track.id === "standoff-trust")?.value ?? 0;
+    if (trust >= 3) {
+      next.scene.completed = true;
+      next.scene.ending = "胡五接受作保，主动交还药匣；无需进入战斗。";
+      changes.push("非战斗收束：私下作保");
+      nextPrompt = "药匣已经交还，记录人物关系与后续债务。";
+    } else if (["move", "take"].includes(request.actionType)) {
+      next.scene.combatUnlocked = true;
+      changes.push("DM确认：进入非致命交锋");
+      nextPrompt = "对峙升级；沿用当前气骰与状态进入战斗。";
+    } else {
+      nextPrompt = `还需 ${3 - trust} 点交匣意愿；也可由DM确认转入交锋。`;
+    }
+    return commitApprovedSceneAction(next, request, definition, narration, changes, nextPrompt, now);
+  }
 
   if (request.actionType === "observe") {
     next = withTrackDelta(next, "track-clue", 1);
     next.scene.permissions = uniqueFact(next.scene.permissions, {
       id: "permission-follow-water-marks",
-      name: "循水痕追查",
-      description: "可沿窄轮水痕直接搜查仓门后方。",
+      name: "循湿痕查验",
+      description: "可沿水棚木板的拖痕直接比对空车位。",
       public: true,
     });
-    changes.push("解密值 +1", "获得场景许可：循水痕追查");
-    narration = `${actor.name}压低身形辨认雨水走向，发现门边水痕并非自然流淌，而是窄轮车刚刚碾过。`;
+    changes.push("解密值 +1", "获得场景许可：循湿痕查验");
+    narration = `${actor.name}压低身形辨认水棚木板上的湿痕，发现药匣被拖向空车位，再由窄轮车运走。`;
   }
 
   if (request.actionType === "investigate") {
@@ -231,11 +311,11 @@ export function resolveSceneAction(
     next.scene.resources = uniqueFact(next.scene.resources, {
       id: "resource-wheel-rubbing",
       name: "窄轮车辙拓印",
-      description: "可用于比对渡口和镖局后门使用的货车。",
+      description: "可用于比对渡口空车位和旧船棚使用的货车。",
       public: true,
     });
     changes.push("解密值 +2", "巡检注意 +1", "取得资源：窄轮车辙拓印");
-    narration = `${actor.name}拨开湿泥细查轮辙，确认镖箱先被拖向后门，再经堤岸小车转运；搜查的响动也让桥头火把靠近了一分。`;
+    narration = `${actor.name}拨开湿泥细查轮辙，确认药匣先被拖出水棚，再经栈桥窄车转运；查验的响动也让巡检火把靠近了一分。`;
   }
 
   if (request.actionType === "negotiate") {
@@ -243,12 +323,12 @@ export function resolveSceneAction(
     next = withTrackDelta(next, "track-patrol", -1);
     next.scene.permissions = uniqueFact(next.scene.permissions, {
       id: "permission-wei-cover",
-      name: "魏长兴声东击西",
-      description: "下一次接近仓门不会增加巡检注意。",
+      name: "魏长兴稳住巡检",
+      description: "下一次接近栈桥入口不会增加巡检封渡。",
       public: true,
     });
     changes.push("解密值 +1", "巡检注意 -1", "获得场景许可：魏长兴声东击西");
-    narration = `${actor.name}借镖局信物稳住同伴与岸边脚夫，魏长兴顺势把巡检的目光引向桥头，仓门前短暂空了出来。`;
+    narration = `${actor.name}借回春堂文书稳住岸边脚夫，魏长兴顺势向巡检解释交接差错，栈桥入口暂时空了出来。`;
   }
 
   if (request.actionType === "move") {
@@ -262,12 +342,12 @@ export function resolveSceneAction(
     }
     next.scene.permissions = uniqueFact(next.scene.permissions, {
       id: "permission-enter-warehouse",
-      name: "抵近仓门",
-      description: "可以直接截住搬箱黑影，或进一步搜查仓内。",
+      name: "抵近栈桥",
+      description: "可以看清抱匣人影，并由DM确认建立追逐序列。",
       public: true,
     });
-    changes.push("获得场景许可：抵近仓门");
-    narration = `${actor.name}借雨幕贴近仓门，已经能看清搬箱者腰间的短兵和后门外接应的小船。`;
+    changes.push("获得场景许可：抵近栈桥");
+    narration = `${actor.name}借水棚阴影贴近栈桥，已经能看清抱匣人影和通往旧船棚的退路。`;
   }
 
   if (request.actionType === "take") {
@@ -275,7 +355,7 @@ export function resolveSceneAction(
     next.scene.resources = uniqueFact(next.scene.resources, {
       id: "resource-blood-seal",
       name: "染血封条",
-      description: "镖箱封条残片；血迹和切口可以证明箱子曾在仓外被开启。",
+      description: "药匣封绳残片；血迹和切口可以证明药匣曾在西栈被调换。",
       public: true,
     });
     changes.push("解密值 +1", "取得资源：染血封条");
@@ -286,36 +366,32 @@ export function resolveSceneAction(
     next = withTrackDelta(next, "track-patrol", -1);
     next.scene.permissions = uniqueFact(next.scene.permissions, {
       id: "permission-controlled-light",
-      name: "暗光照明",
-      description: "可检查仓内近处物件，不暴露在桥头火把视线中。",
+      name: "遮光查验",
+      description: "可检查水棚近处物件，不引来巡检火把。",
       public: true,
     });
     changes.push("巡检注意 -1", "获得场景许可：暗光照明");
-    narration = `${actor.name}用遮住大半的火折贴地照明，既看清了麻绳纤维，也没有让亮光越过仓门。`;
+    narration = `${actor.name}用遮住大半的火折贴地照明，既看清了封绳纤维，也没有让亮光越过水棚。`;
   }
 
   const clue = next.tracks.find((track) => track.id === "track-clue")?.value ?? 0;
-  const hasEntry = next.scene.permissions.some((fact) => fact.id === "permission-enter-warehouse");
-  if (clue >= 3 || hasEntry) {
-    next.scene.combatUnlocked = true;
-    nextPrompt = "证据与位置已经足够。你可以继续追查，也可以截住搬箱者并进入交锋。";
-    if (!changes.includes("解锁：进入交锋")) changes.push("解锁：进入交锋");
+  if (clue >= 2) {
+    next.scene.elements = next.scene.elements.map((element) => ["porter-shadow", "old-boathouse-route"].includes(element.id)
+      ? { ...element, public: true }
+      : element);
   }
-
-  const resolution = createResolution(request, "approved", narration, definition.ruleEntry, changes, nextPrompt, now);
-  next.scene = {
-    ...next.scene,
-    narration,
-    turn: next.scene.turn + 1,
-    pendingRequest: undefined,
-    lastResolution: resolution,
-  };
-  return appendSceneLog(
-    next,
-    `${definition.name}｜${narration}｜${changes.join("；")}`,
-    now,
-    request.audience !== "dm",
-  );
+  if (clue >= 4) {
+    next.scene.permissions = uniqueFact(next.scene.permissions, {
+      id: "permission-old-boathouse",
+      name: "旧船棚去向",
+      description: "证据已经闭合，可由DM确认转入栈桥追逐。",
+      public: true,
+    });
+    next.scene.combatUnlocked = true;
+    nextPrompt = "证据已经闭合；转入栈桥追逐，不直接跳到战斗。";
+    if (!changes.includes("解锁：栈桥追逐")) changes.push("解锁：栈桥追逐");
+  }
+  return commitApprovedSceneAction(next, request, definition, narration, changes, nextPrompt, now);
 }
 
 function validNarration(value: unknown): value is string {
@@ -379,7 +455,7 @@ export async function resolveSceneActionWithNarration(
 export function closeSceneAfterCombat(state: CombatState): CombatState {
   const livingEnemies = state.actors.some((actor) => actor.side === "enemy" && actor.hp > 0);
   if (livingEnemies || state.scene.completed) return state;
-  const ending = "失镖已经夺回，染血封条与车辙指向同一个内应。雨势渐缓，桥头巡检尚未封仓。";
+  const ending = "药匣已经夺回，破封绳、湿脚印与货单指向同一条偷运路线。河风渐缓，西栈巡检尚未封渡。";
   return appendSceneLog({
     ...state,
     scene: { ...state.scene, completed: true, ending, narration: ending },

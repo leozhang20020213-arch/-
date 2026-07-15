@@ -39,7 +39,7 @@ export interface AutoDmResult {
   message: string;
 }
 
-interface LegalResponse {
+export interface LegalResponse {
   state: CombatState;
   response: ResponseAttachment;
   diceIds: string[];
@@ -110,7 +110,7 @@ function responseMinimum(response: ResponseAttachment): number {
  * Failed trials are discarded; the engine clones the supplied state before it
  * validates or mutates anything.
  */
-function findLegalResponse(
+export function findLegalResponse(
   state: CombatState,
   actor: Actor,
   responseType: "截击" | "应招",
@@ -293,6 +293,24 @@ export function advanceAutoDm(
   try {
     if (!state || !Array.isArray(state.actors) || !Array.isArray(state.dice)) {
       return result(state, "idle", "规则主持收到的交锋状态不完整，未推进。");
+    }
+
+    if (
+      state.runtime.mode === "SCENE_STRUCTURED"
+      && state.runtime.scene.sequence
+      && !state.runtime.scene.sequence.initiativeOrder.includes(state.activeActorId)
+    ) {
+      const sequence = state.runtime.scene.sequence;
+      const activeActorId = sequence.activeActorId && sequence.initiativeOrder.includes(sequence.activeActorId)
+        ? sequence.activeActorId
+        : sequence.initiativeOrder.find((actorId) => !sequence.actedActorIds.includes(actorId))
+        ?? state.runtime.scene.sequence.initiativeOrder[0];
+      return result({
+        ...state,
+        activeActorId: activeActorId ?? state.activeActorId,
+        phase: "round_end",
+        pendingAction: undefined,
+      }, "enemy_skip", "当前行动者不属于本段情景序列，已清理过期宣言并安全回到轮转。 ");
     }
 
     if (state.phase === "intercept_window" || state.phase === "react_window") {

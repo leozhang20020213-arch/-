@@ -89,14 +89,12 @@ const TYPE_MAP: Record<string, SceneClockType> = {
 
 const TRIGGER_MAP: Record<string, string> = {
   "track-clue": "调查现场、读取痕迹 +1",
-  "track-patrol": "大声喧哗、亮出兵刃 +1",
-  "track-escape": "拖延时间、被发现 +1",
+  "track-patrol": "争执、拖延或无依据亮兵刃 +1",
 };
 
 const CONSEQUENCE_MAP: Record<string, string> = {
-  "track-clue": "达到8时查明全部线索",
-  "track-patrol": "达到10时官府介入",
-  "track-escape": "达到8时敌人撤离或局势失控",
+  "track-clue": "达到4时确认药匣去向",
+  "track-patrol": "达到2时巡检到场；达到4时封渡",
 };
 
 /**

@@ -11,7 +11,7 @@ import {
 const actorId = "pc-shen-qing";
 
 describe("scene auto DM", () => {
-  it("resolves legal scene actions and unlocks combat deterministically", () => {
+  it("resolves legal scene actions and unlocks the structured pursuit only at four clues", () => {
     let state = createSeedState();
     state = resolveSceneAction(state, {
       id: "r1", actorId, actionType: "observe", targetId: "warehouse-door", approach: "贴地看水痕", createdAt: 1,
@@ -23,8 +23,33 @@ describe("scene auto DM", () => {
       id: "r2", actorId, actionType: "investigate", targetId: "warehouse-door", approach: "比对车辙", createdAt: 2,
     }, { now: () => 20 });
     assert.equal(state.tracks.find((track) => track.id === "track-clue")?.value, 3);
+    assert.equal(state.scene.combatUnlocked, false);
+
+    state = resolveSceneAction(state, {
+      id: "r3", actorId, actionType: "take", targetId: "blood-seal", approach: "收起破封绳", createdAt: 3,
+    }, { now: () => 30 });
+    assert.equal(state.tracks.find((track) => track.id === "track-clue")?.value, 4);
     assert.equal(state.scene.combatUnlocked, true);
-    assert.ok(state.scene.lastResolution?.changes.includes("解锁：进入交锋"));
+    assert.ok(state.scene.lastResolution?.changes.includes("解锁：栈桥追逐"));
+    assert.equal(state.scene.elements.find((element) => element.id === "porter-shadow")?.public, true);
+  });
+
+  it("resolves pursuit and standoff with separate authored tracks", () => {
+    let state = createSeedState();
+    state.scene.id = "pier-pursuit";
+    state.scene.elements = [{ id: "pursuit-runner", kind: "person", name: "胡五", description: "", public: true, interactionIds: ["move"] }];
+    state.tracks = [{ id: "pursuit-progress", name: "追及", kind: "insight", value: 2, max: 3, hidden: false, description: "追上抱匣人" }, { id: "pursuit-risk", name: "药匣受险", kind: "crisis", value: 0, max: 3, hidden: false, description: "药匣受损风险" }];
+    state = resolveSceneAction(state, { id: "p1", actorId, actionType: "move", targetId: "pursuit-runner", createdAt: 1 }, { now: () => 10 });
+    assert.equal(state.scene.combatUnlocked, true);
+    assert.equal(state.tracks[0]?.value, 3);
+
+    state.scene.id = "old-boathouse-standoff";
+    state.scene.combatUnlocked = false;
+    state.scene.elements = [{ id: "medicine-case", kind: "object", name: "药匣", description: "", public: true, interactionIds: ["take"] }];
+    state.tracks = [{ id: "standoff-trust", name: "交匣意愿", kind: "insight", value: 0, max: 3, hidden: false, description: "说服胡五交还药匣" }];
+    state = resolveSceneAction(state, { id: "s1", actorId, actionType: "take", targetId: "medicine-case", createdAt: 2 }, { now: () => 20 });
+    assert.equal(state.scene.combatUnlocked, true);
+    assert.match(state.scene.lastResolution?.changes.join("｜") ?? "", /非致命交锋/);
   });
 
   it("rejects an unavailable target without changing tracks", () => {
@@ -41,7 +66,7 @@ describe("scene auto DM", () => {
     const next = await resolveSceneActionWithNarration(state, {
       id: "r1", actorId, actionType: "observe", targetId: "warehouse-door", approach: "观察", createdAt: 1,
     }, { narrationProvider: { narrate: async () => undefined }, now: () => 10 });
-    assert.match(next.scene.narration, /水痕/);
+    assert.match(next.scene.narration, /湿痕/);
   });
 
   it("queues a room-player action without resolving authority state", () => {

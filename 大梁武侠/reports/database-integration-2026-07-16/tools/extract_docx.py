@@ -78,6 +78,7 @@ def main() -> None:
         Path(r"D:\trpg\大梁武侠\规则书\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\04_前置对齐材料\01_三文件对齐稿.docx"),
         Path(r"D:\trpg\大梁武侠\规则书\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\04_前置对齐材料\02_目录术语冻结与排版插画流程.docx"),
         Path(r"D:\trpg\大梁武侠\规则书\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\05_开发资料\01_开发者规则书_交锋辅助引擎_2026年6月20日.docx"),
+        Path(r"D:\trpg\大梁武侠\规则书\大梁江湖TRPG_Codex专用_UI双模式数据库与新手教学重构任务书_2026-07-15.docx"),
     ]
     out_dir = workspace / "reports" / "database-integration-2026-07-16" / "extracted" / "docx"
     results = [extract_docx(source, out_dir) for source in sources]

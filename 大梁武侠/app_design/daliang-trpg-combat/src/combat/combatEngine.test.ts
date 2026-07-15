@@ -33,7 +33,7 @@ import {
 } from "./combatEngine";
 import { assertRuleCatalogValid } from "../rules/ruleCatalog";
 import { validateLanMessage, validateStatusRecord } from "../rules/schema";
-import type { StatusEffect, SlotValues, Move, Actor, CombatState } from "./types";
+import type { StatusEffect, SlotValues, Move, Actor, CombatState, InventoryItem } from "./types";
 
 const fixedRoll = () => 4;
 
@@ -46,6 +46,15 @@ function createSeedState(): CombatState {
     ...state,
     actors: state.actors.map((actor) => actor.id === "pc-wei"
       ? { ...actor, tableAttrs: { ...actor.tableAttrs, 身势: 3 } }
+      : actor),
+  };
+}
+
+function addFixtureItem(state: CombatState, item: InventoryItem): CombatState {
+  return {
+    ...state,
+    actors: state.actors.map((actor) => actor.id === "pc-shen-qing"
+      ? { ...actor, inventory: [...actor.inventory, item] }
       : actor),
   };
 }
@@ -350,6 +359,15 @@ describe("combat engine", () => {
 
   it("uses medicine to grant temporary qi and logs inventory event", () => {
     let state = enterScene(createSeedState(), fixedRoll);
+    state = addFixtureItem(state, {
+      id: "item-breath-pill",
+      name: "行气丸（测试夹具）",
+      category: "medicine",
+      quantity: 2,
+      sourceId: "fixture-breath-pill",
+      grantsTempQi: { nature: "raw", sides: 6, count: 1 },
+      publicNote: "测试临气生成。",
+    });
     state = useInventoryItem(state, "pc-shen-qing", "item-breath-pill");
     const actor = state.actors.find((item) => item.id === "pc-shen-qing");
     assert.equal(actor?.inventory.find((item) => item.id === "item-breath-pill")?.quantity, 1);
@@ -378,6 +396,17 @@ describe("combat engine", () => {
 
   it("equips and unequips items", () => {
     let state = createSeedState();
+    state = addFixtureItem(state, {
+      id: "item-bamboo-sword",
+      name: "青竹短剑（测试夹具）",
+      category: "weapon",
+      quantity: 1,
+      equipped: false,
+      sourceId: "fixture-bamboo-sword",
+      publicNote: "测试武器替换。",
+    });
+    assert.equal(state.actors[0].inventory.find((item) => item.id === "item-ring-saber")?.equipped, true);
+    assert.equal(state.actors[0].inventory.find((item) => item.id === "item-bamboo-sword")?.equipped, false);
     state = unequipItem(state, "pc-shen-qing", "item-bamboo-sword");
     assert.equal(
       state.actors[0].inventory.find((item) => item.id === "item-bamboo-sword")?.equipped,
@@ -388,6 +417,35 @@ describe("combat engine", () => {
       state.actors[0].inventory.find((item) => item.id === "item-bamboo-sword")?.equipped,
       true,
     );
+    assert.equal(state.actors[0].inventory.find((item) => item.id === "item-ring-saber")?.equipped, false);
+    assert.equal(state.actors[0].equippedWeapon, "item-bamboo-sword");
+  });
+
+  it("keeps equipment replacement and repeated equip idempotent", () => {
+    let state = createSeedState();
+    state = {
+      ...state,
+      actors: state.actors.map((actor) => actor.id === "pc-shen-qing" ? {
+        ...actor,
+        inventory: [...actor.inventory, {
+          id: "item-test-sabre",
+          name: "试验刀",
+          category: "weapon" as const,
+          quantity: 1,
+          sourceId: "test-sabre-source",
+          attrBonus: { 护体: 2 },
+          qiDice: { nature: "yang" as const, sides: 6, count: 1, zone: "QI_POOL" as const },
+          publicNote: "测试装备互斥与幂等。",
+        }],
+      } : actor),
+    };
+    const beforeGuard = state.actors[0].tableAttrs.护体;
+    state = equipItem(state, "pc-shen-qing", "item-test-sabre");
+    state = equipItem(state, "pc-shen-qing", "item-test-sabre");
+    const actor = state.actors[0];
+    assert.equal(actor.tableAttrs.护体, beforeGuard + 2);
+    assert.equal(actor.inventory.filter((item) => item.category === "weapon" && item.equipped).length, 1);
+    assert.equal(state.dice.filter((die) => die.sourceId === "test-sabre-source").length, 1);
   });
 
   it("updates momentum and starts the next round exactly once", () => {
@@ -462,6 +520,14 @@ describe("combat engine", () => {
 
   it("inventory item can trigger source expiration", () => {
     let state = enterScene(createSeedState(), fixedRoll);
+    state = addFixtureItem(state, {
+      id: "item-expire-demo",
+      name: "来源失效（测试夹具）",
+      category: "tool",
+      quantity: 1,
+      expiresSourceId: "短兵客·雨步",
+      publicNote: "只用于来源失效测试。",
+    });
     state = useInventoryItem(state, "pc-shen-qing", "item-expire-demo");
     assert.equal(state.dice.some((die) => die.sourceId === "短兵客·雨步"), false);
     assert.equal(

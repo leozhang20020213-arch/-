@@ -48,7 +48,7 @@ release/win-unpacked/大梁武侠.exe
 
 | 项目 | 结果 |
 | --- | --- |
-| 自动测试 | 27 个套件，146/146 通过 |
+| 自动测试 | 30 个套件，170/170 通过 |
 | TypeScript + Vite 生产构建 | 通过 |
 | Windows x64 目录包 | 通过 |
 | 实际 Electron 完整玩家流程 | 通过 |
@@ -62,6 +62,7 @@ release/win-unpacked/大梁武侠.exe
 实际 Electron 截图、每张截图的身份与时点说明见：
 
 - [Windows UI 截图索引](../../reports/windows-ui-rebuild/README.md)
+- [2026-07-16 整体游戏、开团与数据库大审查](../../reports/full-game-audit-2026-07-16/README.md)
 - [Windows 桌面实现说明](docs/windows-desktop-rebuild.md)
 
 ## 主要结构
@@ -89,6 +90,7 @@ src/ui/overlays/                人物、背包、招式等大型覆盖页
 - 只有结构化效果可以修改权威状态；自由文本用于叙事，不直接改变数值。
 - 遇到规则书没有冻结的内容，应记录规则问题，不批量发明招式或数值。
 - 3D 与 2D 只负责表现，权威随机结果和日志由规则层决定。
+- 单人故事与真人 DM 房间分别保存到 `combat-solo` 和 `combat-room`；旧共享槽只迁移一次，避免角色、骰子和隐藏信息串档。
 
 ## 当前发布说明
 

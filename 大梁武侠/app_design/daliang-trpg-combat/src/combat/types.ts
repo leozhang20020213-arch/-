@@ -217,6 +217,10 @@ export interface Actor {
   id: string;
   name: string;
   side: "player" | "enemy" | "pressure";
+  /** Player-authored identity fields; never interpreted as executable rules. */
+  background?: string;
+  relationshipFacts?: string[];
+  portraitDataUrl?: string;
   // 底层
   sixRoots: SixRoots;
   innerArts: InnerArt[];

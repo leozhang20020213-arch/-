@@ -35,7 +35,7 @@ import {
 } from "../combat/storage";
 import type { Actor, AppSession, CombatState, DistanceBand, InventoryCategory, InventoryItem, Move, QiDie, QiZone, SceneActionRequest, SceneActionType } from "../combat/types";
 import { deriveTargetState } from "../lib/combat/targetValidation";
-import { advanceAutoDm } from "../lib/combat/autoDm";
+import { advanceAutoDm, findLegalResponse } from "../lib/combat/autoDm";
 import { createLanClient, type LanClient, type LanConnectionStatus } from "../net/lanClient";
 import type { LanMessage } from "../rules/schema";
 // PhaserCombatBoard replaced by TacticalCombatStage in PHASE2
@@ -74,9 +74,16 @@ import {
   resolveSceneActionWithNarration,
 } from "../lib/scene/autoSceneDm";
 import { claimPlayerSeat, evaluateRoomReadiness } from "../lib/room/roomRules";
-import { changeSceneMode, startNewScene } from "../controllers/scene/sceneController";
-import { findSceneUsage, type SceneBehaviorCategory } from "../data/scene/sceneBehaviorCatalog";
+import { startNewScene } from "../controllers/scene/sceneController";
+import {
+  SCENE_BEHAVIOR_CATEGORIES,
+  findSceneUsage,
+  usagesForSceneCategory,
+  type SceneBehaviorCategory,
+} from "../data/scene/sceneBehaviorCatalog";
 import { PlayerSceneWorkspace, type SceneAudience } from "./scene/PlayerSceneWorkspace";
+import { transitionToCampaignScene } from "../data/campaign/campaignRuntime";
+import { tutorialCampaignPack } from "../data/campaign/tutorialPack";
 
 const zoneLabels: Record<QiZone, string> = {
   QI_POOL: "气池",
@@ -169,8 +176,8 @@ function targetCandidatesFor(state: CombatState, actor: Actor, move?: Move): Act
 }
 
 export function App() {
-  const [state, setState] = useState<CombatState>(() => loadCombatState());
   const [session, setSession] = useState<AppSession>(() => loadAppSession());
+  const [state, setState] = useState<CombatState>(() => loadCombatState(session.playMode));
   const [declarationDraft, setDeclarationDraft] = useState<DeclarationDraft>({
     actorId: "pc-shen-qing",
     targetId: "",
@@ -210,9 +217,30 @@ export function App() {
   const controlledActorId = session.identity === "dm" ? state.activeActorId : playerActorId;
   const controlledActor = state.actors.find((actor) => actor.id === controlledActorId) ?? state.actors[0];
 
-  useEffect(() => saveCombatState(state), [state]);
+  useEffect(() => saveCombatState(state, session.playMode), [session.playMode, state]);
   useEffect(() => saveAppSession(session), [session]);
   useEffect(() => setSceneDmStatus(""), [session.playMode]);
+  useEffect(() => {
+    const currentUsages = usagesForSceneCategory(state, selectedSceneCategory);
+    const currentIsLegal = currentUsages.some((usage) => usage.id === selectedSceneUsageId);
+    if (currentIsLegal) {
+      setSelectedSceneTarget("");
+      return;
+    }
+    const nextCategory = currentUsages.length > 0
+      ? selectedSceneCategory
+      : SCENE_BEHAVIOR_CATEGORIES.find((category) => usagesForSceneCategory(state, category.id).length > 0)?.id;
+    if (!nextCategory) return;
+    const firstUsage = usagesForSceneCategory(state, nextCategory)[0];
+    if (!firstUsage) return;
+    setSelectedSceneCategory(nextCategory);
+    setSelectedSceneUsageId(firstUsage.id);
+    setSelectedSceneAction(firstUsage.sceneActionType);
+    setSelectedSceneTarget("");
+  // Scene transitions replace the legal action/target surface. Reset the
+  // draft exactly once per authored scene rather than carrying a stale card.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.scene.id]);
   useEffect(() => {
     document.documentElement.style.setProperty("--ui-scale", String(session.preferences.uiScale));
     MotionController.configure(session.preferences.animationSpeed);
@@ -236,7 +264,7 @@ export function App() {
       || state.runtime.mode !== "SCENE_STRUCTURED"
       || !state.scene.combatUnlocked
     ) return;
-    setSceneDmStatus("追逐落点已经确定；规则主持正在揭开苇岸战斗。 ");
+    setSceneDmStatus("追逐落点已经确定；规则主持正在揭开旧船棚对峙。 ");
     const timer = window.setTimeout(() => enterCombatWithSceneRoll("playerCombat"), 900 / session.preferences.animationSpeed);
     return () => window.clearTimeout(timer);
   }, [
@@ -307,10 +335,41 @@ export function App() {
   });
 
   useEffect(() => {
-    const isPlayerDesk = session.route === "playerScene" || session.route === "playerCombat" || session.route === "player";
-    if (!session.autoDmEnabled || session.identity !== "player" || !isPlayerDesk || state.turnPaused) {
+    const isAutomaticTurnDesk = session.route === "playerCombat"
+      || session.route === "player"
+      || (session.route === "playerScene" && state.runtime.mode === "SCENE_STRUCTURED");
+    if (!session.autoDmEnabled || session.identity !== "player" || !isAutomaticTurnDesk || state.turnPaused) {
       setAutoDmStatus("");
       return;
+    }
+
+    // Structured scenes use their authored scene sequence, not the combat AI.
+    // Letting advanceAutoDm choose combat moves here can open hidden intercept
+    // windows on the scene desk and leak future combatants into the pursuit.
+    if (session.route === "playerScene" && state.runtime.mode === "SCENE_STRUCTURED") {
+      let next: CombatState | undefined;
+      let message = "";
+      if (state.phase === "round_end") {
+        next = advanceTurn(state);
+        message = "行动序列已推进。";
+      } else if (
+        state.activeActorId !== playerActorId
+        && (state.phase === "scene" || state.phase === "declare")
+      ) {
+        const actor = state.actors.find((entry) => entry.id === state.activeActorId);
+        next = passMainAction(state, state.activeActorId);
+        message = `${actor?.name ?? "场景角色"}完成了本轮情景行动。`;
+      } else {
+        setAutoDmStatus(state.activeActorId === playerActorId ? "轮到你行动。" : "等待当前情景时点。" );
+        return;
+      }
+
+      setAutoDmStatus("规则主持正在推进情景行动序列……");
+      const timer = window.setTimeout(() => {
+        setState(next);
+        setAutoDmStatus(message);
+      }, MotionController.duration(260));
+      return () => window.clearTimeout(timer);
     }
 
     const step = advanceAutoDm(state, playerActorId);
@@ -404,7 +463,12 @@ export function App() {
       cancelLabel: "保留存档",
       destructive: true,
       onConfirm: () => {
-        setState(clearCombatState());
+        // This danger action clears the whole local profile. Clear both scoped
+        // saves before the session falls back to solo mode, otherwise a room
+        // reset could accidentally overwrite the preserved solo slot.
+        const cleared = clearCombatState("solo");
+        clearCombatState("room");
+        setState(cleared);
         setSession(clearAppSession());
         clearActionDraft();
       },
@@ -412,13 +476,43 @@ export function App() {
   }
 
   function startNewSoloStory() {
-    setState(clearCombatState());
+    setState(clearCombatState("solo"));
     clearActionDraft();
     setSelectedSceneAction("observe");
     setSelectedSceneTarget("");
     setSceneApproach("");
     setSceneDmStatus("");
     go("characterSelect", { identity: "player", gameMode: "scene", playMode: "solo", autoDmEnabled: true });
+  }
+
+  function createRoomAsDm() {
+    // “创建房间” is a new campaign boundary, not a continue-game action.
+    // Preserve the room form/session, but never leak the previous solo or
+    // hosted scene, tracks, hidden information, dice, or turn queue into it.
+    setState(clearCombatState("room"));
+    clearActionDraft();
+    setSelectedSceneAction("observe");
+    setSelectedSceneTarget("");
+    setSceneApproach("");
+    setSceneDmStatus("");
+    go("roomWaiting", {
+      identity: "dm",
+      gameMode: "scene",
+      playMode: "room",
+      autoDmEnabled: false,
+    });
+  }
+
+  function continueSoloStory() {
+    setState(loadCombatState("solo"));
+    const route: AppSession["route"] = session.lastRoute === "playerCombat" ? "playerCombat" : "playerScene";
+    go(route, { identity: "player", playMode: "solo", autoDmEnabled: true });
+  }
+
+  function continueDmRoom() {
+    setState(loadCombatState("room"));
+    const route: AppSession["route"] = session.lastRoute === "dmCombat" ? "dmCombat" : "dmScene";
+    go(route, { identity: "dm", playMode: "room", autoDmEnabled: false });
   }
 
   function enterAs(identity: "dm" | "player" | "spectator") {
@@ -630,7 +724,7 @@ export function App() {
 
   function enterCombatWithSceneRoll(nextRoute: AppSession["route"]) {
     if (!state.scene.combatUnlocked && session.identity === "player") {
-      setPrompt({ title: "尚未取得交锋条件", message: "需要先查明药匣去向或追至苇岸；裁定记录会显示解锁条件。" });
+      setPrompt({ title: "尚未取得交锋条件", message: "需要先查明药匣去向、完成栈桥追逐并抵达旧船棚；裁定记录会显示解锁条件。" });
       return;
     }
     const unrolledEntrantDice = state.dice.filter((die) => die.zone === "QI_POOL" && !die.temporary);
@@ -698,29 +792,39 @@ export function App() {
     };
     if (
       session.playMode === "solo"
-      && resolved.runtime.mode === "SCENE_FREE"
+      && resolved.scene.id === "white-duckweed-ferry"
       && resolved.scene.combatUnlocked
       && !state.scene.combatUnlocked
     ) {
       const pursuitOrder = [playerActorId, ...resolved.actors
-        .filter((actor) => actor.side === "player" && actor.id !== playerActorId)
+        .filter((actor) => actor.hp > 0 && actor.id !== playerActorId && ["pc-wei", "enemy-porter"].includes(actor.id))
         .map((actor) => actor.id)];
-      const pursuit = changeSceneMode({
-        ...resolved,
-        scene: {
-          ...resolved.scene,
-          location: "雾巷追影",
-          timeWindow: "三轮内截住搬匣人",
-          narration: "雾中人影攥着封签钻入窄巷。湿滑石阶、倾倒鱼篓与早市人流把追路切成三段。",
-          combatUnlocked: false,
-          lastResolution: resolved.scene.lastResolution ? {
-            ...resolved.scene.lastResolution,
-            changes: [...resolved.scene.lastResolution.changes, "转入结构化追逐"],
-            nextPrompt: "行动序列已经建立；队友由规则主持推进，完成这一轮后自然转入苇岸战斗。",
-          } : resolved.scene.lastResolution,
-        },
-      }, "SCENE_STRUCTURED", pursuitOrder);
-      next = { ...pursuit, phase: "declare" as const };
+      next = transitionToCampaignScene(resolved, tutorialCampaignPack, "pier-pursuit", pursuitOrder);
+      next.scene.lastResolution = resolved.scene.lastResolution ? {
+        ...resolved.scene.lastResolution,
+        changes: [...resolved.scene.lastResolution.changes, "转入结构化追逐"],
+        nextPrompt: "行动序列已经建立；三轮内追上抱匣人，气骰不重投。",
+      } : resolved.scene.lastResolution;
+    } else if (
+      session.playMode === "solo"
+      && resolved.scene.id === "pier-pursuit"
+      && resolved.scene.combatUnlocked
+    ) {
+      next = transitionToCampaignScene(resolved, tutorialCampaignPack, "old-boathouse-standoff");
+      next.scene.lastResolution = resolved.scene.lastResolution;
+    } else if (
+      session.playMode === "solo"
+      && resolved.scene.id === "old-boathouse-standoff"
+      && resolved.scene.combatUnlocked
+    ) {
+      const combatScene = transitionToCampaignScene(resolved, tutorialCampaignPack, "old-boathouse-combat");
+      next = confirmInitiative(prepareCombatRound(combatScene));
+      setState(next);
+      setSelectedSceneTarget("");
+      setSceneApproach("");
+      setSceneDmStatus("规则主持确认对峙升级为非致命交锋；沿用当前气骰与状态。");
+      go("playerCombat", { gameMode: "combat" });
+      return;
     } else if (session.playMode === "solo" && resolved.runtime.mode === "SCENE_STRUCTURED") {
       const sequence = resolved.runtime.scene.sequence;
       const automatedActors = resolved.actors.filter((actor) =>
@@ -1039,12 +1143,12 @@ export function App() {
       <div className="app-shell">
         <TitleBar session={session} debugView={debugView} setDebugView={setDebugView} onHome={() => go("home")} onReset={resetAll} />
         <div style={{ gridRow: "2 / -1", overflow: "auto" }}>
-          {session.route === "home" ? <HomeScreen session={session} go={go} onNewSolo={startNewSoloStory} /> : null}
+          {session.route === "home" ? <HomeScreen session={session} go={go} onContinuePlayer={continueSoloStory} onContinueDm={continueDmRoom} onNewSolo={startNewSoloStory} /> : null}
           {session.route === "characterSelect" ? (
             <CharacterSelect state={state} session={session} setSession={setSession} go={go} patch={patch} />
           ) : null}
           {session.route === "createRoom" || session.route === "room" ? (
-            <CreateRoomPage session={session} setSession={setSession} go={go} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} startLanRoom={startLanRoom} />
+            <CreateRoomPage session={session} setSession={setSession} go={go} onCreateRoom={createRoomAsDm} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} startLanRoom={startLanRoom} />
           ) : null}
           {session.route === "joinRoom" ? (
             <JoinRoomPage state={state} session={session} setSession={setSession} go={go} enterAs={enterAs} lanUrl={lanUrl} setLanUrl={setLanUrl} lanStatus={lanStatus} lanDetail={lanDetail} joinLanRoom={joinLanRoom} />
@@ -1120,16 +1224,18 @@ function Topbar({
 function HomeScreen({
   session,
   go,
+  onContinuePlayer,
+  onContinueDm,
   onNewSolo,
 }: {
   session: AppSession;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
+  onContinuePlayer: () => void;
+  onContinueDm: () => void;
   onNewSolo: () => void;
 }) {
   const canContinuePlayer = Boolean(session.selectedActorId);
   const canContinueDm = Boolean(session.room.roomName.trim() && session.room.hostName.trim());
-  const playerContinueRoute: AppSession["route"] = session.lastRoute === "playerCombat" ? "playerCombat" : "playerScene";
-  const dmContinueRoute: AppSession["route"] = session.lastRoute === "dmCombat" ? "dmCombat" : "dmScene";
   return (
     <section className="home-screen windows-home">
       <header className="home-masthead">
@@ -1147,7 +1253,7 @@ function HomeScreen({
           <h3>以一名江湖人进入故事</h3>
           <p>管理自己的角色，在单人故事或局域网房间中行动。</p>
           <div className="role-actions">
-            <button className="primary-action" type="button" disabled={!canContinuePlayer} onClick={() => go(playerContinueRoute, { identity: "player", playMode: "solo", autoDmEnabled: true })}>
+            <button className="primary-action" type="button" disabled={!canContinuePlayer} onClick={onContinuePlayer}>
               继续单人故事
             </button>
             <button type="button" onClick={onNewSolo}>
@@ -1164,7 +1270,7 @@ function HomeScreen({
           <h3>掌握边界、暗线与落果</h3>
           <p>管理团档、场景、隐藏信息与玩家行动裁定。</p>
           <div className="role-actions">
-            <button className="primary-action" type="button" disabled={!canContinueDm} onClick={() => go(dmContinueRoute, { identity: "dm", playMode: "room", autoDmEnabled: false })}>
+            <button className="primary-action" type="button" disabled={!canContinueDm} onClick={onContinueDm}>
               继续主持
             </button>
             <button type="button" onClick={() => go("createRoom", { identity: "dm", playMode: "room", autoDmEnabled: false })}>
@@ -1193,6 +1299,7 @@ function CreateRoomPage({
   session,
   setSession,
   go,
+  onCreateRoom,
   lanUrl,
   setLanUrl,
   lanStatus,
@@ -1202,6 +1309,7 @@ function CreateRoomPage({
   session: AppSession;
   setSession: React.Dispatch<React.SetStateAction<AppSession>>;
   go: (route: AppSession["route"], patchSession?: Partial<AppSession>) => void;
+  onCreateRoom: () => void;
   lanUrl: string;
   setLanUrl: (value: string) => void;
   lanStatus: LanConnectionStatus;
@@ -1283,7 +1391,7 @@ function CreateRoomPage({
             允许玩家私密述意
           </label>
         </div>
-        <button className="primary-action room-console__commit" type="button" disabled={!canCreate} onClick={() => go("roomWaiting", { identity: "dm" })}>
+        <button className="primary-action room-console__commit" type="button" disabled={!canCreate} onClick={onCreateRoom}>
           以 DM 身份开房
         </button>
         {!canCreate ? <p className="form-error">请填写房间名与主持人名称。</p> : null}
@@ -1297,7 +1405,7 @@ function CreateRoomPage({
           </div>
           <span className="support-active-badge">校验通过</span>
         </header>
-        <p className="room-console__lead">从渡口调查到雾巷追逐，在苇岸保住被调换的药匣。</p>
+        <p className="room-console__lead">从西栈查验到栈桥追逐，在旧船棚查明偷匣缘由并决定如何收束。</p>
         <dl className="room-dossier-grid">
           <div><dt>流程</dt><dd>调查 → 交锋 → 收束</dd></div>
           <div><dt>规模</dt><dd>推荐 1–4 人</dd></div>
@@ -1735,7 +1843,7 @@ function DmSceneDesk(props: DeskProps & {
       }
       left={
         <aside className="scene-side-column dm-scene-ledger">
-          <section className="panel"><p className="eyebrow">主持记录</p><h2>{props.state.scene.location}</h2><dl className="scene-ledger"><dt>时间窗</dt><dd>{props.state.scene.timeWindow}</dd><dt>边界</dt><dd>{props.state.scene.boundary}</dd><dt>收束</dt><dd>{props.state.scene.completed ? props.state.scene.ending : "夺回镖箱、确认内应去向或危机落果"}</dd></dl></section>
+          <section className="panel"><p className="eyebrow">主持记录</p><h2>{props.state.scene.location}</h2><dl className="scene-ledger"><dt>时间窗</dt><dd>{props.state.scene.timeWindow}</dd><dt>边界</dt><dd>{props.state.scene.boundary}</dd><dt>收束</dt><dd>{props.state.scene.completed ? props.state.scene.ending : "保住失匣、查明偷匣缘由或承受危机落果"}</dd></dl></section>
           <section className="panel scene-tracks-vertical"><h3>危机与解密</h3>{props.state.tracks.map((track) => <article className="dm-track-card" key={track.id}><div><strong>{track.name}</strong><span>{track.value}/{track.max}</span></div><meter min={0} max={track.max} value={track.value} /><small>{track.description}</small>{track.kind === "crisis" ? <><em>增长：{track.growthConditions?.join("；")}</em><em>阈值：{track.triggerOutcome}</em><em>降低：{track.reductionConditions?.join("；")}</em></> : <div className="insight-layers">{track.insightLayers?.map((layer) => <span className={track.value >= layer.level * 2 ? "revealed" : ""} key={layer.level}>第{layer.level}层 · {track.value >= layer.level * 2 ? layer.summary : "尚未公开"}</span>)}</div>}<div className="mini-stepper"><button type="button" onClick={() => recordTrackChange(track.id, -1)}>−</button><button type="button" onClick={() => recordTrackChange(track.id, 1)}>＋</button></div></article>)}</section>
         </aside>
       }
@@ -1786,8 +1894,8 @@ function DmCombatDesk(props: DeskProps & {
   dmNote: string;
   setDmNote: (value: string) => void;
   onStartScene: () => void;
-  onIntercept: () => void;
-  onReact: () => void;
+  onIntercept: (responseId?: string, diceIds?: string[]) => void;
+  onReact: (responseId?: string, diceIds?: string[]) => void;
   onSkipResponse: () => void;
   onOutcome: () => void;
   onEndRound: () => void;
@@ -1805,6 +1913,10 @@ function DmCombatDesk(props: DeskProps & {
   const pendingActor = props.state.actors.find((actor) => actor.id === pending?.actorId);
   const pendingTarget = props.state.actors.find((actor) => actor.id === pending?.targetId);
   const pendingMove = pendingActor?.moves.find((move) => move.id === pending?.moveId);
+  const pendingResponder = props.state.actors.find((actor) => actor.id === pending?.targetId);
+  const legalDmResponse = pendingResponder && (props.state.phase === "intercept_window" || props.state.phase === "react_window")
+    ? findLegalResponse(props.state, pendingResponder, props.state.phase === "intercept_window" ? "截击" : "应招")
+    : undefined;
 
   function recordDmState(label: string, updater: (current: CombatState) => CombatState) {
     props.patch((current) => {
@@ -1840,7 +1952,7 @@ function DmCombatDesk(props: DeskProps & {
           <section className="dm-action-stack">
             <span>当前时点</span><strong>{phaseLabel(props.state.phase)}</strong>
             {pending ? <p>{pendingActor?.name}「{pendingMove?.name}」→ {pendingTarget?.name} · 锁气{pending.diceIds.length}</p> : <p>{activeActor.name} 正在行动，尚无宣言。</p>}
-            <div>{props.state.phase === "intercept_window" ? <><button type="button" onClick={props.onIntercept}>代为截击</button><button type="button" onClick={props.onSkipResponse}>关闭截击窗</button></> : null}{props.state.phase === "react_window" ? <><button type="button" onClick={props.onReact}>代为应招</button><button type="button" onClick={props.onSkipResponse}>放弃应招</button></> : null}{props.state.phase === "outcome" ? <button className="dm-outcome-confirm" type="button" onClick={props.onOutcome}>落果确认印</button> : null}{props.state.phase === "round_end" ? <button type="button" onClick={props.onEndRound}>推进序列</button> : null}</div>
+            <div>{props.state.phase === "intercept_window" ? <><button type="button" disabled={!legalDmResponse} title={!legalDmResponse ? "受招者当前没有合法截击或可用气骰" : undefined} onClick={() => legalDmResponse && props.onIntercept(legalDmResponse.response.id, legalDmResponse.diceIds)}>代为截击</button><button type="button" onClick={props.onSkipResponse}>关闭截击窗</button></> : null}{props.state.phase === "react_window" ? <><button type="button" disabled={!legalDmResponse} title={!legalDmResponse ? "受招者当前没有合法应招或可用气骰" : undefined} onClick={() => legalDmResponse && props.onReact(legalDmResponse.response.id, legalDmResponse.diceIds)}>代为应招</button><button type="button" onClick={props.onSkipResponse}>放弃应招</button></> : null}{props.state.phase === "outcome" ? <button className="dm-outcome-confirm" type="button" onClick={props.onOutcome}>落果确认印</button> : null}{props.state.phase === "round_end" ? <button type="button" onClick={props.onEndRound}>推进序列</button> : null}</div>
           </section>
         </main>
       }
@@ -2903,14 +3015,59 @@ function InventoryCover({ actor, canManage, patch }: {
 function MoveLibraryCover({ actor }: { actor: Actor }) {
   const filters = ["全部", "外功", "法门", "便行", "截击", "应招"] as const;
   const [filter, setFilter] = useState<(typeof filters)[number]>("全部");
-  const [selectedId, setSelectedId] = useState(actor.moves[0]?.id ?? "");
-  const moves = actor.moves.filter((move) => filter === "全部" || move.category === filter || (filter === "截击" && move.hasIntercept) || (filter === "应招" && move.hasReact));
-  const selected = actor.moves.find((move) => move.id === selectedId) ?? moves[0];
+  const entries = [
+    ...actor.moves.map((move) => ({
+      id: `move:${move.id}`,
+      name: move.name,
+      category: move.category,
+      timing: move.timing,
+      minDice: move.minDice,
+      qiNatureThreshold: move.qiNatureThreshold,
+      equipPermission: move.equipPermission,
+      baseEffect: move.baseEffect,
+      targetRange: move.targetRange,
+      allowedShi: move.allowedShi,
+      resourceDestination: move.resourceDestination,
+      tier: move.tier,
+    })),
+    ...actor.quickActions.map((action) => ({
+      id: `quick:${action.id}`,
+      name: action.name,
+      category: "便行",
+      timing: action.timing,
+      minDice: action.minDice,
+      qiNatureThreshold: action.qiNatureThreshold,
+      equipPermission: action.permission,
+      baseEffect: action.effect,
+      targetRange: action.limit,
+      allowedShi: ["不限"],
+      resourceDestination: action.resourceDestination,
+      tier: action.type,
+    })),
+    ...actor.responses.map((response) => ({
+      id: `response:${response.id}`,
+      name: response.moveName,
+      category: response.responseType,
+      timing: response.timing,
+      minDice: response.minDice,
+      qiNatureThreshold: response.qiNatureThreshold,
+      equipPermission: response.equipPermission,
+      baseEffect: response.baseEffect,
+      targetRange: response.constraints,
+      allowedShi: response.allowedShi,
+      resourceDestination: response.resourceDestination,
+      tier: `${response.responseType}挂载`,
+    })),
+  ];
+  const visibleEntries = entries.filter((entry) => filter === "全部" || entry.category === filter);
+  const [selectedId, setSelectedId] = useState(entries[0]?.id ?? "");
+  const selected = visibleEntries.find((entry) => entry.id === selectedId) ?? visibleEntries[0];
   return (
     <div className="drawer-content move-library-cover">
       <nav>{filters.map((item) => <button className={filter === item ? "active" : ""} type="button" key={item} onClick={() => setFilter(item)}>{item}</button>)}</nav>
       <section className="move-library-cover__cards">
-        {moves.map((move) => <button type="button" className={`action-card library-move-card${selected?.id === move.id ? " selected" : ""}`} key={move.id} onClick={() => setSelectedId(move.id)}><span className="card-cost">{move.minDice}</span><strong>{move.name}</strong><small>{move.category} · {move.timing}</small><p>{move.baseEffect}</p><span>{move.targetRange}</span></button>)}
+        {visibleEntries.map((entry) => <button type="button" className={`action-card library-move-card${selected?.id === entry.id ? " selected" : ""}`} key={entry.id} onClick={() => setSelectedId(entry.id)}><span className="card-cost">{entry.minDice}</span><strong>{entry.name}</strong><small>{entry.category} · {entry.timing}</small><p>{entry.baseEffect}</p><span>{entry.targetRange}</span></button>)}
+        {visibleEntries.length === 0 ? <p className="empty-state">当前人物没有此类招式或响应。</p> : null}
       </section>
       <aside className="move-library-cover__detail">
         {selected ? <><small>{actor.name} · {selected.tier}</small><h3>{selected.name}</h3><p>{selected.baseEffect}</p><dl><div><dt>模式/时点</dt><dd>{selected.timing}</dd></div><div><dt>目标/距离</dt><dd>{selected.targetRange}</dd></div><div><dt>阴阳</dt><dd>{selected.qiNatureThreshold}</dd></div><div><dt>装备</dt><dd>{selected.equipPermission}</dd></div><div><dt>势</dt><dd>{selected.allowedShi.join("、")}</dd></div><div><dt>资源去向</dt><dd>{selected.resourceDestination}</dd></div></dl></> : <p className="empty-state">当前分类没有招式。</p>}

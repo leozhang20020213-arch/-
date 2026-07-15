@@ -11,7 +11,7 @@ import type { Actor, CombatState, DistanceRelation } from "../combat/types";
 import type { Combatant, CombatSide, DistanceEdge, SceneObjective, StageData } from "../types/combat";
 import { assignActorsToSlots, getAllSlots } from "../lib/combat/boardLayout";
 
-const DEFAULT_SCENE_TAGS = ["雨夜", "仓门", "堤岸", "货堆"];
+const DEFAULT_SCENE_TAGS = ["夜雨", "旧船棚", "水门", "药匣"];
 
 // ==========================================================================
 // Side normalization
@@ -98,8 +98,8 @@ export function buildStageData(state: CombatState): StageData {
 // ==========================================================================
 
 export const MOCK_STAGE_DATA: StageData = {
-  sceneName: "旧堤仓",
-  sceneTags: ["雨夜", "仓门", "堤岸", "货堆"],
+  sceneName: "旧船棚",
+  sceneTags: ["夜雨", "旧船棚", "水门", "药匣"],
   combatants: [
     // Player side — 2 actors → y=[44, 56] (CARD_V_UNITS=12)
     {
@@ -145,6 +145,6 @@ export const MOCK_STAGE_DATA: StageData = {
     { from: "pc-wei", to: "enemy-archer", band: "远距" },
   ],
   objectives: [
-    { id: "obj-blood-chest", title: "找到血镖箱", current: 1, target: 3 },
+    { id: "obj-medicine-case", title: "保住失匣", current: 1, target: 3 },
   ],
 };

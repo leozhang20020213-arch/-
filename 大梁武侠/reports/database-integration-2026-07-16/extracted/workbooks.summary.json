@@ -7,14 +7,16 @@
         "rows": 12,
         "columns": 2,
         "dataRows": 11,
+        "formattedBlankRows": 0,
         "headers": [
           "项目",
           "内容"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -23,6 +25,7 @@
         "rows": 241,
         "columns": 22,
         "dataRows": 240,
+        "formattedBlankRows": 0,
         "headers": [
           "招式ID",
           "名称",
@@ -48,9 +51,10 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 544,
         "rawTokenSamples": [
           {
@@ -209,6 +213,7 @@
         "rows": 121,
         "columns": 20,
         "dataRows": 120,
+        "formattedBlankRows": 0,
         "headers": [
           "内功ID",
           "名称",
@@ -232,9 +237,10 @@
           "DM投放建议"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 186,
         "rawTokenSamples": [
           {
@@ -389,6 +395,7 @@
         "rows": 121,
         "columns": 17,
         "dataRows": 120,
+        "formattedBlankRows": 0,
         "headers": [
           "法门ID",
           "名称",
@@ -409,9 +416,10 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 240,
         "rawTokenSamples": [
           {
@@ -569,6 +577,7 @@
         "rows": 181,
         "columns": 19,
         "dataRows": 180,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "名称",
@@ -591,9 +600,10 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -602,6 +612,7 @@
         "rows": 61,
         "columns": 14,
         "dataRows": 60,
+        "formattedBlankRows": 0,
         "headers": [
           "药物ID",
           "名称",
@@ -619,9 +630,10 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 144,
         "rawTokenSamples": [
           {
@@ -791,6 +803,7 @@
         "rows": 65,
         "columns": 13,
         "dataRows": 64,
+        "formattedBlankRows": 0,
         "headers": [
           "状态ID",
           "名称",
@@ -807,9 +820,10 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 64,
         "rawTokenSamples": [
           {
@@ -960,6 +974,7 @@
         "rows": 61,
         "columns": 10,
         "dataRows": 60,
+        "formattedBlankRows": 0,
         "headers": [
           "谱本ID",
           "名称",
@@ -973,9 +988,10 @@
           "DM投放提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 120,
         "rawTokenSamples": [
           {
@@ -1185,6 +1201,7 @@
         "rows": 41,
         "columns": 11,
         "dataRows": 40,
+        "formattedBlankRows": 0,
         "headers": [
           "资源ID",
           "名称",
@@ -1199,9 +1216,211 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [
+          {
+            "row": 2,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 3,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 4,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 5,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 6,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 7,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 8,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 9,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 10,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 11,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 12,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 13,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 14,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 15,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 16,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 17,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 18,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 19,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 20,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 21,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 22,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 23,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 24,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 25,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 26,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 27,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 28,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 29,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 30,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 31,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 32,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 33,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 34,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 35,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 36,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 37,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 38,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 39,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 40,
+            "column": 9,
+            "value": "[object Object]"
+          },
+          {
+            "row": 41,
+            "column": 9,
+            "value": "[object Object]"
+          }
+        ],
         "rawTokenCellCount": 40,
         "rawTokenSamples": [
           {
@@ -1351,6 +1570,7 @@
         "rows": 121,
         "columns": 12,
         "dataRows": 120,
+        "formattedBlankRows": 0,
         "headers": [
           "物品ID",
           "名称",
@@ -1366,9 +1586,10 @@
           "DM裁定提示"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 240,
         "rawTokenSamples": [
           {
@@ -1542,7 +1763,8 @@
         "name": "00_总目录",
         "rows": 51,
         "columns": 7,
-        "dataRows": 50,
+        "dataRows": 47,
+        "formattedBlankRows": 3,
         "headers": [
           "大梁江湖TRPG 大小样库",
           "",
@@ -1582,9 +1804,10 @@
             7
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -1593,14 +1816,16 @@
         "rows": 11,
         "columns": 2,
         "dataRows": 10,
+        "formattedBlankRows": 0,
         "headers": [
           "规则对象",
           "确定口径"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -1609,6 +1834,7 @@
         "rows": 7,
         "columns": 13,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "内功ID",
           "内功名",
@@ -1625,9 +1851,10 @@
           "玩家可见说明"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -1636,6 +1863,7 @@
         "rows": 76,
         "columns": 12,
         "dataRows": 75,
+        "formattedBlankRows": 0,
         "headers": [
           "内功ID",
           "内功名",
@@ -1676,9 +1904,10 @@
             9
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -1687,6 +1916,7 @@
         "rows": 76,
         "columns": 14,
         "dataRows": 75,
+        "formattedBlankRows": 0,
         "headers": [
           "内功ID",
           "内功名",
@@ -1729,9 +1959,10 @@
             9
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 75,
         "rawTokenSamples": [
           {
@@ -1881,6 +2112,7 @@
         "rows": 11,
         "columns": 6,
         "dataRows": 10,
+        "formattedBlankRows": 0,
         "headers": [
           "映射表ID",
           "取气值下限",
@@ -1899,9 +2131,10 @@
             5
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 10,
         "rawTokenSamples": [
           {
@@ -1981,6 +2214,7 @@
         "rows": 13,
         "columns": 9,
         "dataRows": 12,
+        "formattedBlankRows": 0,
         "headers": [
           "内功ID",
           "内功名",
@@ -2018,9 +2252,10 @@
             2
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2029,6 +2264,7 @@
         "rows": 7,
         "columns": 15,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "内功ID",
           "内功名",
@@ -2047,9 +2283,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2058,6 +2295,7 @@
         "rows": 24,
         "columns": 21,
         "dataRows": 23,
+        "formattedBlankRows": 0,
         "headers": [
           "招式ID",
           "招式名",
@@ -2082,9 +2320,10 @@
           "设计备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2093,6 +2332,7 @@
         "rows": 43,
         "columns": 9,
         "dataRows": 42,
+        "formattedBlankRows": 0,
         "headers": [
           "招式ID",
           "招式名",
@@ -2162,9 +2402,10 @@
             3
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2173,6 +2414,7 @@
         "rows": 10,
         "columns": 10,
         "dataRows": 9,
+        "formattedBlankRows": 0,
         "headers": [
           "动作ID",
           "名称",
@@ -2186,9 +2428,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2197,6 +2440,7 @@
         "rows": 10,
         "columns": 6,
         "dataRows": 9,
+        "formattedBlankRows": 0,
         "headers": [
           "强度轴",
           "玩家可见/开发者",
@@ -2206,9 +2450,10 @@
           "设计备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2217,6 +2462,7 @@
         "rows": 10,
         "columns": 4,
         "dataRows": 9,
+        "formattedBlankRows": 0,
         "headers": [
           "字段/枚举",
           "取值",
@@ -2224,9 +2470,10 @@
           "是否玩家可见"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2235,6 +2482,7 @@
         "rows": 20,
         "columns": 14,
         "dataRows": 19,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2252,9 +2500,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2263,6 +2512,7 @@
         "rows": 12,
         "columns": 7,
         "dataRows": 11,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2282,9 +2532,10 @@
             2
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2293,6 +2544,7 @@
         "rows": 4,
         "columns": 11,
         "dataRows": 3,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2307,9 +2559,10 @@
           "来源记录"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2318,6 +2571,7 @@
         "rows": 5,
         "columns": 11,
         "dataRows": 4,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2332,9 +2586,10 @@
           "是否可调息"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2343,6 +2598,7 @@
         "rows": 17,
         "columns": 7,
         "dataRows": 16,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2366,9 +2622,10 @@
             2
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2377,6 +2634,7 @@
         "rows": 7,
         "columns": 7,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2387,9 +2645,10 @@
           "是否磨损/消耗"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2398,6 +2657,7 @@
         "rows": 12,
         "columns": 11,
         "dataRows": 11,
+        "formattedBlankRows": 0,
         "headers": [
           "装备ID",
           "装备名",
@@ -2412,9 +2672,10 @@
           "调整备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2423,6 +2684,7 @@
         "rows": 14,
         "columns": 3,
         "dataRows": 13,
+        "formattedBlankRows": 0,
         "headers": [
           "类别",
           "取值",
@@ -2446,9 +2708,10 @@
             2
           ]
         ],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2457,6 +2720,7 @@
         "rows": 14,
         "columns": 11,
         "dataRows": 13,
+        "formattedBlankRows": 0,
         "headers": [
           "药物ID",
           "药物名",
@@ -2471,9 +2735,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2482,6 +2747,7 @@
         "rows": 14,
         "columns": 9,
         "dataRows": 13,
+        "formattedBlankRows": 0,
         "headers": [
           "药物ID",
           "药物名",
@@ -2494,9 +2760,10 @@
           "限制"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2505,6 +2772,7 @@
         "rows": 4,
         "columns": 10,
         "dataRows": 3,
+        "formattedBlankRows": 0,
         "headers": [
           "药物ID",
           "药物名",
@@ -2518,9 +2786,10 @@
           "限制"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2529,6 +2798,7 @@
         "rows": 5,
         "columns": 6,
         "dataRows": 4,
+        "formattedBlankRows": 0,
         "headers": [
           "药物ID",
           "药物名",
@@ -2538,9 +2808,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2549,6 +2820,7 @@
         "rows": 14,
         "columns": 10,
         "dataRows": 13,
+        "formattedBlankRows": 0,
         "headers": [
           "药物ID",
           "药物名",
@@ -2562,9 +2834,10 @@
           "调整备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2573,14 +2846,16 @@
         "rows": 8,
         "columns": 2,
         "dataRows": 7,
+        "formattedBlankRows": 0,
         "headers": [
           "字段/术语",
           "采用口径"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2589,6 +2864,7 @@
         "rows": 11,
         "columns": 12,
         "dataRows": 10,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2604,9 +2880,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2615,6 +2892,7 @@
         "rows": 11,
         "columns": 8,
         "dataRows": 10,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2626,9 +2904,10 @@
           "落果位置"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2637,6 +2916,7 @@
         "rows": 3,
         "columns": 10,
         "dataRows": 2,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2650,9 +2930,10 @@
           "是否可调息"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2661,6 +2942,7 @@
         "rows": 7,
         "columns": 4,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "状态",
           "触发条件",
@@ -2668,9 +2950,10 @@
           "修复/恢复方式"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2679,6 +2962,7 @@
         "rows": 11,
         "columns": 10,
         "dataRows": 10,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2692,9 +2976,10 @@
           "超模风险"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2703,14 +2988,16 @@
         "rows": 5,
         "columns": 2,
         "dataRows": 4,
+        "formattedBlankRows": 0,
         "headers": [
           "术语",
           "口径"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2719,6 +3006,7 @@
         "rows": 13,
         "columns": 11,
         "dataRows": 12,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2733,9 +3021,10 @@
           "备注"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2744,6 +3033,7 @@
         "rows": 13,
         "columns": 8,
         "dataRows": 12,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2755,9 +3045,10 @@
           "限制"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2766,6 +3057,7 @@
         "rows": 7,
         "columns": 5,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2774,9 +3066,10 @@
           "落果位置"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2785,15 +3078,17 @@
         "rows": 7,
         "columns": 3,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "资源状态",
           "规则影响",
           "恢复/处理"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2802,6 +3097,7 @@
         "rows": 13,
         "columns": 9,
         "dataRows": 12,
+        "formattedBlankRows": 0,
         "headers": [
           "ID",
           "名称",
@@ -2814,9 +3110,10 @@
           "超模风险"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2825,14 +3122,16 @@
         "rows": 6,
         "columns": 2,
         "dataRows": 5,
+        "formattedBlankRows": 0,
         "headers": [
           "术语",
           "口径"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2841,6 +3140,7 @@
         "rows": 7,
         "columns": 4,
         "dataRows": 6,
+        "formattedBlankRows": 0,
         "headers": [
           "库名",
           "工作表数",
@@ -2848,9 +3148,10 @@
           "说明"
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       }
@@ -2863,7 +3164,8 @@
         "name": "00_修订说明",
         "rows": 200,
         "columns": 26,
-        "dataRows": 199,
+        "dataRows": 8,
+        "formattedBlankRows": 191,
         "headers": [
           "招式库小样本：响应挂载与势前置修订",
           "",
@@ -2893,9 +3195,10 @@
           ""
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2903,7 +3206,8 @@
         "name": "01_招式主表",
         "rows": 200,
         "columns": 26,
-        "dataRows": 199,
+        "dataRows": 14,
+        "formattedBlankRows": 185,
         "headers": [
           "招式ID",
           "招式名",
@@ -2933,9 +3237,10 @@
           ""
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2943,7 +3248,8 @@
         "name": "02_响应挂载明细",
         "rows": 200,
         "columns": 26,
-        "dataRows": 199,
+        "dataRows": 15,
+        "formattedBlankRows": 184,
         "headers": [
           "挂载ID",
           "招式ID",
@@ -2973,9 +3279,10 @@
           ""
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -2983,7 +3290,8 @@
         "name": "03_势生态表",
         "rows": 200,
         "columns": 26,
-        "dataRows": 199,
+        "dataRows": 7,
+        "formattedBlankRows": 192,
         "headers": [
           "强度/类型",
           "势条件类型",
@@ -3013,9 +3321,10 @@
           ""
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -3023,7 +3332,8 @@
         "name": "04_便行表",
         "rows": 200,
         "columns": 26,
-        "dataRows": 199,
+        "dataRows": 9,
+        "formattedBlankRows": 190,
         "headers": [
           "便行ID",
           "名称",
@@ -3053,9 +3363,10 @@
           ""
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       },
@@ -3063,7 +3374,8 @@
         "name": "05_字段字典",
         "rows": 200,
         "columns": 26,
-        "dataRows": 199,
+        "dataRows": 10,
+        "formattedBlankRows": 189,
         "headers": [
           "字段",
           "所在表",
@@ -3093,9 +3405,10 @@
           ""
         ],
         "duplicateIds": [],
-        "blankIdRows": 0,
+        "blankIdRows": [],
         "formulaCount": 0,
         "errorCells": [],
+        "objectObjectCells": [],
         "rawTokenCellCount": 0,
         "rawTokenSamples": []
       }

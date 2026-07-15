@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
 
 let mainWindow;
-const SAVE_KEYS = new Set(["combat", "session", "campaign"]);
+const SAVE_KEYS = new Set(["combat", "combat-solo", "combat-room", "session", "campaign"]);
 
 function savePath(key) {
   if (!SAVE_KEYS.has(key)) throw new Error("不支持的存档类型");

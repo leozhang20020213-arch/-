@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createSeedState } from "../../data/seed";
-import { confirmInitiative, enterScene } from "../../combat/combatEngine";
+import { advanceTurn, confirmInitiative, enterScene } from "../../combat/combatEngine";
 import { confirmCombatOrder, startCombatFromScene } from "../combat/combatController";
 import { changeSceneMode, closeCombatToScene, startNewScene } from "./sceneController";
 
@@ -29,6 +29,18 @@ describe("scene and combat controllers", () => {
     assert.equal(structured.runtime.mode, "SCENE_STRUCTURED");
     assert.deepEqual(structured.initiativeOrder, ["pc-shen-qing", "enemy-short-blade"]);
     assert.deepEqual(qiSnapshot(structured), faces);
+  });
+
+  it("keeps future combat actors out of a structured scene turn queue", () => {
+    const structured = changeSceneMode(
+      startNewScene(createSeedState(), "SCENE_FREE", fixedRoll),
+      "SCENE_STRUCTURED",
+      ["pc-shen-qing", "pc-wei", "enemy-porter"],
+    );
+    const advanced = advanceTurn({ ...structured, phase: "round_end" });
+    assert.deepEqual(advanced.initiativeOrder, ["pc-shen-qing", "pc-wei", "enemy-porter"]);
+    assert.deepEqual(advanced.runtime.scene.sequence?.initiativeOrder, ["pc-shen-qing", "pc-wei", "enemy-porter"]);
+    assert.equal(advanced.activeActorId, "pc-wei");
   });
 
   it("starts combat at round one while preserving scene qi and returns without recovery", () => {
