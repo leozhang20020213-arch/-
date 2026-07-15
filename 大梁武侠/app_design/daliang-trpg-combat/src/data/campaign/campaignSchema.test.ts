@@ -10,6 +10,16 @@ describe("campaign pack schema", () => {
       tutorialCampaignPack.scenes.map((scene) => scene.mode),
       ["SCENE_FREE", "SCENE_STRUCTURED", "COMBAT"],
     );
+    assert.equal(tutorialCampaignPack.catalogVersion, "2026-07-16");
+    assert.equal(tutorialCampaignPack.scenes[0].elements.some((element) => element.ruleReferenceIds?.includes("MED-001")), true);
+  });
+
+  it("rejects duplicated and malformed rule-text references", () => {
+    const broken = cloneCampaignPack(tutorialCampaignPack);
+    broken.scenes[0].elements[0].ruleReferenceIds = ["MED-001", "MED-001", "not valid"];
+    const issues = validateCampaignPack(broken);
+    assert.ok(issues.some((issue) => issue.message.includes("不能重复")));
+    assert.ok(issues.some((issue) => issue.message.includes("格式非法")));
   });
 
   it("rejects missing scene links without mutating the authored pack", () => {

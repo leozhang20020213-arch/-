@@ -21,7 +21,7 @@ export const COMBAT_PHASES = ["setup", "initiative", "scene", "declare", "interc
 
 export const SHI_CONDITIONS = ["无势", "宽势", "中势", "单势"] as const;
 export const FORM_POSITIONS = ["起式", "承式", "转式", "收式", "绝式", "无"] as const;
-export const STATUS_NAMES = ["迟滞", "破口", "失衡", "流血", "中毒", "燃烧", "冻结", "眩晕", "封穴"] as const;
+export const STATUS_NAMES = ["迟滞", "破口", "失衡", "流血", "中毒", "燃烧", "冻结", "眩晕", "封穴", "药性冲突"] as const;
 
 export const COMBAT_EVENTS = [
   "ENTER_SCENE",

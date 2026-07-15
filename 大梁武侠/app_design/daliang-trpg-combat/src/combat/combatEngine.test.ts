@@ -360,6 +360,22 @@ describe("combat engine", () => {
     assert.equal(state.logs.some((log) => log.type === "TEMP_QI_GRANTED"), true);
   });
 
+  it("uses catalog-backed golden ointment for fixed healing and records same-scene medicine conflict", () => {
+    let state = enterScene(createSeedState(), fixedRoll);
+    state = {
+      ...state,
+      actors: state.actors.map((actor) => actor.id === "pc-shen-qing" ? { ...actor, hp: 8 } : actor),
+    };
+    state = useInventoryItem(state, "pc-shen-qing", "item-golden-ointment");
+    assert.equal(state.actors.find((actor) => actor.id === "pc-shen-qing")?.hp, 12);
+    state = useInventoryItem(state, "pc-shen-qing", "item-golden-ointment");
+    const actor = state.actors.find((entry) => entry.id === "pc-shen-qing");
+    assert.equal(actor?.hp, 16);
+    assert.equal(actor?.statuses.some((status) => status.name === "药性冲突"), true);
+    assert.equal(actor?.inventory.find((item) => item.id === "item-golden-ointment")?.quantity, 0);
+    assert.equal(actor?.inventory.find((item) => item.id === "item-golden-ointment")?.catalogId, "MED-001");
+  });
+
   it("equips and unequips items", () => {
     let state = createSeedState();
     state = unequipItem(state, "pc-shen-qing", "item-bamboo-sword");

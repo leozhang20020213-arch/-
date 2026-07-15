@@ -1,0 +1,110 @@
+{
+  "source": "D:\\trpg\\大梁武侠\\规则书\\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\\04_前置对齐材料\\01_三文件对齐稿.docx",
+  "paragraphCount": 20,
+  "headingCount": 11,
+  "headings": [
+    {
+      "index": 7,
+      "style": "Heading 1",
+      "text": "一、四份材料的定位"
+    },
+    {
+      "index": 9,
+      "style": "Heading 1",
+      "text": "二、最高优先级统一结论"
+    },
+    {
+      "index": 14,
+      "style": "Heading 1",
+      "text": "三、旧规则书对齐：保留、废弃、改写"
+    },
+    {
+      "index": 16,
+      "style": "Heading 1",
+      "text": "四、新玩家规则书对齐：保留与必须修正"
+    },
+    {
+      "index": 18,
+      "style": "Heading 1",
+      "text": "五、世界观总册对齐：如何进入规则书"
+    },
+    {
+      "index": 20,
+      "style": "Heading 1",
+      "text": "六、数据库对齐：规则书必须承认的库结构"
+    },
+    {
+      "index": 22,
+      "style": "Heading 1",
+      "text": "七、三文件之间的主要冲突与统一结论"
+    },
+    {
+      "index": 24,
+      "style": "Heading 1",
+      "text": "八、内测第一版规则书建议目录"
+    },
+    {
+      "index": 26,
+      "style": "Heading 1",
+      "text": "九、插图位置总规划"
+    },
+    {
+      "index": 28,
+      "style": "Heading 1",
+      "text": "十、下一步工作拆分"
+    },
+    {
+      "index": 30,
+      "style": "Heading 1",
+      "text": "十一、对齐后的规则书底层一句话"
+    }
+  ],
+  "tableCount": 9,
+  "tables": [
+    {
+      "index": 1,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 2,
+      "rows": 10,
+      "columns": 3
+    },
+    {
+      "index": 3,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 4,
+      "rows": 10,
+      "columns": 3
+    },
+    {
+      "index": 5,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 6,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 7,
+      "rows": 10,
+      "columns": 2
+    },
+    {
+      "index": 8,
+      "rows": 15,
+      "columns": 4
+    },
+    {
+      "index": 9,
+      "rows": 9,
+      "columns": 3
+    }
+  ]
+}

@@ -1,0 +1,815 @@
+{
+  "source": "D:\\trpg\\大梁武侠\\规则书\\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\\01_规则书\\02_DM规则书_内测第一版.docx",
+  "paragraphCount": 269,
+  "headingCount": 113,
+  "headings": [
+    {
+      "index": 11,
+      "style": "Heading 1",
+      "text": "2026年6月20日回填修订：DM带团操作口径"
+    },
+    {
+      "index": 13,
+      "style": "Heading 2",
+      "text": "一、每个新场景开始，先让玩家整理气骰"
+    },
+    {
+      "index": 18,
+      "style": "Heading 2",
+      "text": "二、情景转交锋必须提醒"
+    },
+    {
+      "index": 22,
+      "style": "Heading 2",
+      "text": "三、交锋准备四步"
+    },
+    {
+      "index": 27,
+      "style": "Heading 2",
+      "text": "四、行动结算时，DM按固定窗口走"
+    },
+    {
+      "index": 28,
+      "style": "Heading 2",
+      "text": "五、截击成功与非法宣言"
+    },
+    {
+      "index": 31,
+      "style": "Heading 2",
+      "text": "六、息库、调息与返照"
+    },
+    {
+      "index": 32,
+      "style": "Heading 2",
+      "text": "七、装备、药物、器具来源失效"
+    },
+    {
+      "index": 37,
+      "style": "Heading 2",
+      "text": "八、App辅助时，DM仍保留裁定权"
+    },
+    {
+      "index": 39,
+      "style": "Heading 2",
+      "text": "九、快速主持检查表"
+    },
+    {
+      "index": 73,
+      "style": "Heading 1",
+      "text": "第0章 DM速读：主持人先做什么"
+    },
+    {
+      "index": 74,
+      "style": "Heading 2",
+      "text": "0.1 DM不是替玩家写剧情的人"
+    },
+    {
+      "index": 77,
+      "style": "Heading 2",
+      "text": "0.2 DM每次裁定先问四句话"
+    },
+    {
+      "index": 83,
+      "style": "Heading 2",
+      "text": "0.3 DM规则书与玩家规则书的分工"
+    },
+    {
+      "index": 85,
+      "style": "Heading 1",
+      "text": "第1章 主持人的裁定顺序"
+    },
+    {
+      "index": 86,
+      "style": "Heading 2",
+      "text": "1.1 记录优先"
+    },
+    {
+      "index": 88,
+      "style": "Heading 2",
+      "text": "1.2 裁定五步"
+    },
+    {
+      "index": 89,
+      "style": "Heading 2",
+      "text": "1.3 自由描述与规则入口"
+    },
+    {
+      "index": 91,
+      "style": "Heading 2",
+      "text": "1.4 不要奖励空泛话术"
+    },
+    {
+      "index": 93,
+      "style": "Heading 2",
+      "text": "1.5 裁定示例"
+    },
+    {
+      "index": 95,
+      "style": "Heading 1",
+      "text": "第2章 建场、信息公开与场景边界"
+    },
+    {
+      "index": 96,
+      "style": "Heading 2",
+      "text": "2.1 什么是建场"
+    },
+    {
+      "index": 98,
+      "style": "Heading 2",
+      "text": "2.2 建场必须公开的内容"
+    },
+    {
+      "index": 99,
+      "style": "Heading 2",
+      "text": "2.3 可以隐藏的信息"
+    },
+    {
+      "index": 101,
+      "style": "Heading 2",
+      "text": "2.4 场景边界"
+    },
+    {
+      "index": 104,
+      "style": "Heading 1",
+      "text": "第3章 危机值与解密值"
+    },
+    {
+      "index": 105,
+      "style": "Heading 2",
+      "text": "3.1 危机值的定义"
+    },
+    {
+      "index": 107,
+      "style": "Heading 2",
+      "text": "3.2 危机值的写法"
+    },
+    {
+      "index": 108,
+      "style": "Heading 2",
+      "text": "3.3 危机值不要模糊"
+    },
+    {
+      "index": 110,
+      "style": "Heading 2",
+      "text": "3.4 解密值的定义"
+    },
+    {
+      "index": 112,
+      "style": "Heading 2",
+      "text": "3.5 解密值的层级"
+    },
+    {
+      "index": 113,
+      "style": "Heading 2",
+      "text": "3.6 危机与解密可以同时推进"
+    },
+    {
+      "index": 116,
+      "style": "Heading 1",
+      "text": "第4章 动景、目标线与场景压力"
+    },
+    {
+      "index": 117,
+      "style": "Heading 2",
+      "text": "4.1 动景是什么"
+    },
+    {
+      "index": 119,
+      "style": "Heading 2",
+      "text": "4.2 动景条目的最小字段"
+    },
+    {
+      "index": 120,
+      "style": "Heading 2",
+      "text": "4.3 目标线"
+    },
+    {
+      "index": 122,
+      "style": "Heading 2",
+      "text": "4.4 动景与玩家选择"
+    },
+    {
+      "index": 125,
+      "style": "Heading 1",
+      "text": "第5章 敌人与NPC投放总则"
+    },
+    {
+      "index": 126,
+      "style": "Heading 2",
+      "text": "5.1 敌人不需要完整玩家角色卡"
+    },
+    {
+      "index": 128,
+      "style": "Heading 2",
+      "text": "5.2 敌人分层"
+    },
+    {
+      "index": 129,
+      "style": "Heading 2",
+      "text": "5.3 敌人条目的最小格式"
+    },
+    {
+      "index": 139,
+      "style": "Heading 2",
+      "text": "5.4 敌人的目的比数值重要"
+    },
+    {
+      "index": 141,
+      "style": "Heading 2",
+      "text": "5.5 敌人投放与玩家人数"
+    },
+    {
+      "index": 144,
+      "style": "Heading 1",
+      "text": "第6章 世界观、数据库与资源投放"
+    },
+    {
+      "index": 145,
+      "style": "Heading 2",
+      "text": "6.1 世界观如何进入规则"
+    },
+    {
+      "index": 147,
+      "style": "Heading 2",
+      "text": "6.2 世界观投放的四层"
+    },
+    {
+      "index": 148,
+      "style": "Heading 2",
+      "text": "6.3 数据库不是堆素材"
+    },
+    {
+      "index": 150,
+      "style": "Heading 2",
+      "text": "6.4 投放强度的三条原则"
+    },
+    {
+      "index": 154,
+      "style": "Heading 2",
+      "text": "6.5 App设计的预留边界"
+    },
+    {
+      "index": 157,
+      "style": "Heading 1",
+      "text": "附录 第一步速查表"
+    },
+    {
+      "index": 158,
+      "style": "Heading 2",
+      "text": "A.1 主持人开场前检查"
+    },
+    {
+      "index": 167,
+      "style": "Heading 2",
+      "text": "A.2 场景记录卡模板"
+    },
+    {
+      "index": 168,
+      "style": "Heading 2",
+      "text": "A.3 本步收束"
+    },
+    {
+      "index": 170,
+      "style": "Heading 1",
+      "text": "第7章 敌人完整范式"
+    },
+    {
+      "index": 171,
+      "style": "Heading 2",
+      "text": "7.1 敌人不是简化玩家角色"
+    },
+    {
+      "index": 174,
+      "style": "Heading 2",
+      "text": "7.2 敌人强度层级"
+    },
+    {
+      "index": 175,
+      "style": "Heading 2",
+      "text": "7.3 敌人卡字段"
+    },
+    {
+      "index": 176,
+      "style": "Heading 2",
+      "text": "7.4 敌人气骰的简化方式"
+    },
+    {
+      "index": 178,
+      "style": "Heading 2",
+      "text": "7.5 敌人的势生态"
+    },
+    {
+      "index": 181,
+      "style": "Heading 1",
+      "text": "第8章 敌人行动与响应挂载"
+    },
+    {
+      "index": 182,
+      "style": "Heading 2",
+      "text": "8.1 敌人每轮不应无限操作"
+    },
+    {
+      "index": 184,
+      "style": "Heading 2",
+      "text": "8.2 响应挂载的DM裁定"
+    },
+    {
+      "index": 186,
+      "style": "Heading 2",
+      "text": "8.3 敌人AI顺序"
+    },
+    {
+      "index": 189,
+      "style": "Heading 2",
+      "text": "8.4 集群敌人"
+    },
+    {
+      "index": 191,
+      "style": "Heading 1",
+      "text": "第9章 动景库与场景压力"
+    },
+    {
+      "index": 192,
+      "style": "Heading 2",
+      "text": "9.1 动景是什么"
+    },
+    {
+      "index": 194,
+      "style": "Heading 2",
+      "text": "9.2 动景条目字段"
+    },
+    {
+      "index": 195,
+      "style": "Heading 2",
+      "text": "9.3 常用动景样例"
+    },
+    {
+      "index": 196,
+      "style": "Heading 2",
+      "text": "9.4 动景不替代敌人"
+    },
+    {
+      "index": 198,
+      "style": "Heading 1",
+      "text": "第10章 地区投放包与世界观接入"
+    },
+    {
+      "index": 199,
+      "style": "Heading 2",
+      "text": "10.1 世界观如何进入DM规则"
+    },
+    {
+      "index": 201,
+      "style": "Heading 2",
+      "text": "10.2 地区投放示例"
+    },
+    {
+      "index": 202,
+      "style": "Heading 1",
+      "text": "第11章 门派势力与资源投放"
+    },
+    {
+      "index": 203,
+      "style": "Heading 2",
+      "text": "11.1 势力不是任务发布器"
+    },
+    {
+      "index": 205,
+      "style": "Heading 2",
+      "text": "11.2 门派投放字段"
+    },
+    {
+      "index": 206,
+      "style": "Heading 2",
+      "text": "11.3 资源投放原则"
+    },
+    {
+      "index": 208,
+      "style": "Heading 1",
+      "text": "第12章 模组结构"
+    },
+    {
+      "index": 209,
+      "style": "Heading 2",
+      "text": "12.1 一场模组需要哪些骨架"
+    },
+    {
+      "index": 211,
+      "style": "Heading 2",
+      "text": "12.2 三幕式短模组"
+    },
+    {
+      "index": 212,
+      "style": "Heading 2",
+      "text": "12.3 不要把所有内容写死"
+    },
+    {
+      "index": 214,
+      "style": "Heading 1",
+      "text": "附录A 第二步速查"
+    },
+    {
+      "index": 215,
+      "style": "Heading 1",
+      "text": "附录B 插图位置清单"
+    },
+    {
+      "index": 217,
+      "style": "Heading 1",
+      "text": "第13章 主持人审查表"
+    },
+    {
+      "index": 218,
+      "style": "Heading 2",
+      "text": "13.1 审查表的用途"
+    },
+    {
+      "index": 221,
+      "style": "Heading 2",
+      "text": "13.2 通用规则对象审查"
+    },
+    {
+      "index": 223,
+      "style": "Heading 2",
+      "text": "13.3 招式条目审查"
+    },
+    {
+      "index": 225,
+      "style": "Heading 2",
+      "text": "13.4 敌人审查"
+    },
+    {
+      "index": 229,
+      "style": "Heading 1",
+      "text": "第14章 数据库投放细则"
+    },
+    {
+      "index": 230,
+      "style": "Heading 2",
+      "text": "14.1 数据库不是正文附庸"
+    },
+    {
+      "index": 232,
+      "style": "Heading 2",
+      "text": "14.2 投放的三个层级"
+    },
+    {
+      "index": 234,
+      "style": "Heading 2",
+      "text": "14.3 内功投放"
+    },
+    {
+      "index": 237,
+      "style": "Heading 2",
+      "text": "14.4 招式投放"
+    },
+    {
+      "index": 240,
+      "style": "Heading 2",
+      "text": "14.5 装备、药物、坐骑与文书物品投放"
+    },
+    {
+      "index": 244,
+      "style": "Heading 1",
+      "text": "第15章 内测流程与反馈记录"
+    },
+    {
+      "index": 245,
+      "style": "Heading 2",
+      "text": "15.1 内测目的"
+    },
+    {
+      "index": 247,
+      "style": "Heading 2",
+      "text": "15.2 内测批次"
+    },
+    {
+      "index": 249,
+      "style": "Heading 2",
+      "text": "15.3 反馈记录方式"
+    },
+    {
+      "index": 252,
+      "style": "Heading 2",
+      "text": "15.4 不应立即改掉的反馈"
+    },
+    {
+      "index": 255,
+      "style": "Heading 1",
+      "text": "第16章 样例模组：桥陵镇雨夜失镖"
+    },
+    {
+      "index": 256,
+      "style": "Heading 2",
+      "text": "16.1 模组用途"
+    },
+    {
+      "index": 258,
+      "style": "Heading 2",
+      "text": "16.2 背景"
+    },
+    {
+      "index": 260,
+      "style": "Heading 2",
+      "text": "16.3 场景目标"
+    },
+    {
+      "index": 262,
+      "style": "Heading 2",
+      "text": "16.4 主要场景"
+    },
+    {
+      "index": 264,
+      "style": "Heading 2",
+      "text": "16.5 敌人样例"
+    },
+    {
+      "index": 267,
+      "style": "Heading 2",
+      "text": "16.6 结局示例"
+    },
+    {
+      "index": 270,
+      "style": "Heading 1",
+      "text": "第17章 桌面记录页"
+    },
+    {
+      "index": 271,
+      "style": "Heading 2",
+      "text": "17.1 场景记录页"
+    },
+    {
+      "index": 273,
+      "style": "Heading 2",
+      "text": "17.2 敌人卡记录页"
+    },
+    {
+      "index": 275,
+      "style": "Heading 2",
+      "text": "17.3 内测问题记录页"
+    },
+    {
+      "index": 278,
+      "style": "Heading 1",
+      "text": "第18章 第三步速查与收束"
+    },
+    {
+      "index": 279,
+      "style": "Heading 2",
+      "text": "18.1 DM 每次开团前检查"
+    },
+    {
+      "index": 288,
+      "style": "Heading 2",
+      "text": "18.2 DM 临场裁定顺序"
+    },
+    {
+      "index": 294,
+      "style": "Heading 2",
+      "text": "18.3 第三步收束"
+    }
+  ],
+  "tableCount": 48,
+  "tables": [
+    {
+      "index": 1,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 2,
+      "rows": 5,
+      "columns": 2
+    },
+    {
+      "index": 3,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 4,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 5,
+      "rows": 6,
+      "columns": 4
+    },
+    {
+      "index": 6,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 7,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 8,
+      "rows": 4,
+      "columns": 5
+    },
+    {
+      "index": 9,
+      "rows": 6,
+      "columns": 4
+    },
+    {
+      "index": 10,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 11,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 12,
+      "rows": 5,
+      "columns": 5
+    },
+    {
+      "index": 13,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 14,
+      "rows": 12,
+      "columns": 2
+    },
+    {
+      "index": 15,
+      "rows": 6,
+      "columns": 5
+    },
+    {
+      "index": 16,
+      "rows": 12,
+      "columns": 3
+    },
+    {
+      "index": 17,
+      "rows": 6,
+      "columns": 2
+    },
+    {
+      "index": 18,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 19,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 20,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 21,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 22,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 23,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 24,
+      "rows": 6,
+      "columns": 5
+    },
+    {
+      "index": 25,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 26,
+      "rows": 7,
+      "columns": 4
+    },
+    {
+      "index": 27,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 28,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 29,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 30,
+      "rows": 4,
+      "columns": 3
+    },
+    {
+      "index": 31,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 32,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 33,
+      "rows": 6,
+      "columns": 4
+    },
+    {
+      "index": 34,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 35,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 36,
+      "rows": 4,
+      "columns": 3
+    },
+    {
+      "index": 37,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 38,
+      "rows": 6,
+      "columns": 2
+    },
+    {
+      "index": 39,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 40,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 41,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 42,
+      "rows": 5,
+      "columns": 2
+    },
+    {
+      "index": 43,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 44,
+      "rows": 4,
+      "columns": 5
+    },
+    {
+      "index": 45,
+      "rows": 5,
+      "columns": 2
+    },
+    {
+      "index": 46,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 47,
+      "rows": 9,
+      "columns": 2
+    },
+    {
+      "index": 48,
+      "rows": 9,
+      "columns": 2
+    }
+  ]
+}

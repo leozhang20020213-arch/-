@@ -30,6 +30,8 @@ export interface SceneElement {
   public: boolean;
   areaId?: string;
   interactionUsageIds: string[];
+  /** Read-only links into the versioned rule-text catalog. They never execute by themselves. */
+  ruleReferenceIds?: string[];
   blocksMovement?: boolean;
   blocksSight?: boolean;
   destructible?: boolean;
@@ -98,6 +100,7 @@ export interface CampaignPack {
   name: string;
   version: string;
   rulesVersion: string;
+  catalogVersion?: string;
   description: string;
   startSceneId: string;
   chapters: Array<{ id: string; name: string; summary: string; sceneIds: string[] }>;
@@ -128,7 +131,18 @@ export function validateCampaignPack(pack: CampaignPack): CampaignValidationIssu
     addId(scene.id, `scenes[${sceneIndex}].id`);
     if (!scene.objective.trim()) issues.push({ severity: "warning", path: `scenes[${sceneIndex}].objective`, message: "场景没有可读目标。" });
     if (!scene.boundary.trim()) issues.push({ severity: "error", path: `scenes[${sceneIndex}].boundary`, message: "场景必须声明边界。" });
-    scene.elements.forEach((element, elementIndex) => addId(element.id, `scenes[${sceneIndex}].elements[${elementIndex}].id`));
+    scene.elements.forEach((element, elementIndex) => {
+      addId(element.id, `scenes[${sceneIndex}].elements[${elementIndex}].id`);
+      const referenceIds = element.ruleReferenceIds ?? [];
+      if (new Set(referenceIds).size !== referenceIds.length) {
+        issues.push({ severity: "error", path: `scenes[${sceneIndex}].elements[${elementIndex}].ruleReferenceIds`, message: "规则资料引用不能重复。" });
+      }
+      referenceIds.forEach((id) => {
+        if (!/^[A-Z][A-Z0-9-]+$/.test(id)) {
+          issues.push({ severity: "error", path: `scenes[${sceneIndex}].elements[${elementIndex}].ruleReferenceIds`, message: `规则资料标识 ${id} 格式非法。` });
+        }
+      });
+    });
     scene.events.forEach((event, eventIndex) => {
       addId(event.id, `scenes[${sceneIndex}].events[${eventIndex}].id`);
       if (event.conditions.length === 0) issues.push({ severity: "warning", path: `scenes[${sceneIndex}].events[${eventIndex}]`, message: "事件没有触发条件，只能由DM手动触发。" });

@@ -620,10 +620,10 @@ const actorShenQing: Actor = {
   responses: [RG001, RG002],
   quickActions: [BX001, BX002, BX004, BX006],
   inventory: [
-    { id: "item-ring-saber", name: "环首刀", category: "weapon", quantity: 1, equipped: true, sourceId: "沈青·环首刀", publicNote: "主要武器。当前装备中。" },
-    { id: "item-thick-shirt", name: "厚布上衣", category: "armor", quantity: 1, equipped: true, sourceId: "沈青·厚布上衣", publicNote: "基础护甲。当前装备中。" },
-    { id: "item-golden-ointment", name: "金疮药", category: "medicine", quantity: 2, sourceId: "金疮药", publicNote: "使用后可恢复气血，或配合简药止血使用。" },
-    { id: "item-fire-starter", name: "火折", category: "tool", quantity: 1, sourceId: "火折", publicNote: "可用于点燃、照明或制造烟雾。" },
+    { id: "item-ring-saber", name: "环首刀", category: "weapon", quantity: 1, equipped: true, sourceId: "沈青·环首刀", catalogId: "EQ-W-001", publicNote: "提供刀与持握许可；武器基础伤害修正+2，普通招架修正+1。" },
+    { id: "item-thick-shirt", name: "厚布短褂", category: "armor", quantity: 1, equipped: true, sourceId: "沈青·厚布短褂", catalogId: "EQ-AU-001", publicNote: "上装护甲值1，护体+1。磨损或损坏时关闭对应许可。" },
+    { id: "item-golden-ointment", name: "金疮药", category: "medicine", quantity: 2, sourceId: "金疮药", catalogId: "MED-001", healHp: 4, repeatUseStatus: "药性冲突", publicNote: "自己或接触同伴使用，消耗1份并恢复4点气血；同场景再次使用会产生药性冲突。" },
+    { id: "item-fire-starter", name: "火折", category: "tool", quantity: 1, sourceId: "火折", catalogId: "EQ-T-001", publicNote: "提供点火与照明许可；本身不直接产生伤害落果。" },
     { id: "item-bureau-token", name: "镖局信物", category: "tool", quantity: 1, sourceId: "镖局信物", publicNote: "可用于情景交涉，向镖局或水会证明身份。" },
     // Legacy items for backward test compatibility
     { id: "item-bamboo-sword", name: "青竹短剑", category: "weapon", quantity: 1, equipped: true, sourceId: "沈青·青竹短剑", publicNote: "轻便短剑。" },

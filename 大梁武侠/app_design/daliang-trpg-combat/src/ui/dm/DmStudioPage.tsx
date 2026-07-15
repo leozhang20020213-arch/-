@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cloneCampaignPack, validateCampaignPack, type CampaignPack, type CampaignScene, type SceneElementKind } from "../../data/campaign/campaignSchema";
 import { tutorialCampaignPack } from "../../data/campaign/tutorialPack";
+import { loadRuleTextCatalog, type RuleTextCatalog } from "../../data/rules/ruleTextCatalog";
 
 const elementKinds: Array<{ kind: SceneElementKind; label: string }> = [
-  { kind: "npc", label: "NPC" }, { kind: "enemy", label: "敌人" }, { kind: "object", label: "物件" },
-  { kind: "clue", label: "线索" }, { kind: "door", label: "门窗" }, { kind: "obstacle", label: "阻隔" },
-  { kind: "hazard", label: "危险" }, { kind: "dynamic", label: "动景" },
+  { kind: "area", label: "区域" }, { kind: "npc", label: "NPC" }, { kind: "enemy", label: "敌人" },
+  { kind: "companion", label: "队友" }, { kind: "object", label: "物件" }, { kind: "container", label: "容器" },
+  { kind: "door", label: "门窗" }, { kind: "obstacle", label: "阻隔" }, { kind: "hazard", label: "危险" },
+  { kind: "clue", label: "线索" }, { kind: "document", label: "文书" }, { kind: "dynamic", label: "动景" },
 ];
 
 function readPack(): CampaignPack {
@@ -31,9 +33,24 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
   const [selectedSceneId, setSelectedSceneId] = useState(pack.startSceneId);
   const [selectedElementId, setSelectedElementId] = useState<string>();
   const [status, setStatus] = useState("本地草稿");
+  const [catalog, setCatalog] = useState<RuleTextCatalog>();
+  const [resourceQuery, setResourceQuery] = useState("");
   const selectedScene = pack.scenes.find((scene) => scene.id === selectedSceneId) ?? pack.scenes[0];
   const selectedElement = selectedScene?.elements.find((element) => element.id === selectedElementId);
   const issues = useMemo(() => validateCampaignPack(pack), [pack]);
+  const referenceEntries = useMemo(() => {
+    const normalized = resourceQuery.trim().toLocaleLowerCase("zh-CN");
+    return (catalog?.entries ?? [])
+      .filter((entry) => entry.review.status === "REFERENCE")
+      .filter((entry) => !normalized || `${entry.id} ${entry.name} ${entry.kindLabel} ${entry.category}`.toLocaleLowerCase("zh-CN").includes(normalized))
+      .slice(0, 18);
+  }, [catalog, resourceQuery]);
+
+  useEffect(() => {
+    let active = true;
+    loadRuleTextCatalog().then((value) => { if (active) setCatalog(value); }).catch(() => { if (active) setStatus("规则文字库读取失败"); });
+    return () => { active = false; };
+  }, []);
 
   function updateScene(patch: Partial<CampaignScene>) {
     setPack((current) => ({
@@ -54,6 +71,12 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
     if (!selectedElement) return;
     updateScene({ elements: selectedScene.elements.map((element) => element.id === selectedElement.id ? { ...element, ...patch } : element) });
     setStatus("有未保存修改");
+  }
+
+  function toggleRuleReference(referenceId: string) {
+    if (!selectedElement) return;
+    const current = selectedElement.ruleReferenceIds ?? [];
+    updateElement({ ruleReferenceIds: current.includes(referenceId) ? current.filter((id) => id !== referenceId) : [...current, referenceId] });
   }
 
   async function save() {
@@ -86,6 +109,17 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
           <small>向当前场景添加</small>
           {elementKinds.map((entry) => <button type="button" key={entry.kind} onClick={() => addElement(entry.kind)}>＋ {entry.label}</button>)}
         </div>
+        <section className="dm-studio__rule-assets" aria-label="规则资料资源库">
+          <header><small>7月16日规则文字库</small><strong>审校通过的资料引用</strong></header>
+          <input value={resourceQuery} placeholder="搜索招式、装备、状态…" onChange={(event) => setResourceQuery(event.target.value)} />
+          <p>{catalog ? `${catalog.countsByStatus.REFERENCE} 条可引用；异常条目已隔离` : "正在校验资料库…"}</p>
+          <div>
+            {referenceEntries.map((entry) => {
+              const linked = selectedElement?.ruleReferenceIds?.includes(entry.id) ?? false;
+              return <button className={linked ? "linked" : ""} disabled={!selectedElement} type="button" key={entry.id} title={selectedElement ? `关联到 ${selectedElement.name}` : "先选择场景元素"} onClick={() => toggleRuleReference(entry.id)}><span>{entry.kindLabel}</span><b>{entry.name}</b><small>{entry.id}</small></button>;
+            })}
+          </div>
+        </section>
       </aside>
 
       <section className="dm-studio__canvas">
@@ -116,6 +150,14 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
           <label className="check-row"><input type="checkbox" checked={selectedElement.public} onChange={(event) => updateElement({ public: event.target.checked })} />玩家可见</label>
           <label>DM备注<textarea value={selectedElement.hiddenNote ?? ""} onChange={(event) => updateElement({ hiddenNote: event.target.value })} /></label>
           <label>允许用法<input value={selectedElement.interactionUsageIds.join(", ")} onChange={(event) => updateElement({ interactionUsageIds: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) })} /></label>
+          <section className="dm-studio__linked-rules">
+            <small>规则资料引用（不会自动执行）</small>
+            {(selectedElement.ruleReferenceIds ?? []).map((id) => {
+              const entry = catalog?.entries.find((item) => item.id === id);
+              return <button type="button" key={id} onClick={() => toggleRuleReference(id)}><span>{entry?.name ?? id}</span><i>移除</i></button>;
+            })}
+            {(selectedElement.ruleReferenceIds ?? []).length === 0 ? <p>从左侧资料库选择已审校条目。结构化效果仍需绑定可执行用法。</p> : null}
+          </section>
         </> : <>
           <label>场景名<input value={selectedScene.name} onChange={(event) => updateScene({ name: event.target.value })} /></label>
           <label>目标<textarea value={selectedScene.objective} onChange={(event) => updateScene({ objective: event.target.value })} /></label>
@@ -125,7 +167,7 @@ export function DmStudioPage({ onBack, onPreview }: { onBack: () => void; onPrev
       </aside>
 
       <footer className="dm-studio__footer">
-        <div><strong>规则验证</strong><span>{issues.filter((issue) => issue.severity === "error").length} 错误 · {issues.filter((issue) => issue.severity === "warning").length} 提醒</span>{issues[0] ? <small>{issues[0].path}：{issues[0].message}</small> : <small>引用、模式、目标与场景连接均通过。</small>}</div>
+        <div><strong>规则验证</strong><span>{issues.filter((issue) => issue.severity === "error").length} 错误 · {issues.filter((issue) => issue.severity === "warning").length} 提醒 · {catalog?.entryCount ?? "…"} 条资料</span>{issues[0] ? <small>{issues[0].path}：{issues[0].message}</small> : <small>引用、模式、目标与场景连接均通过；资料引用不绕过可执行规则。</small>}</div>
         <button type="button" onClick={() => setStatus("模拟完成 · 未修改权威存档")}>模拟一轮</button>
         <button type="button" onClick={onPreview}>玩家视图预览</button>
         <button className="primary-action" type="button" onClick={save}>保存草稿</button>

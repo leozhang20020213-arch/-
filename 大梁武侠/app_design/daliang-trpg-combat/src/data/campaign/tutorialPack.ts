@@ -6,6 +6,7 @@ export const tutorialCampaignPack: CampaignPack = {
   name: "白蘋渡失匣",
   version: "1.0.0",
   rulesVersion: "2026-07-15",
+  catalogVersion: "2026-07-16",
   description: "规整的新手教学团包：从渡口调查、结构化追逐到苇荡夺匣交锋。",
   startSceneId: "white-duckweed-ferry",
   chapters: [{ id: "chapter-lost-case", name: "第一折·失匣", summary: "追查被调换的药匣，并决定渡口众人的去路。", sceneIds: ["white-duckweed-ferry", "alley-pursuit", "reed-bank-combat"] }],
@@ -17,7 +18,7 @@ export const tutorialCampaignPack: CampaignPack = {
       elements: [
         { id: "ferry-seal", kind: "clue", name: "带血封签", description: "封蜡被利器整齐挑开。", public: true, interactionUsageIds: ["investigate", "observe"] },
         { id: "boatwoman-lin", kind: "npc", name: "船娘林四", description: "守着空船，不肯先开口。", public: true, interactionUsageIds: ["negotiate", "observe"] },
-        { id: "locked-medicine-case", kind: "container", name: "替换药匣", description: "匣锁完整，重量却不对。", public: false, interactionUsageIds: ["investigate", "take", "use_item"], destructible: true },
+        { id: "locked-medicine-case", kind: "container", name: "替换药匣", description: "匣锁完整，重量却不对。", public: false, interactionUsageIds: ["investigate", "take", "use_item"], ruleReferenceIds: ["MED-001"], destructible: true },
       ],
       tracks: [{ id: "ferry-insight", name: "真相", kind: "insight", max: 6, public: true }, { id: "boat-departs", name: "开船", kind: "crisis", max: 6, public: true }],
       events: [
@@ -42,7 +43,7 @@ export const tutorialCampaignPack: CampaignPack = {
       id: "reed-bank-combat", chapterId: "chapter-lost-case", name: "苇岸夺匣", mode: "COMBAT",
       description: "接应者在苇岸现身，药匣随时可能被推入水中。", objective: "保住药匣并阻止接应者灭口。", boundary: "苇岸、浅水、系船木桩与一叶小舟。",
       timeWindow: "小舟离岸前", weather: "雾散风起", light: "晨光", media: [],
-      elements: [{ id: "medicine-case-objective", kind: "object", name: "药匣", description: "本场争夺目标。", public: true, interactionUsageIds: ["take", "protect"] }],
+      elements: [{ id: "medicine-case-objective", kind: "object", name: "药匣", description: "本场争夺目标。", public: true, interactionUsageIds: ["take", "protect"], ruleReferenceIds: ["MED-001"] }],
       tracks: [{ id: "skiff-departure", name: "小舟离岸", kind: "crisis", max: 4, public: true }], events: [],
       combat: {
         id: "reed-bank-encounter", participantIds: ["pc-shen-qing", "pc-wei", "enemy-short-blade", "enemy-porter"],

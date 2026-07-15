@@ -1,0 +1,50 @@
+{
+  "source": "D:\\trpg\\大梁武侠\\规则书\\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\\05_开发资料\\01_开发者规则书_交锋辅助引擎_2026年6月20日.docx",
+  "paragraphCount": 27,
+  "headingCount": 7,
+  "headings": [
+    {
+      "index": 1,
+      "style": "Heading 1",
+      "text": "大梁江湖TRPG 开发者规则书"
+    },
+    {
+      "index": 3,
+      "style": "Heading 2",
+      "text": "一、App边界"
+    },
+    {
+      "index": 5,
+      "style": "Heading 2",
+      "text": "二、核心区域枚举"
+    },
+    {
+      "index": 6,
+      "style": "Heading 2",
+      "text": "三、气骰生命周期"
+    },
+    {
+      "index": 9,
+      "style": "Heading 2",
+      "text": "四、主要流程伪代码"
+    },
+    {
+      "index": 16,
+      "style": "Heading 2",
+      "text": "五、必须保留的手动入口"
+    },
+    {
+      "index": 22,
+      "style": "Heading 2",
+      "text": "六、第一版验收标准"
+    }
+  ],
+  "tableCount": 1,
+  "tables": [
+    {
+      "index": 1,
+      "rows": 6,
+      "columns": 2
+    }
+  ]
+}

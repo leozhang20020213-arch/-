@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026-07-16",
+  "rulesVersion": "2026-07-15+text-2026-07-16",
+  "source": "大梁武侠_规则文字库详设_2026年7月16日.xlsx",
+  "generatedAt": "2026-07-15T17:47:20.790Z",
+  "entryCount": 1004,
+  "countsByKind": {
+    "external_move": 240,
+    "inner_art": 120,
+    "scene_method": 120,
+    "equipment": 180,
+    "medicine": 60,
+    "status": 64,
+    "manual": 60,
+    "mount": 40,
+    "document": 120
+  },
+  "countsByStatus": {
+    "REFERENCE": 831,
+    "REVIEW_REQUIRED": 133,
+    "QUARANTINED": 40
+  },
+  "issueCounts": {
+    "ALWAYS_ON_TOTAL_TRIGGER": 133,
+    "EXTREME_QI_DEMAND": 45,
+    "HIGH_BASE_DAMAGE": 30,
+    "LETHAL_BASE_DAMAGE": 15,
+    "RAW_STRUCTURED_LITERAL": 106,
+    "HIGH_HEALING": 5,
+    "UNSERIALIZED_OBJECT": 40
+  },
+  "precedence": [
+    "2026-07-15 冻结口径（交锋、调息、返照与响应）",
+    "2026-07-16 规则文字库（条目正文与资源资料）",
+    "2026-06-20 对齐规则包（稳定基础口径）",
+    "程序内置样例（仅作可执行回归基线）"
+  ]
+}

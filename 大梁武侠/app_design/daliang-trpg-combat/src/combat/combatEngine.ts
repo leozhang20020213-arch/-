@@ -2137,6 +2137,9 @@ export function useInventoryItem(
   let next = cloneState(state);
   const actor = requireActor(next, actorId);
   const item = requireItem(actor, itemId);
+  const repeatedMedicineUse = item.category === "medicine" && (actor.inventoryEvents ?? []).some(
+    (event) => event.eventType === "use" && event.itemId === itemId && event.sceneId === state.scene.id,
+  );
 
   if (item.quantity <= 0) {
     return appendLog(
@@ -2157,7 +2160,7 @@ export function useInventoryItem(
           : stored,
       ),
       inventoryEvents: [
-        { itemId, actorId, eventType: "use" as const, createdAt: Date.now() },
+        { itemId, actorId, eventType: "use" as const, sceneId: next.scene.id, createdAt: Date.now() },
         ...(entry.inventoryEvents ?? []),
       ],
     };
@@ -2178,16 +2181,36 @@ export function useInventoryItem(
     );
   }
 
-  // Apply healing if item grants it
-  if (item.attrBonus?.气血) {
+  // Healing is an explicit consumable effect. attrBonus.气血 remains a
+  // migration fallback for older saves, but new data uses healHp so equipment
+  // attributes and immediate healing cannot be confused.
+  const healAmount = Math.max(0, item.healHp ?? item.attrBonus?.气血 ?? 0);
+  if (healAmount > 0) {
     next.actors = next.actors.map((a) =>
       a.id === actorId
-        ? { ...a, hp: Math.min(a.maxHp, a.hp + (item.attrBonus?.气血 ?? 0)) }
+        ? { ...a, hp: Math.min(a.maxHp, a.hp + healAmount) }
         : a,
     );
   }
 
-  return appendLog(next, "USE_ITEM", `${actor.name} 使用「${item.name}」。`);
+  if (repeatedMedicineUse && item.repeatUseStatus) {
+    next = applyStatusEffect(next, actorId, {
+      id: `status-medicine-conflict-${actorId}-${next.scene.id}`,
+      name: item.repeatUseStatus,
+      layers: 1,
+      source: item.name,
+      ownerId: actorId,
+      public: true,
+      effects: ["再次使用药物时，按药物条目增加副作用。"],
+      removalEntries: ["场景结束", "医理法门"],
+    });
+  }
+
+  const resultText = [
+    healAmount > 0 ? `恢复${Math.min(healAmount, Math.max(0, actor.maxHp - actor.hp))}点气血` : "",
+    repeatedMedicineUse && item.repeatUseStatus ? `获得「${item.repeatUseStatus}」` : "",
+  ].filter(Boolean).join("，");
+  return appendLog(next, "USE_ITEM", `${actor.name} 使用「${item.name}」${resultText ? `，${resultText}` : ""}。`);
 }
 
 /**

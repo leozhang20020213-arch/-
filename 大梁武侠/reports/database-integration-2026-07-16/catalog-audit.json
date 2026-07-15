@@ -1,0 +1,5046 @@
+{
+  "manifest": {
+    "schemaVersion": 1,
+    "catalogVersion": "2026-07-16",
+    "rulesVersion": "2026-07-15+text-2026-07-16",
+    "source": "大梁武侠_规则文字库详设_2026年7月16日.xlsx",
+    "generatedAt": "2026-07-15T17:47:20.790Z",
+    "entryCount": 1004,
+    "countsByKind": {
+      "external_move": 240,
+      "inner_art": 120,
+      "scene_method": 120,
+      "equipment": 180,
+      "medicine": 60,
+      "status": 64,
+      "manual": 60,
+      "mount": 40,
+      "document": 120
+    },
+    "countsByStatus": {
+      "REFERENCE": 831,
+      "REVIEW_REQUIRED": 133,
+      "QUARANTINED": 40
+    },
+    "issueCounts": {
+      "ALWAYS_ON_TOTAL_TRIGGER": 133,
+      "EXTREME_QI_DEMAND": 45,
+      "HIGH_BASE_DAMAGE": 30,
+      "LETHAL_BASE_DAMAGE": 15,
+      "RAW_STRUCTURED_LITERAL": 106,
+      "HIGH_HEALING": 5,
+      "UNSERIALIZED_OBJECT": 40
+    },
+    "precedence": [
+      "2026-07-15 冻结口径（交锋、调息、返照与响应）",
+      "2026-07-16 规则文字库（条目正文与资源资料）",
+      "2026-06-20 对齐规则包（稳定基础口径）",
+      "程序内置样例（仅作可执行回归基线）"
+    ]
+  },
+  "flaggedEntries": [
+    {
+      "id": "MV-FP-08",
+      "name": "吞肩卸力",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FP-10",
+      "name": "横身护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FP-14",
+      "name": "崩山三叠",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FP-15",
+      "name": "双峰贯耳",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FP-16",
+      "name": "沉肘破架",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-LG-08",
+      "name": "旋身卸腿",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-LG-10",
+      "name": "横腿护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-LG-14",
+      "name": "风摆连踢",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-LG-15",
+      "name": "穿林飞膝",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-LG-16",
+      "name": "坠身劈腿",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-GR-08",
+      "name": "沉肩解缠",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-GR-10",
+      "name": "横身护送",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-GR-14",
+      "name": "双关伏虎",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-GR-15",
+      "name": "锁喉制身",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-GR-16",
+      "name": "舍身抱摔",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BM-08",
+      "name": "借肩翻越",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BM-10",
+      "name": "横空护人",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BM-14",
+      "name": "三折穿廊",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BM-15",
+      "name": "飞桥渡隙",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BM-16",
+      "name": "孤雁坠崖",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-DA-08",
+      "name": "贴刃卸劲",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-DA-10",
+      "name": "横刀护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-DA-14",
+      "name": "沧浪三叠",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-DA-15",
+      "name": "沧浪一线",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-DA-16",
+      "name": "舍锋断路",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SW-08",
+      "name": "引剑卸势",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SW-10",
+      "name": "回剑护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SW-14",
+      "name": "七星连点",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SW-15",
+      "name": "一线穿云",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SW-16",
+      "name": "舍剑封门",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SP-08",
+      "name": "贴杆卸冲",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SP-10",
+      "name": "横矛护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SP-14",
+      "name": "连环三刺",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SP-15",
+      "name": "贯阵一枪",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SP-16",
+      "name": "折杆守关",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ST-08",
+      "name": "顺势卸打",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ST-10",
+      "name": "横棍护人",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ST-14",
+      "name": "风车连扫",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ST-15",
+      "name": "一棍定门",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ST-16",
+      "name": "断棍缠身",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SH-08",
+      "name": "斜盾卸冲",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SH-10",
+      "name": "举盾护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SH-14",
+      "name": "铁墙连进",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SH-15",
+      "name": "覆城一撞",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-SH-16",
+      "name": "弃盾堵门",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HI-08",
+      "name": "偏锋引落",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HI-10",
+      "name": "飞针护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HI-14",
+      "name": "连珠三发",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HI-15",
+      "name": "满天星雨",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HI-16",
+      "name": "舍匣断追",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BW-08",
+      "name": "偏矢引位",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BW-10",
+      "name": "掩射护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BW-14",
+      "name": "三矢连珠",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BW-15",
+      "name": "落日贯城",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-BW-16",
+      "name": "断弦封道",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FL-08",
+      "name": "顺势卸缠",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FL-10",
+      "name": "牵索护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FL-14",
+      "name": "九节连环",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FL-15",
+      "name": "天罗缚地",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-FL-16",
+      "name": "舍索封门",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HV-08",
+      "name": "借地卸力",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HV-10",
+      "name": "横柄护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HV-14",
+      "name": "三岳连崩",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HV-15",
+      "name": "开山一击",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-HV-16",
+      "name": "舍兵断桥",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ME-08",
+      "name": "卸扣解绳",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ME-10",
+      "name": "牵机护伴",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ME-14",
+      "name": "连机三转",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ME-15",
+      "name": "百簧齐发",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-ME-16",
+      "name": "舍机封门",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-JM-08",
+      "name": "顺势拉开",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-JM-10",
+      "name": "横肩护人",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 17,
+        "triggerTotal": 17,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥17，但附加触发仅要求合值≥17，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-JM-14",
+      "name": "三人合围",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果11点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-JM-15",
+      "name": "合身制伏",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 12,
+        "declarationTotal": 38,
+        "triggerTotal": 38,
+        "damage": 18,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥38，但附加触发仅要求合值≥38，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入12枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "LETHAL_BASE_DAMAGE",
+            "severity": "error",
+            "message": "基础气血落果18点，已达到当前样例敌人完整气血量级。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MV-JM-16",
+      "name": "舍身顶门",
+      "kind": "external_move",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 10,
+        "declarationTotal": 30,
+        "triggerTotal": 26,
+        "damage": 12,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥30，但附加触发仅要求合值≥26，成招后将恒定触发。"
+          },
+          {
+            "code": "EXTREME_QI_DEMAND",
+            "severity": "error",
+            "message": "最低投入10枚，超过当前教学角色6枚常规气骰规模。"
+          },
+          {
+            "code": "HIGH_BASE_DAMAGE",
+            "severity": "warning",
+            "message": "基础气血落果12点，需要按人物阶段限制投放。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "IA-01-030",
+      "name": "倒海回天录",
+      "kind": "inner_art",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "IA-02-030",
+      "name": "九死燃命经",
+      "kind": "inner_art",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "IA-03-029",
+      "name": "玄龟覆海功",
+      "kind": "inner_art",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "IA-03-030",
+      "name": "逆鳞封窍书",
+      "kind": "inner_art",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "IA-04-029",
+      "name": "枯荣再生录",
+      "kind": "inner_art",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "IA-04-030",
+      "name": "借命换元书",
+      "kind": "inner_art",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-01",
+      "name": "听痕辨路",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-02",
+      "name": "观泥识足",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-03",
+      "name": "查账对号",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-04",
+      "name": "辨印验契",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-09",
+      "name": "望烟寻火",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-11",
+      "name": "辨药识味",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-16",
+      "name": "听墙辨室",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-17",
+      "name": "查货验封",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-01-19",
+      "name": "比拓寻源",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-01",
+      "name": "稳声问话",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-02",
+      "name": "投帖求见",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-03",
+      "name": "按价议货",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-04",
+      "name": "说合两家",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-09",
+      "name": "黑话探口",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-11",
+      "name": "递礼说明",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-16",
+      "name": "请老作证",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-17",
+      "name": "转话释疑",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-02-19",
+      "name": "换保通行",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-01",
+      "name": "拆簧验锁",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-02",
+      "name": "藏影听风",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-03",
+      "name": "绕岗避灯",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-04",
+      "name": "换衣混入",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-09",
+      "name": "藏物换包",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-11",
+      "name": "伏梁候人",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-16",
+      "name": "埋伏退路",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-17",
+      "name": "偷取小物",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-03-19",
+      "name": "封门缓追",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-01",
+      "name": "识路抄近",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-02",
+      "name": "追踪辨向",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-03",
+      "name": "驾驭催程",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-04",
+      "name": "封路抢先",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-09",
+      "name": "攀绳登高",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-11",
+      "name": "滚坡下切",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-16",
+      "name": "护车转弯",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-17",
+      "name": "弃重加速",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-04-19",
+      "name": "虚张错路",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-01",
+      "name": "简药止血",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-02",
+      "name": "行气解穴",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-03",
+      "name": "整理兵刃",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-04",
+      "name": "修补护具",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-09",
+      "name": "查点行囊",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-11",
+      "name": "磨刀上油",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-16",
+      "name": "净水煮沸",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-17",
+      "name": "收存证物",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-05-19",
+      "name": "搭棚遮雨",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-01",
+      "name": "递交路引",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-02",
+      "name": "投帖拜山",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 10,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥10，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-03",
+      "name": "查验盐引",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-04",
+      "name": "商会作保",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-05",
+      "name": "会馆借宿",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 2,
+        "declarationTotal": 11,
+        "triggerTotal": 11,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥11，但附加触发仅要求合值≥11，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-09",
+      "name": "请匠验器",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-10",
+      "name": "入市挂牌",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-11",
+      "name": "祭礼问规",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 3,
+        "declarationTotal": 13,
+        "triggerTotal": 13,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥13，但附加触发仅要求合值≥13，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-15",
+      "name": "请书院荐",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-16",
+      "name": "向乡约报",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-17",
+      "name": "交割镖单",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 4,
+        "declarationTotal": 15,
+        "triggerTotal": 15,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥15，但附加触发仅要求合值≥15，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-19",
+      "name": "封签入库",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SM-06-20",
+      "name": "结清人情",
+      "kind": "scene_method",
+      "review": {
+        "status": "REVIEW_REQUIRED",
+        "risk": "high",
+        "minimumQi": 6,
+        "declarationTotal": 19,
+        "triggerTotal": 16,
+        "issues": [
+          {
+            "code": "ALWAYS_ON_TOTAL_TRIGGER",
+            "severity": "error",
+            "message": "宣言已要求合值≥19，但附加触发仅要求合值≥16，成招后将恒定触发。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MED-005",
+      "name": "止痛汤",
+      "kind": "medicine",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "healing": 8,
+        "issues": [
+          {
+            "code": "HIGH_HEALING",
+            "severity": "warning",
+            "message": "单次恢复8点气血，需限制稀有度与重复使用。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MED-006",
+      "name": "续命丹",
+      "kind": "medicine",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "healing": 9,
+        "issues": [
+          {
+            "code": "HIGH_HEALING",
+            "severity": "warning",
+            "message": "单次恢复9点气血，需限制稀有度与重复使用。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MED-058",
+      "name": "参附急汤",
+      "kind": "medicine",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "healing": 8,
+        "issues": [
+          {
+            "code": "HIGH_HEALING",
+            "severity": "warning",
+            "message": "单次恢复8点气血，需限制稀有度与重复使用。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MED-059",
+      "name": "九转还阳丹",
+      "kind": "medicine",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "healing": 9,
+        "issues": [
+          {
+            "code": "HIGH_HEALING",
+            "severity": "warning",
+            "message": "单次恢复9点气血，需限制稀有度与重复使用。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MED-060",
+      "name": "借命金针散",
+      "kind": "medicine",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "healing": 10,
+        "issues": [
+          {
+            "code": "HIGH_HEALING",
+            "severity": "warning",
+            "message": "单次恢复10点气血，需限制稀有度与重复使用。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-01-01",
+      "name": "拳掌入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-01-02",
+      "name": "拳掌行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-01-03",
+      "name": "拳掌门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-01-04",
+      "name": "拳掌旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-02-01",
+      "name": "腿法入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-02-02",
+      "name": "腿法行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-02-03",
+      "name": "腿法门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-02-04",
+      "name": "腿法旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-03-01",
+      "name": "擒拿入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-03-02",
+      "name": "擒拿行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-03-03",
+      "name": "擒拿门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-03-04",
+      "name": "擒拿旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-04-01",
+      "name": "身法/轻功入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-04-02",
+      "name": "身法/轻功行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-04-03",
+      "name": "身法/轻功门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-04-04",
+      "name": "身法/轻功旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-05-01",
+      "name": "刀入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-05-02",
+      "name": "刀行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-05-03",
+      "name": "刀门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-05-04",
+      "name": "刀旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-06-01",
+      "name": "剑入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-06-02",
+      "name": "剑行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-06-03",
+      "name": "剑门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-06-04",
+      "name": "剑旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-07-01",
+      "name": "枪/矛入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-07-02",
+      "name": "枪/矛行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-07-03",
+      "name": "枪/矛门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-07-04",
+      "name": "枪/矛旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-08-01",
+      "name": "棍入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-08-02",
+      "name": "棍行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-08-03",
+      "name": "棍门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-08-04",
+      "name": "棍旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-09-01",
+      "name": "盾入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-09-02",
+      "name": "盾行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-09-03",
+      "name": "盾门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-09-04",
+      "name": "盾旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-10-01",
+      "name": "暗器入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-10-02",
+      "name": "暗器行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-10-03",
+      "name": "暗器门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-10-04",
+      "name": "暗器旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-11-01",
+      "name": "弓弩入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-11-02",
+      "name": "弓弩行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-11-03",
+      "name": "弓弩门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-11-04",
+      "name": "弓弩旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-12-01",
+      "name": "软兵入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-12-02",
+      "name": "软兵行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-12-03",
+      "name": "软兵门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-12-04",
+      "name": "软兵旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-13-01",
+      "name": "重兵入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-13-02",
+      "name": "重兵行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-13-03",
+      "name": "重兵门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-13-04",
+      "name": "重兵旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-14-01",
+      "name": "奇门器械入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-14-02",
+      "name": "奇门器械行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-14-03",
+      "name": "奇门器械门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-14-04",
+      "name": "奇门器械旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-15-01",
+      "name": "徒手护人与江湖杂手入门抄本",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-15-02",
+      "name": "徒手护人与江湖杂手行旅手录",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-15-03",
+      "name": "徒手护人与江湖杂手门内正谱",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MAN-15-04",
+      "name": "徒手护人与江湖杂手旧藏残卷",
+      "kind": "manual",
+      "review": {
+        "status": "REFERENCE",
+        "risk": "medium",
+        "issues": [
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-001",
+      "name": "驿马",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-002",
+      "name": "良马",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-003",
+      "name": "战马",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-004",
+      "name": "骡子",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-005",
+      "name": "毛驴",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-006",
+      "name": "北地矮马",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-007",
+      "name": "河洛车马",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-008",
+      "name": "沙州骆驼",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-009",
+      "name": "岭南驮骡",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-010",
+      "name": "猎犬队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-011",
+      "name": "马车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-012",
+      "name": "轻车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-013",
+      "name": "镖车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-014",
+      "name": "粮车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-015",
+      "name": "囚车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-016",
+      "name": "独轮车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-017",
+      "name": "牛车",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-018",
+      "name": "雪橇",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-019",
+      "name": "沙橇",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-020",
+      "name": "山轿",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-021",
+      "name": "小舟",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-022",
+      "name": "乌篷船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-023",
+      "name": "快船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-024",
+      "name": "竹筏",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-025",
+      "name": "货船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-026",
+      "name": "盐船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-027",
+      "name": "渔船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-028",
+      "name": "海舶",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-029",
+      "name": "岛渡船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-030",
+      "name": "灯船",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-031",
+      "name": "驿站换马组",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-032",
+      "name": "马帮驮队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-033",
+      "name": "镖局车队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-034",
+      "name": "水会船队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-035",
+      "name": "军镇驮队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-036",
+      "name": "药行背篓队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-037",
+      "name": "脚行肩舆队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-038",
+      "name": "海商护航队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-039",
+      "name": "乡约工车队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MOUNT-040",
+      "name": "山门挑夫队",
+      "kind": "mount",
+      "review": {
+        "status": "QUARANTINED",
+        "risk": "high",
+        "issues": [
+          {
+            "code": "UNSERIALIZED_OBJECT",
+            "severity": "error",
+            "message": "源表含 [object Object] 占位，真实参数已经丢失。"
+          },
+          {
+            "code": "RAW_STRUCTURED_LITERAL",
+            "severity": "warning",
+            "message": "源表把结构化参数以 Python 字典文字写入，需要转换后才能交给玩家。"
+          }
+        ]
+      }
+    }
+  ]
+}

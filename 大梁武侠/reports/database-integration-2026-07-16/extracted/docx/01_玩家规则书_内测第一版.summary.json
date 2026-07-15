@@ -1,0 +1,1135 @@
+{
+  "source": "D:\\trpg\\大梁武侠\\规则书\\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\\01_规则书\\01_玩家规则书_内测第一版.docx",
+  "paragraphCount": 415,
+  "headingCount": 167,
+  "headings": [
+    {
+      "index": 11,
+      "style": "Heading 1",
+      "text": "版本说明"
+    },
+    {
+      "index": 15,
+      "style": "Heading 1",
+      "text": "2026年6月20日回填修订：玩家上桌操作口径"
+    },
+    {
+      "index": 17,
+      "style": "Heading 2",
+      "text": "一、开始一个场景时，先处理气骰"
+    },
+    {
+      "index": 22,
+      "style": "Heading 2",
+      "text": "二、轮到你行动时，按七步做"
+    },
+    {
+      "index": 30,
+      "style": "Heading 2",
+      "text": "三、情景进入交锋时，玩家要确认"
+    },
+    {
+      "index": 37,
+      "style": "Heading 2",
+      "text": "四、先后计算时，玩家只做两件事"
+    },
+    {
+      "index": 41,
+      "style": "Heading 2",
+      "text": "五、截击与应招怎么用"
+    },
+    {
+      "index": 43,
+      "style": "Heading 2",
+      "text": "六、调息、返照、取物"
+    },
+    {
+      "index": 44,
+      "style": "Heading 2",
+      "text": "七、装备、药物、器具给的气骰失效"
+    },
+    {
+      "index": 46,
+      "style": "Heading 2",
+      "text": "八、App使用边界"
+    },
+    {
+      "index": 48,
+      "style": "Heading 2",
+      "text": "九、与旧段落冲突时的处理"
+    },
+    {
+      "index": 50,
+      "style": "Heading 1",
+      "text": "目录"
+    },
+    {
+      "index": 78,
+      "style": "Heading 1",
+      "text": "卷首 如何开始游戏"
+    },
+    {
+      "index": 83,
+      "style": "Heading 1",
+      "text": "第0章 速读：这是一款怎样的武侠TRPG"
+    },
+    {
+      "index": 84,
+      "style": "Heading 2",
+      "text": "0.1 角色并非靠单一数值作战"
+    },
+    {
+      "index": 86,
+      "style": "Heading 2",
+      "text": "0.2 交锋的核心不是命中，而是配置与应对"
+    },
+    {
+      "index": 88,
+      "style": "Heading 2",
+      "text": "0.3 情景不是纯掷骰剧情，也不是纯战棋"
+    },
+    {
+      "index": 90,
+      "style": "Heading 2",
+      "text": "0.4 App 与数据库是辅助，不是规则本身"
+    },
+    {
+      "index": 92,
+      "style": "Heading 1",
+      "text": "第一编 角色与底层结构"
+    },
+    {
+      "index": 93,
+      "style": "Heading 1",
+      "text": "第1章 角色卡"
+    },
+    {
+      "index": 94,
+      "style": "Heading 2",
+      "text": "1.1 角色卡记录什么"
+    },
+    {
+      "index": 106,
+      "style": "Heading 2",
+      "text": "1.2 角色卡上哪些值会在游戏中频繁变化"
+    },
+    {
+      "index": 108,
+      "style": "Heading 2",
+      "text": "1.3 新角色如何起步"
+    },
+    {
+      "index": 110,
+      "style": "Heading 1",
+      "text": "第2章 六根：角色的里属性"
+    },
+    {
+      "index": 111,
+      "style": "Heading 2",
+      "text": "2.1 六根的含义"
+    },
+    {
+      "index": 113,
+      "style": "Heading 2",
+      "text": "2.2 六根项目"
+    },
+    {
+      "index": 115,
+      "style": "Heading 2",
+      "text": "2.3 六根的数值与边界"
+    },
+    {
+      "index": 117,
+      "style": "Heading 2",
+      "text": "2.4 六根不直接打人"
+    },
+    {
+      "index": 119,
+      "style": "Heading 1",
+      "text": "第3章 内功盘"
+    },
+    {
+      "index": 120,
+      "style": "Heading 2",
+      "text": "3.1 内功盘的作用"
+    },
+    {
+      "index": 122,
+      "style": "Heading 2",
+      "text": "3.2 占窍与内功数量"
+    },
+    {
+      "index": 124,
+      "style": "Heading 2",
+      "text": "3.3 内功读取六根组"
+    },
+    {
+      "index": 126,
+      "style": "Heading 2",
+      "text": "3.4 内功如何产生表属性"
+    },
+    {
+      "index": 129,
+      "style": "Heading 2",
+      "text": "3.5 内功如何产生气骰"
+    },
+    {
+      "index": 132,
+      "style": "Heading 2",
+      "text": "3.6 内功的层级、重数与被动"
+    },
+    {
+      "index": 135,
+      "style": "Heading 2",
+      "text": "3.7 散功、沉淀与并行限制"
+    },
+    {
+      "index": 138,
+      "style": "Heading 1",
+      "text": "第4章 表属性"
+    },
+    {
+      "index": 139,
+      "style": "Heading 2",
+      "text": "4.1 表属性是什么"
+    },
+    {
+      "index": 141,
+      "style": "Heading 2",
+      "text": "4.2 六项核心表属性"
+    },
+    {
+      "index": 142,
+      "style": "Heading 2",
+      "text": "4.3 表属性如何进入规则"
+    },
+    {
+      "index": 144,
+      "style": "Heading 2",
+      "text": "4.4 表属性会被什么改变"
+    },
+    {
+      "index": 147,
+      "style": "Heading 1",
+      "text": "第二编 气骰与交锋"
+    },
+    {
+      "index": 148,
+      "style": "Heading 1",
+      "text": "第5章 气骰与气骰区域"
+    },
+    {
+      "index": 149,
+      "style": "Heading 2",
+      "text": "5.1 气骰的定义"
+    },
+    {
+      "index": 151,
+      "style": "Heading 2",
+      "text": "5.2 气骰区域"
+    },
+    {
+      "index": 152,
+      "style": "Heading 2",
+      "text": "5.3 常规气骰与临时气骰"
+    },
+    {
+      "index": 154,
+      "style": "Heading 2",
+      "text": "5.4 气骰的投掷与保留"
+    },
+    {
+      "index": 157,
+      "style": "Heading 1",
+      "text": "第6章 阴阳槽、槽值与基础触发"
+    },
+    {
+      "index": 158,
+      "style": "Heading 2",
+      "text": "6.1 为什么要分阴槽与阳槽"
+    },
+    {
+      "index": 160,
+      "style": "Heading 2",
+      "text": "6.2 四类槽值"
+    },
+    {
+      "index": 162,
+      "style": "Heading 2",
+      "text": "6.3 成招门槛与槽值触发"
+    },
+    {
+      "index": 164,
+      "style": "Heading 2",
+      "text": "6.4 基础效果与触发效果的边界"
+    },
+    {
+      "index": 166,
+      "style": "Heading 2",
+      "text": "6.5 触发数量要克制"
+    },
+    {
+      "index": 168,
+      "style": "Heading 1",
+      "text": "第7章 行动类型：正式出手、出手便行、随手便行"
+    },
+    {
+      "index": 169,
+      "style": "Heading 2",
+      "text": "7.1 正式出手"
+    },
+    {
+      "index": 171,
+      "style": "Heading 2",
+      "text": "7.2 出手便行"
+    },
+    {
+      "index": 173,
+      "style": "Heading 3",
+      "text": "移步"
+    },
+    {
+      "index": 175,
+      "style": "Heading 3",
+      "text": "整身"
+    },
+    {
+      "index": 177,
+      "style": "Heading 3",
+      "text": "调息"
+    },
+    {
+      "index": 179,
+      "style": "Heading 2",
+      "text": "7.3 随手便行"
+    },
+    {
+      "index": 181,
+      "style": "Heading 3",
+      "text": "返照"
+    },
+    {
+      "index": 184,
+      "style": "Heading 1",
+      "text": "第8章 交锋流程"
+    },
+    {
+      "index": 185,
+      "style": "Heading 2",
+      "text": "8.1 交锋开始前要确认什么"
+    },
+    {
+      "index": 187,
+      "style": "Heading 2",
+      "text": "8.2 一轮交锋的基本顺序"
+    },
+    {
+      "index": 189,
+      "style": "Heading 2",
+      "text": "8.3 宣言与合法性"
+    },
+    {
+      "index": 191,
+      "style": "Heading 2",
+      "text": "8.4 截击窗口"
+    },
+    {
+      "index": 193,
+      "style": "Heading 2",
+      "text": "8.5 成招与基础效果"
+    },
+    {
+      "index": 195,
+      "style": "Heading 2",
+      "text": "8.6 槽值触发"
+    },
+    {
+      "index": 197,
+      "style": "Heading 2",
+      "text": "8.7 应招窗口"
+    },
+    {
+      "index": 199,
+      "style": "Heading 2",
+      "text": "8.8 落果与资源去向"
+    },
+    {
+      "index": 201,
+      "style": "Heading 2",
+      "text": "8.9 回合结束后的检查"
+    },
+    {
+      "index": 204,
+      "style": "Heading 1",
+      "text": "附：本编阅读后的最低上桌要求"
+    },
+    {
+      "index": 214,
+      "style": "Heading 1",
+      "text": "第三编 外功、法门与响应"
+    },
+    {
+      "index": 217,
+      "style": "Heading 1",
+      "text": "第9章 招式总则"
+    },
+    {
+      "index": 218,
+      "style": "Heading 2",
+      "text": "9.1 什么是招式"
+    },
+    {
+      "index": 221,
+      "style": "Heading 2",
+      "text": "9.2 招式条目的阅读顺序"
+    },
+    {
+      "index": 223,
+      "style": "Heading 2",
+      "text": "9.3 招式字段总表"
+    },
+    {
+      "index": 225,
+      "style": "Heading 2",
+      "text": "9.4 层级、投入、式位与强度"
+    },
+    {
+      "index": 227,
+      "style": "Heading 2",
+      "text": "9.5 前置、势门槛与起式口径"
+    },
+    {
+      "index": 230,
+      "style": "Heading 3",
+      "text": "9.5.1 多数招式没有硬前置"
+    },
+    {
+      "index": 232,
+      "style": "Heading 3",
+      "text": "9.5.2 前置分为软前置和硬前置"
+    },
+    {
+      "index": 234,
+      "style": "Heading 3",
+      "text": "9.5.3 势门槛写成范围优先"
+    },
+    {
+      "index": 236,
+      "style": "Heading 3",
+      "text": "9.5.4 避免过长交互轮次"
+    },
+    {
+      "index": 238,
+      "style": "Heading 2",
+      "text": "9.6 基础效果"
+    },
+    {
+      "index": 243,
+      "style": "Heading 2",
+      "text": "9.7 槽值触发"
+    },
+    {
+      "index": 245,
+      "style": "Heading 2",
+      "text": "9.8 风险必须明确"
+    },
+    {
+      "index": 247,
+      "style": "Heading 2",
+      "text": "9.9 装备许可与持握方式"
+    },
+    {
+      "index": 250,
+      "style": "Heading 3",
+      "text": "9.10 响应挂载字段"
+    },
+    {
+      "index": 254,
+      "style": "Heading 3",
+      "text": "9.11 势前置取代链式招式前置"
+    },
+    {
+      "index": 258,
+      "style": "Heading 1",
+      "text": "第10章 外功"
+    },
+    {
+      "index": 259,
+      "style": "Heading 2",
+      "text": "10.1 外功的定位"
+    },
+    {
+      "index": 261,
+      "style": "Heading 2",
+      "text": "10.2 外功必须写式位"
+    },
+    {
+      "index": 263,
+      "style": "Heading 2",
+      "text": "10.3 外功与势"
+    },
+    {
+      "index": 266,
+      "style": "Heading 2",
+      "text": "10.4 外功与武器"
+    },
+    {
+      "index": 268,
+      "style": "Heading 2",
+      "text": "10.5 外功强度分层"
+    },
+    {
+      "index": 270,
+      "style": "Heading 2",
+      "text": "10.6 外功样例一：破浪横刀"
+    },
+    {
+      "index": 272,
+      "style": "Heading 2",
+      "text": "10.7 外功样例二：回身护肩"
+    },
+    {
+      "index": 275,
+      "style": "Heading 1",
+      "text": "第11章 法门"
+    },
+    {
+      "index": 276,
+      "style": "Heading 2",
+      "text": "11.1 法门的定位"
+    },
+    {
+      "index": 278,
+      "style": "Heading 2",
+      "text": "11.2 法门通常不写式位"
+    },
+    {
+      "index": 280,
+      "style": "Heading 2",
+      "text": "11.3 法门类目"
+    },
+    {
+      "index": 281,
+      "style": "Heading 2",
+      "text": "11.4 法门与玩家推理"
+    },
+    {
+      "index": 283,
+      "style": "Heading 2",
+      "text": "11.5 法门与器具许可"
+    },
+    {
+      "index": 285,
+      "style": "Heading 2",
+      "text": "11.6 法门样例一：听痕辨路"
+    },
+    {
+      "index": 286,
+      "style": "Heading 2",
+      "text": "11.7 法门样例二：拆簧验锁"
+    },
+    {
+      "index": 287,
+      "style": "Heading 2",
+      "text": "11.8 法门样例三：行气解穴"
+    },
+    {
+      "index": 289,
+      "style": "Heading 1",
+      "text": "第12章 响应：截击与应招"
+    },
+    {
+      "index": 290,
+      "style": "Heading 2",
+      "text": "12.1 响应总则"
+    },
+    {
+      "index": 294,
+      "style": "Heading 2",
+      "text": "12.2 截击"
+    },
+    {
+      "index": 297,
+      "style": "Heading 2",
+      "text": "12.3 应招"
+    },
+    {
+      "index": 300,
+      "style": "Heading 2",
+      "text": "12.4 响应额度"
+    },
+    {
+      "index": 302,
+      "style": "Heading 2",
+      "text": "12.5 第三方护人"
+    },
+    {
+      "index": 304,
+      "style": "Heading 2",
+      "text": "12.6 截击样例：截腕挑锋"
+    },
+    {
+      "index": 305,
+      "style": "Heading 2",
+      "text": "12.7 应招样例：横盾承浪"
+    },
+    {
+      "index": 306,
+      "style": "Heading 2",
+      "text": "12.8 响应边界速查"
+    },
+    {
+      "index": 315,
+      "style": "Heading 1",
+      "text": "第三编结语"
+    },
+    {
+      "index": 319,
+      "style": "Heading 1",
+      "text": "第四编 情景、状态与成长"
+    },
+    {
+      "index": 323,
+      "style": "Heading 1",
+      "text": "第13章 情景模式"
+    },
+    {
+      "index": 324,
+      "style": "Heading 2",
+      "text": "13.1 什么是情景模式"
+    },
+    {
+      "index": 327,
+      "style": "Heading 2",
+      "text": "13.2 情景中的四类记录"
+    },
+    {
+      "index": 329,
+      "style": "Heading 2",
+      "text": "13.3 危机值"
+    },
+    {
+      "index": 333,
+      "style": "Heading 2",
+      "text": "13.4 解密值"
+    },
+    {
+      "index": 337,
+      "style": "Heading 2",
+      "text": "13.5 场景许可"
+    },
+    {
+      "index": 340,
+      "style": "Heading 2",
+      "text": "13.6 情景行动如何进入交锋"
+    },
+    {
+      "index": 343,
+      "style": "Heading 1",
+      "text": "第14章 状态、伤害与六根异常"
+    },
+    {
+      "index": 344,
+      "style": "Heading 2",
+      "text": "14.1 状态的原则"
+    },
+    {
+      "index": 347,
+      "style": "Heading 2",
+      "text": "14.2 伤害与气血"
+    },
+    {
+      "index": 350,
+      "style": "Heading 2",
+      "text": "14.3 护体"
+    },
+    {
+      "index": 353,
+      "style": "Heading 2",
+      "text": "14.4 常见交锋状态"
+    },
+    {
+      "index": 355,
+      "style": "Heading 2",
+      "text": "14.5 燃烧与冻结"
+    },
+    {
+      "index": 358,
+      "style": "Heading 2",
+      "text": "14.6 六根异常与封穴"
+    },
+    {
+      "index": 361,
+      "style": "Heading 2",
+      "text": "14.7 濒死与救治"
+    },
+    {
+      "index": 365,
+      "style": "Heading 1",
+      "text": "第15章 成长与修行"
+    },
+    {
+      "index": 366,
+      "style": "Heading 2",
+      "text": "15.1 成长不只是加点"
+    },
+    {
+      "index": 368,
+      "style": "Heading 2",
+      "text": "15.2 成长的主要入口"
+    },
+    {
+      "index": 370,
+      "style": "Heading 2",
+      "text": "15.3 武艺入栏"
+    },
+    {
+      "index": 373,
+      "style": "Heading 2",
+      "text": "15.4 内功重数与沉淀"
+    },
+    {
+      "index": 376,
+      "style": "Heading 2",
+      "text": "15.5 谱本归属"
+    },
+    {
+      "index": 378,
+      "style": "Heading 2",
+      "text": "15.6 成长记录表"
+    },
+    {
+      "index": 381,
+      "style": "Heading 1",
+      "text": "第16章 名望、关系与资源"
+    },
+    {
+      "index": 382,
+      "style": "Heading 2",
+      "text": "16.1 名望不是单纯声望值"
+    },
+    {
+      "index": 385,
+      "style": "Heading 2",
+      "text": "16.2 关系事实"
+    },
+    {
+      "index": 388,
+      "style": "Heading 2",
+      "text": "16.3 资源分类"
+    },
+    {
+      "index": 391,
+      "style": "Heading 2",
+      "text": "16.4 资源状态"
+    },
+    {
+      "index": 393,
+      "style": "Heading 2",
+      "text": "16.5 资源如何改变局面"
+    },
+    {
+      "index": 396,
+      "style": "Heading 2",
+      "text": "16.6 本编收束"
+    },
+    {
+      "index": 399,
+      "style": "Heading 1",
+      "text": "第四编速查"
+    },
+    {
+      "index": 402,
+      "style": "Heading 1",
+      "text": "第五编 新手创建与上桌速查"
+    },
+    {
+      "index": 404,
+      "style": "Heading 1",
+      "text": "第17章 新手角色创建"
+    },
+    {
+      "index": 405,
+      "style": "Heading 2",
+      "text": "17.1 开卡总原则"
+    },
+    {
+      "index": 408,
+      "style": "Heading 2",
+      "text": "17.2 角色创建七步"
+    },
+    {
+      "index": 410,
+      "style": "Heading 2",
+      "text": "17.3 第一步：人物概念"
+    },
+    {
+      "index": 413,
+      "style": "Heading 2",
+      "text": "17.4 第二步：分配六根"
+    },
+    {
+      "index": 417,
+      "style": "Heading 2",
+      "text": "17.5 第三步：选择初始内功"
+    },
+    {
+      "index": 421,
+      "style": "Heading 2",
+      "text": "17.6 第四步：计算表属性"
+    },
+    {
+      "index": 424,
+      "style": "Heading 2",
+      "text": "17.7 第五步：确定初始气骰"
+    },
+    {
+      "index": 427,
+      "style": "Heading 2",
+      "text": "17.8 第六步：选择初始武艺"
+    },
+    {
+      "index": 431,
+      "style": "Heading 2",
+      "text": "17.9 第七步：选择初始装备与资源"
+    },
+    {
+      "index": 435,
+      "style": "Heading 2",
+      "text": "17.10 快速开卡包示例"
+    },
+    {
+      "index": 437,
+      "style": "Heading 1",
+      "text": "第18章 上桌速查"
+    },
+    {
+      "index": 438,
+      "style": "Heading 2",
+      "text": "18.1 每场游戏开始前"
+    },
+    {
+      "index": 441,
+      "style": "Heading 2",
+      "text": "18.2 一轮交锋速查"
+    },
+    {
+      "index": 443,
+      "style": "Heading 2",
+      "text": "18.3 行动类型速查"
+    },
+    {
+      "index": 445,
+      "style": "Heading 2",
+      "text": "18.4 读一条招式的速查"
+    },
+    {
+      "index": 447,
+      "style": "Heading 2",
+      "text": "18.5 常见错误速查"
+    },
+    {
+      "index": 450,
+      "style": "Heading 1",
+      "text": "第19章 术语表"
+    },
+    {
+      "index": 454,
+      "style": "Heading 1",
+      "text": "第五编收束"
+    }
+  ],
+  "tableCount": 58,
+  "tables": [
+    {
+      "index": 1,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 2,
+      "rows": 4,
+      "columns": 4
+    },
+    {
+      "index": 3,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 4,
+      "rows": 5,
+      "columns": 2
+    },
+    {
+      "index": 5,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 6,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 7,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 8,
+      "rows": 10,
+      "columns": 3
+    },
+    {
+      "index": 9,
+      "rows": 16,
+      "columns": 3
+    },
+    {
+      "index": 10,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 11,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 12,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 13,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 14,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 15,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 16,
+      "rows": 15,
+      "columns": 2
+    },
+    {
+      "index": 17,
+      "rows": 14,
+      "columns": 2
+    },
+    {
+      "index": 18,
+      "rows": 9,
+      "columns": 3
+    },
+    {
+      "index": 19,
+      "rows": 13,
+      "columns": 2
+    },
+    {
+      "index": 20,
+      "rows": 13,
+      "columns": 2
+    },
+    {
+      "index": 21,
+      "rows": 13,
+      "columns": 2
+    },
+    {
+      "index": 22,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 23,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 24,
+      "rows": 13,
+      "columns": 2
+    },
+    {
+      "index": 25,
+      "rows": 13,
+      "columns": 2
+    },
+    {
+      "index": 26,
+      "rows": 7,
+      "columns": 2
+    },
+    {
+      "index": 27,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 28,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 29,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 30,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 31,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 32,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 33,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 34,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 35,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 36,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 37,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 38,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 39,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 40,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 41,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 42,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 43,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 44,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 45,
+      "rows": 8,
+      "columns": 4
+    },
+    {
+      "index": 46,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 47,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 48,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 49,
+      "rows": 7,
+      "columns": 3
+    },
+    {
+      "index": 50,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 51,
+      "rows": 8,
+      "columns": 3
+    },
+    {
+      "index": 52,
+      "rows": 7,
+      "columns": 4
+    },
+    {
+      "index": 53,
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "index": 54,
+      "rows": 11,
+      "columns": 3
+    },
+    {
+      "index": 55,
+      "rows": 5,
+      "columns": 4
+    },
+    {
+      "index": 56,
+      "rows": 10,
+      "columns": 3
+    },
+    {
+      "index": 57,
+      "rows": 10,
+      "columns": 2
+    },
+    {
+      "index": 58,
+      "rows": 39,
+      "columns": 2
+    }
+  ]
+}

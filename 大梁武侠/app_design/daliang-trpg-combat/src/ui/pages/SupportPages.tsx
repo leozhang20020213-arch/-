@@ -1,10 +1,19 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   AppSession,
   CombatState,
   InventoryCategory,
 } from "../../combat/types";
+import {
+  loadRuleTextCatalog,
+  reviewStatusDescription,
+  reviewStatusLabel,
+  type RuleReviewStatus,
+  type RuleTextCatalog,
+  type RuleTextEntry,
+  type RuleTextKind,
+} from "../../data/rules/ruleTextCatalog";
 
 type LibraryCategory =
   | "all"
@@ -45,55 +54,125 @@ const inventoryLabels: Record<InventoryCategory, string> = {
   misc: "杂物",
 };
 
+type CatalogKindFilter = "all" | RuleTextKind;
+type CatalogStatusFilter = "all" | RuleReviewStatus;
+
+const catalogKindLabels: Record<CatalogKindFilter, string> = {
+  all: "全部类别",
+  external_move: "外功",
+  inner_art: "内功",
+  scene_method: "情景法门",
+  equipment: "装备",
+  medicine: "药物",
+  status: "状态",
+  manual: "谱本",
+  mount: "坐骑载具",
+  document: "文书资源",
+};
+
+const catalogStatusLabels: Record<CatalogStatusFilter, string> = {
+  all: "全部审校状态",
+  REFERENCE: "资料可用",
+  REVIEW_REQUIRED: "需要复核",
+  QUARANTINED: "暂不接入",
+};
+
 export interface LibraryPageProps {
   state: CombatState;
+  isDm?: boolean;
   onBack: () => void;
 }
 
-/** Searchable view over the rule data already loaded into CombatState. */
-export function LibraryPage({ state, onBack }: LibraryPageProps) {
+/** Versioned rule-text database plus the smaller executable session catalog. */
+export function LibraryPage({ state, isDm = false, onBack }: LibraryPageProps) {
   const searchId = useId();
   const categoryId = useId();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<LibraryCategory>("all");
+  const [view, setView] = useState<"catalog" | "session">("catalog");
+  const [category, setCategory] = useState<CatalogKindFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<CatalogStatusFilter>("all");
+  const [sessionCategory, setSessionCategory] = useState<LibraryCategory>("all");
+  const [catalog, setCatalog] = useState<RuleTextCatalog>();
+  const [catalogError, setCatalogError] = useState("");
+  const [selectedEntry, setSelectedEntry] = useState<RuleTextEntry>();
 
-  const entries = useMemo(() => collectLibraryEntries(state), [state]);
-  const categoryCounts = useMemo(() => {
+  useEffect(() => {
+    let active = true;
+    loadRuleTextCatalog()
+      .then((value) => {
+        if (!active) return;
+        setCatalog(value);
+        setSelectedEntry(value.entries[0]);
+      })
+      .catch((error: unknown) => {
+        if (active) setCatalogError(error instanceof Error ? error.message : "规则文字库读取失败。");
+      });
+    return () => { active = false; };
+  }, []);
+
+  const sessionEntries = useMemo(() => collectLibraryEntries(state), [state]);
+  const sessionCategoryCounts = useMemo(() => {
     const counts = Object.fromEntries(
       Object.keys(categoryLabels).map((key) => [key, 0]),
     ) as Record<LibraryCategory, number>;
-    counts.all = entries.length;
-    entries.forEach((entry) => {
+    counts.all = sessionEntries.length;
+    sessionEntries.forEach((entry) => {
       counts[entry.category] += 1;
     });
     return counts;
-  }, [entries]);
+  }, [sessionEntries]);
 
   const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
-  const results = entries.filter((entry) => {
-    if (category !== "all" && entry.category !== category) return false;
+  const catalogResults = useMemo(() => (catalog?.entries ?? []).filter((entry) => {
+    if (category !== "all" && entry.kind !== category) return false;
+    if (statusFilter !== "all" && entry.review.status !== statusFilter) return false;
     if (!normalizedQuery) return true;
-    return [entry.title, entry.subtitle, entry.detail, ...entry.tags]
+    return [entry.id, entry.name, entry.kindLabel, entry.category, entry.subCategory, entry.tier, entry.summary, entry.playerText]
       .join(" ")
       .toLocaleLowerCase("zh-CN")
       .includes(normalizedQuery);
+  }), [catalog, category, normalizedQuery, statusFilter]);
+  const sessionResults = sessionEntries.filter((entry) => {
+    if (sessionCategory !== "all" && entry.category !== sessionCategory) return false;
+    if (!normalizedQuery) return true;
+    return [entry.title, entry.subtitle, entry.detail, ...entry.tags].join(" ").toLocaleLowerCase("zh-CN").includes(normalizedQuery);
   });
 
   function clearFilters() {
     setQuery("");
     setCategory("all");
+    setStatusFilter("all");
+    setSessionCategory("all");
   }
 
   return (
-    <main className="support-page" aria-labelledby="library-page-title">
+    <main className="support-page support-page--library" aria-labelledby="library-page-title">
       <header className="support-page__header panel">
         <div>
-          <p className="eyebrow">当前团包 · 已载入规则数据</p>
-          <h1 id="library-page-title">资料库</h1>
-          <p className="hint">检索当前会话实际载入的角色、招式、内功、状态、物品与场景轨。</p>
+          <p className="eyebrow">权威规则文字库 · 版本化接入</p>
+          <h1 id="library-page-title">大梁武侠资料库</h1>
+          <p className="hint">完整资料与可执行团包分离。审校异常条目不会进入自动DM或权威结算。</p>
         </div>
         <button type="button" onClick={onBack}>返回</button>
       </header>
+
+      <nav className="library-view-tabs panel" aria-label="资料来源">
+        <button type="button" className={view === "catalog" ? "active" : ""} onClick={() => setView("catalog")}>
+          完整规则文字库 <span>{catalog?.entryCount ?? "…"}</span>
+        </button>
+        <button type="button" className={view === "session" ? "active" : ""} onClick={() => setView("session")}>
+          当前团包可执行数据 <span>{sessionEntries.length}</span>
+        </button>
+      </nav>
+
+      {view === "catalog" && catalog ? (
+        <section className="library-audit-strip" aria-label="数据库审校概况">
+          <div><small>权威条目</small><strong>{catalog.entryCount}</strong><span>7月16日文字库</span></div>
+          <div className="safe"><small>资料可用</small><strong>{catalog.countsByStatus.REFERENCE}</strong><span>可供阅读与创作引用</span></div>
+          <div className="review"><small>需要复核</small><strong>{catalog.countsByStatus.REVIEW_REQUIRED}</strong><span>阻止自动执行</span></div>
+          <div className="blocked"><small>暂不接入</small><strong>{catalog.countsByStatus.QUARANTINED}</strong><span>关键参数缺失</span></div>
+        </section>
+      ) : null}
 
       <section className="support-toolbar panel" aria-label="资料库筛选">
         <label htmlFor={searchId}>
@@ -108,29 +187,33 @@ export function LibraryPage({ state, onBack }: LibraryPageProps) {
         </label>
         <label htmlFor={categoryId}>
           分类
-          <select
-            id={categoryId}
-            value={category}
-            onChange={(event) => setCategory(event.target.value as LibraryCategory)}
-          >
-            {(Object.keys(categoryLabels) as LibraryCategory[]).map((key) => (
-              <option key={key} value={key}>
-                {categoryLabels[key]}（{categoryCounts[key]}）
-              </option>
-            ))}
-          </select>
+          {view === "catalog" ? (
+            <select id={categoryId} value={category} onChange={(event) => setCategory(event.target.value as CatalogKindFilter)}>
+              {(Object.keys(catalogKindLabels) as CatalogKindFilter[]).map((key) => <option key={key} value={key}>{catalogKindLabels[key]}{key === "all" ? "" : `（${catalog?.countsByKind[key] ?? 0}）`}</option>)}
+            </select>
+          ) : (
+            <select id={categoryId} value={sessionCategory} onChange={(event) => setSessionCategory(event.target.value as LibraryCategory)}>
+              {(Object.keys(categoryLabels) as LibraryCategory[]).map((key) => <option key={key} value={key}>{categoryLabels[key]}（{sessionCategoryCounts[key]}）</option>)}
+            </select>
+          )}
         </label>
+        {view === "catalog" ? <label>审校状态<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as CatalogStatusFilter)}>{(Object.keys(catalogStatusLabels) as CatalogStatusFilter[]).map((key) => <option key={key} value={key}>{catalogStatusLabels[key]}</option>)}</select></label> : null}
         <div className="support-toolbar__summary" aria-live="polite" aria-atomic="true">
-          <span className="identity-pill">{results.length} 条结果</span>
-          {(query || category !== "all") && (
+          <span className="identity-pill">{view === "catalog" ? catalogResults.length : sessionResults.length} 条结果</span>
+          {(query || category !== "all" || statusFilter !== "all" || sessionCategory !== "all") && (
             <button type="button" onClick={clearFilters}>清除筛选</button>
           )}
         </div>
       </section>
 
-      {results.length > 0 ? (
+      {view === "catalog" ? (
+        catalogError ? <section className="panel support-empty"><h2>数据库读取失败</h2><p>{catalogError}</p></section>
+          : !catalog ? <section className="panel support-empty"><h2>正在校验规则文字库</h2><p>载入条目、索引和审校结果…</p></section>
+            : catalogResults.length > 0 ? <CatalogBrowser entries={catalogResults} selected={selectedEntry} isDm={isDm} onSelect={setSelectedEntry} />
+              : <section className="panel support-empty"><h2>没有匹配资料</h2><p className="empty-state">请调整类别、审校状态或搜索词。</p><button type="button" onClick={clearFilters}>查看全部资料</button></section>
+      ) : sessionResults.length > 0 ? (
         <section className="support-entry-grid" aria-label="资料库结果">
-          {results.map((entry) => (
+          {sessionResults.map((entry) => (
             <article className="panel support-entry" key={entry.id}>
               <div className="support-entry__heading">
                 <span className="support-entry__category">{categoryLabels[entry.category]}</span>
@@ -154,6 +237,44 @@ export function LibraryPage({ state, onBack }: LibraryPageProps) {
         </section>
       )}
     </main>
+  );
+}
+
+function CatalogBrowser({ entries, selected, isDm, onSelect }: { entries: RuleTextEntry[]; selected?: RuleTextEntry; isDm: boolean; onSelect: (entry: RuleTextEntry) => void }) {
+  const visible = entries.slice(0, 160);
+  const current = selected && entries.some((entry) => entry.id === selected.id) ? selected : entries[0];
+  return (
+    <section className="catalog-browser" aria-label="规则文字条目">
+      <div className="catalog-browser__list" role="listbox" aria-label="条目列表">
+        {visible.map((entry) => (
+          <button key={entry.id} type="button" role="option" aria-selected={current?.id === entry.id} className={`catalog-row status-${entry.review.status.toLowerCase()}${current?.id === entry.id ? " selected" : ""}`} onClick={() => onSelect(entry)}>
+            <span className="catalog-row__sigil">{entry.kindLabel.slice(0, 1)}</span>
+            <span><b>{entry.name}</b><small>{entry.id} · {entry.category}{entry.subCategory ? ` / ${entry.subCategory}` : ""}</small></span>
+            <i title={reviewStatusDescription(entry.review.status)}>{reviewStatusLabel(entry.review.status)}</i>
+          </button>
+        ))}
+        {entries.length > visible.length ? <p className="catalog-browser__limit">已显示前 {visible.length} 条，请继续缩小筛选范围。</p> : null}
+      </div>
+      {current ? <CatalogInspector entry={current} isDm={isDm} /> : null}
+    </section>
+  );
+}
+
+function CatalogInspector({ entry, isDm }: { entry: RuleTextEntry; isDm: boolean }) {
+  const sections = entry.sections.filter((section) => section.scope === "player" || isDm);
+  return (
+    <article className={`catalog-inspector status-${entry.review.status.toLowerCase()}`}>
+      <header>
+        <div><span>{entry.kindLabel} · {entry.category}{entry.tier ? ` · ${entry.tier}` : ""}</span><h2>{entry.name}</h2><small>{entry.id} · {entry.source.sheet} 第{entry.source.row}行</small></div>
+        <strong>{reviewStatusLabel(entry.review.status)}</strong>
+      </header>
+      <p className="catalog-inspector__summary">{entry.summary || entry.playerText}</p>
+      {entry.review.issues.length > 0 ? <section className="catalog-inspector__issues" aria-label="审校问题"><h3>接入限制</h3>{entry.review.issues.map((issue) => <p key={issue.code}><b>{issue.severity === "error" ? "阻断" : "提醒"}</b>{issue.message}</p>)}</section> : <p className="catalog-inspector__safe">文字资料通过自动审计；正式进入角色、敌人或自动DM前仍需制作可执行用法。</p>}
+      <section className="catalog-inspector__text"><h3>玩家说明</h3><p>{entry.playerText || "该条目尚无独立玩家说明。"}</p></section>
+      <dl className="catalog-inspector__sections">{sections.map((section) => <div key={`${section.label}:${section.value}`}><dt>{section.label}</dt><dd>{section.value}</dd></div>)}</dl>
+      {isDm && entry.dmText ? <section className="catalog-inspector__dm"><h3>DM裁定</h3><p>{entry.dmText}</p></section> : null}
+      <footer><span>运行支持：仅资料库</span><span>规则口径：2026-07-15 + 文字库 2026-07-16</span></footer>
+    </article>
   );
 }
 
@@ -204,10 +325,11 @@ export function PacksPage({ state, session, onBack }: PacksPageProps) {
         <p>{state.sceneGoal}</p>
         <dl className="support-detail-list">
           <div><dt>团包标识</dt><dd>{session.room.campaignId || "未声明"}</dd></div>
-          <div><dt>版本</dt><dd>白蘋渡失匣 v1 · 规则口径 2026-07-15</dd></div>
+          <div><dt>版本</dt><dd>白蘋渡失匣 v1 · 冻结口径 2026-07-15 · 文字库 2026-07-16</dd></div>
           <div><dt>当前场景</dt><dd>{state.sceneName}</dd></div>
-          <div><dt>场景数量</dt><dd>1 个完整样例场景（调查→交锋→收束）</dd></div>
-          <div><dt>数据完整性</dt><dd>{counts.actors > 0 && counts.moves > 0 && counts.dice > 0 && counts.tracks > 0 ? "校验通过" : "缺少关键数据"}</dd></div>
+          <div><dt>场景数量</dt><dd>3 个教学场景（自由情景→结构化追逐→战斗）</dd></div>
+          <div><dt>规则文字库</dt><dd>1004 条版本化资料；异常条目与可执行规则隔离</dd></div>
+          <div><dt>数据完整性</dt><dd>{counts.actors > 0 && counts.moves > 0 && counts.dice > 0 && counts.tracks > 0 ? "可执行样例校验通过" : "缺少关键数据"}</dd></div>
           <div><dt>兼容状态</dt><dd>Windows x64 · 当前规则引擎兼容</dd></div>
           <div><dt>房间</dt><dd>{session.room.roomName} · {session.roomCode}</dd></div>
           <div><dt>运行方式</dt><dd>{session.room.mode === "local" ? "本地模式" : session.room.mode}</dd></div>

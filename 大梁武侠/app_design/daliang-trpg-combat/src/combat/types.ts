@@ -184,7 +184,7 @@ export interface QuickAction {
 }
 
 // === Status Effects (状态) ===
-export type StatusName = "迟滞" | "破口" | "失衡" | "流血" | "中毒" | "燃烧" | "冻结" | "眩晕" | "封穴";
+export type StatusName = "迟滞" | "破口" | "失衡" | "流血" | "中毒" | "燃烧" | "冻结" | "眩晕" | "封穴" | "药性冲突";
 
 export interface StatusEffect {
   id: string;
@@ -275,6 +275,9 @@ export interface InventoryItem {
   quantity: number;
   equipped?: boolean;
   sourceId?: string;
+  catalogId?: string;
+  healHp?: number;
+  repeatUseStatus?: StatusName;
   grantsTempQi?: { nature: QiNature; sides: number; count: number };
   attrBonus?: Partial<TableAttrs>;
   qiDice?: { nature: QiNature; sides: number; count: number; zone: "QI_POOL" | "TEMP_QI" };
@@ -288,6 +291,7 @@ export interface InventoryEvent {
   itemId: string;
   actorId: string;
   eventType: "use" | "equip" | "unequip" | "expire_source";
+  sceneId?: string;
   createdAt: number;
 }
 

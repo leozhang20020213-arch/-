@@ -1,0 +1,80 @@
+{
+  "source": "D:\\trpg\\大梁武侠\\规则书\\大梁江湖TRPG_内测第一版文件包_回填修订_2026年6月20日\\04_前置对齐材料\\02_目录术语冻结与排版插画流程.docx",
+  "paragraphCount": 114,
+  "headingCount": 10,
+  "headings": [
+    {
+      "index": 4,
+      "style": "Heading 1",
+      "text": "一、这一阶段的目标"
+    },
+    {
+      "index": 9,
+      "style": "Heading 1",
+      "text": "二、内测第一版的总体分工"
+    },
+    {
+      "index": 10,
+      "style": "Heading 1",
+      "text": "三、内测第一版的目录冻结建议"
+    },
+    {
+      "index": 60,
+      "style": "Heading 1",
+      "text": "四、术语冻结与写法边界"
+    },
+    {
+      "index": 61,
+      "style": "Heading 1",
+      "text": "五、后续正文重构建议步骤"
+    },
+    {
+      "index": 70,
+      "style": "Heading 1",
+      "text": "六、如何批量做规则书排版"
+    },
+    {
+      "index": 84,
+      "style": "Heading 1",
+      "text": "七、如何批量做插画"
+    },
+    {
+      "index": 103,
+      "style": "Heading 1",
+      "text": "八、为后续 App 预留但不写入规则书的东西"
+    },
+    {
+      "index": 108,
+      "style": "Heading 1",
+      "text": "九、我对你当前问题的直接建议"
+    },
+    {
+      "index": 113,
+      "style": "Heading 1",
+      "text": "十、下一步建议"
+    }
+  ],
+  "tableCount": 4,
+  "tables": [
+    {
+      "index": 1,
+      "rows": 5,
+      "columns": 3
+    },
+    {
+      "index": 2,
+      "rows": 12,
+      "columns": 4
+    },
+    {
+      "index": 3,
+      "rows": 4,
+      "columns": 4
+    },
+    {
+      "index": 4,
+      "rows": 5,
+      "columns": 4
+    }
+  ]
+}

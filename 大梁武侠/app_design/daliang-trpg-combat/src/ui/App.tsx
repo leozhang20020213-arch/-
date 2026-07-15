@@ -1056,7 +1056,7 @@ export function App() {
             <CharacterAssignPage state={state} session={session} setSession={setSession} enterAs={enterAs} go={go} />
           ) : null}
           {session.route === "library" ? (
-            <LibraryPage state={session.identity === "dm" ? state : playerState} onBack={() => go("home")} />
+            <LibraryPage state={session.identity === "dm" ? state : playerState} isDm={session.identity === "dm"} onBack={() => go("home")} />
           ) : null}
           {session.route === "packs" ? (
             <PacksPage state={session.identity === "dm" ? state : playerState} session={session} onBack={() => go("home")} />
@@ -2625,7 +2625,7 @@ function InventoryItemCard({ actorId, item, canManage, patch }: {
   return (
     <article className="inventory-item">
       <strong>{item.name}{item.equipped ? "（已装备）" : ""}</strong>
-      <span>数量 {item.quantity}</span>
+      <span>数量 {item.quantity}{item.catalogId ? ` · 资料 ${item.catalogId}` : ""}</span>
       <p>{item.publicNote}</p>
       {canManage ? (
         <div className="split-actions">
@@ -2887,9 +2887,9 @@ function InventoryCover({ actor, canManage, patch }: {
       <aside className="inventory-cover__detail">
         {selected ? <>
           <div className="inventory-cover__art"><img src={iconMap.inventory} alt="物品美术占位" /></div>
-          <small>{categoryLabels[selected.category]} · {selected.equipped ? "已装备" : "背包中"}</small>
+          <small>{categoryLabels[selected.category]} · {selected.equipped ? "已装备" : "背包中"}{selected.catalogId ? ` · 规则资料 ${selected.catalogId}` : ""}</small>
           <h3>{selected.name}</h3><p>{selected.publicNote}</p>
-          <dl><div><dt>数量</dt><dd>{selected.quantity}</dd></div><div><dt>来源</dt><dd>{selected.sourceId}</dd></div></dl>
+          <dl><div><dt>数量</dt><dd>{selected.quantity}</dd></div><div><dt>来源</dt><dd>{selected.sourceId}</dd></div>{selected.healHp ? <div><dt>固定效果</dt><dd>气血+{selected.healHp}</dd></div> : null}{selected.repeatUseStatus ? <div><dt>重复使用</dt><dd>{selected.repeatUseStatus}</dd></div> : null}</dl>
           <div className="split-actions">
             <button className="primary-action" type="button" disabled={!canManage} onClick={() => primaryAction(selected)}>{selected.category === "weapon" || selected.category === "armor" || selected.category === "accessory" ? selected.equipped ? "卸下" : "装备" : "使用"}</button>
             <button type="button" disabled title="丢弃需要DM许可并产生权威日志">丢弃</button>
